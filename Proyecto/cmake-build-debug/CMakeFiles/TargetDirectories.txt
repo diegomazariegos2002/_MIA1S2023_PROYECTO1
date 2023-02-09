@@ -1,0 +1,3 @@
+/home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Proyecto/cmake-build-debug/CMakeFiles/Proyecto.dir
+/home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Proyecto/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Proyecto/cmake-build-debug/CMakeFiles/rebuild_cache.dir
