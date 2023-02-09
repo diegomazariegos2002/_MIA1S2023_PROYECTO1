@@ -319,9 +319,9 @@ bool Particion::freeSpace(int s, std::string p, char u, int address) {
         if (size>0){
             int freeSpace=0;
             if (address == 0){ // si es la primera particion
-                freeSpace= mbr.mbr_tamanio - sizeof(MBR);
+                freeSpace= mbr.mbr_tamano - sizeof(MBR);
             }else{ // si no es la primera particion
-                freeSpace= mbr.mbr_tamanio - mbr.mbr_partition[address - 1].part_start - mbr.mbr_partition[address - 1].part_s;
+                freeSpace= mbr.mbr_tamano - mbr.mbr_partition[address - 1].part_start - mbr.mbr_partition[address - 1].part_s;
             }
             return freeSpace >= size;
         }
@@ -762,7 +762,7 @@ void Particion::incrementPartition() {
 
         if (address != -1){
             if (address == 3){
-                if ((mbr.mbr_partition[address].part_start + mbr.mbr_partition[address].part_s + incremento) <= mbr.mbr_tamanio){
+                if ((mbr.mbr_partition[address].part_start + mbr.mbr_partition[address].part_s + incremento) <= mbr.mbr_tamano){
                     mbr.mbr_partition[address].part_s+=incremento;
                     fseek(file,0,SEEK_SET);
                     fwrite(&mbr, sizeof(MBR),1,file);
@@ -777,7 +777,7 @@ void Particion::incrementPartition() {
             }else{
                //Si no existe la siguiente particion
                if (mbr.mbr_partition[address + 1].part_start == -1){
-                    if ((mbr.mbr_partition[address].part_start + mbr.mbr_partition[address].part_s + incremento) <= mbr.mbr_tamanio){
+                    if ((mbr.mbr_partition[address].part_start + mbr.mbr_partition[address].part_s + incremento) <= mbr.mbr_tamano){
                         mbr.mbr_partition[address].part_s+=incremento;
                         fseek(file,0,SEEK_SET);
                         fwrite(&mbr,sizeof(MBR),1,file);

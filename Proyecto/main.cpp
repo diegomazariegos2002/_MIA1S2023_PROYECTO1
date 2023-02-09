@@ -1,5 +1,8 @@
 #include <iostream>
+#include <cstring>
+#include "Analizador.h"
 
+using namespace std;
 
 int main() {
     MountList *mountList=new MountList();

@@ -613,7 +613,7 @@ void Analizador::exec(string path) {
     while(getline(script, linea)){
         if (linea != "\n" && linea.length() > 0){
             cout << "** "<<linea<<endl;
-            Analizador *analizador = new Analizador(linea);
+            Analizador *analizador = new Analizador(linea, this->mountList);
             analizador->analizarEntrada();
         }
     }

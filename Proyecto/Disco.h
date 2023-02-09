@@ -14,7 +14,7 @@ class Disco {
         string f;
         string u;
         string p;
-        string directorio;
+        string pathFull;
         string getDirectorio(string path);
 };
 

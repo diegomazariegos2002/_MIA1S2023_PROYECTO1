@@ -12,7 +12,7 @@ Disco::Disco() {
     this->f="bf";
     this->u="m";
     this->p=" ";
-    this->directorio="";
+    this->pathFull="";
 }
 
 bool Disco::validar() {
@@ -61,9 +61,9 @@ void Disco::mkdisk() {
             cout<<"EL DISCO YA EXISTE"<<endl;
             fclose(file);
         }else{
-            this->directorio=this->getDirectorio(this->p);
-            system(("sudo -S mkdir -p \'"+this->directorio+"\'").c_str());
-            system(("sudo -S chmod -R 777 \'"+this->directorio+"\'").c_str());
+            this->pathFull=this->getDirectorio(this->p);
+            system(("sudo -S mkdir -p \'" + this->pathFull + "\'").c_str());
+            system(("sudo -S chmod -R 777 \'" + this->pathFull + "\'").c_str());
             FILE *file;
             
             char buffer[1024];
@@ -89,7 +89,7 @@ void Disco::mkdisk() {
             MBR mbr;
             mbr.mbr_fecha_creacion= time(nullptr);
             mbr.mbr_dsk_signature=static_cast<int>(time(nullptr));
-            mbr.mbr_tamanio=size*1024;
+            mbr.mbr_tamano=size*1024;
             mbr.disk_fit= this->f[0];
             for (int j = 0; j < 4; ++j) {
                 mbr.mbr_partition[j].part_start=-1;
