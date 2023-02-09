@@ -55,6 +55,36 @@ build CMakeFiles/Proyecto.dir/main.cpp.o: CXX_COMPILER__Proyecto_Debug /home/die
   OBJECT_DIR = CMakeFiles/Proyecto.dir
   OBJECT_FILE_DIR = CMakeFiles/Proyecto.dir
 
+build CMakeFiles/Proyecto.dir/Disco.cpp.o: CXX_COMPILER__Proyecto_Debug /home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Proyecto/Disco.cpp || cmake_object_order_depends_target_Proyecto
+  DEP_FILE = CMakeFiles/Proyecto.dir/Disco.cpp.o.d
+  FLAGS = -g -fdiagnostics-color=always -std=gnu++17
+  OBJECT_DIR = CMakeFiles/Proyecto.dir
+  OBJECT_FILE_DIR = CMakeFiles/Proyecto.dir
+
+build CMakeFiles/Proyecto.dir/Analizador.cpp.o: CXX_COMPILER__Proyecto_Debug /home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Proyecto/Analizador.cpp || cmake_object_order_depends_target_Proyecto
+  DEP_FILE = CMakeFiles/Proyecto.dir/Analizador.cpp.o.d
+  FLAGS = -g -fdiagnostics-color=always -std=gnu++17
+  OBJECT_DIR = CMakeFiles/Proyecto.dir
+  OBJECT_FILE_DIR = CMakeFiles/Proyecto.dir
+
+build CMakeFiles/Proyecto.dir/Particion.cpp.o: CXX_COMPILER__Proyecto_Debug /home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Proyecto/Particion.cpp || cmake_object_order_depends_target_Proyecto
+  DEP_FILE = CMakeFiles/Proyecto.dir/Particion.cpp.o.d
+  FLAGS = -g -fdiagnostics-color=always -std=gnu++17
+  OBJECT_DIR = CMakeFiles/Proyecto.dir
+  OBJECT_FILE_DIR = CMakeFiles/Proyecto.dir
+
+build CMakeFiles/Proyecto.dir/Nodo_M.cpp.o: CXX_COMPILER__Proyecto_Debug /home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Proyecto/Nodo_M.cpp || cmake_object_order_depends_target_Proyecto
+  DEP_FILE = CMakeFiles/Proyecto.dir/Nodo_M.cpp.o.d
+  FLAGS = -g -fdiagnostics-color=always -std=gnu++17
+  OBJECT_DIR = CMakeFiles/Proyecto.dir
+  OBJECT_FILE_DIR = CMakeFiles/Proyecto.dir
+
+build CMakeFiles/Proyecto.dir/MountList.cpp.o: CXX_COMPILER__Proyecto_Debug /home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Proyecto/MountList.cpp || cmake_object_order_depends_target_Proyecto
+  DEP_FILE = CMakeFiles/Proyecto.dir/MountList.cpp.o.d
+  FLAGS = -g -fdiagnostics-color=always -std=gnu++17
+  OBJECT_DIR = CMakeFiles/Proyecto.dir
+  OBJECT_FILE_DIR = CMakeFiles/Proyecto.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target Proyecto
@@ -63,7 +93,7 @@ build CMakeFiles/Proyecto.dir/main.cpp.o: CXX_COMPILER__Proyecto_Debug /home/die
 #############################################
 # Link the executable Proyecto
 
-build Proyecto: CXX_EXECUTABLE_LINKER__Proyecto_Debug CMakeFiles/Proyecto.dir/main.cpp.o
+build Proyecto: CXX_EXECUTABLE_LINKER__Proyecto_Debug CMakeFiles/Proyecto.dir/main.cpp.o CMakeFiles/Proyecto.dir/Disco.cpp.o CMakeFiles/Proyecto.dir/Analizador.cpp.o CMakeFiles/Proyecto.dir/Particion.cpp.o CMakeFiles/Proyecto.dir/Nodo_M.cpp.o CMakeFiles/Proyecto.dir/MountList.cpp.o
   FLAGS = -g
   OBJECT_DIR = CMakeFiles/Proyecto.dir
   POST_BUILD = :
