@@ -10,6 +10,7 @@
 #include "Disco.h"
 #include "Particion.h"
 #include "Montar.h"
+#include "Rep.h"
 
 using namespace std;
 
@@ -25,6 +26,7 @@ public:
     Particion *particion;
     Montar *montar;
     MountList *mountList;
+    Rep *rep;
 
     void exec(string path);
 };

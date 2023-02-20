@@ -71,8 +71,8 @@ void Analizador::analizarEntrada() {
 
             //parte de verificar comandos
             while (this->entrada.length() > 0) {
-                if (strncmp(entradaMinus.c_str(), "-s", 2) == 0) {
-                    i = entradaMinus.find("->") + 2;
+                if (strncmp(entradaMinus.c_str(), ">size", 5) == 0) {
+                    i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
                     }
@@ -88,8 +88,8 @@ void Analizador::analizarEntrada() {
                     entradaMinus = entradaMinus.erase(0, i);
                     this->entrada = this->entrada.erase(0, i);
 
-                } else if (strncmp(entradaMinus.c_str(), "-f", 2) == 0) {
-                    i = entradaMinus.find("->") + 2;
+                } else if (strncmp(entradaMinus.c_str(), ">fit", 4) == 0) {
+                    i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
                     }
@@ -105,8 +105,8 @@ void Analizador::analizarEntrada() {
                     entradaMinus = entradaMinus.erase(0, i);
                     this->entrada = this->entrada.erase(0, i);
 
-                } else if (strncmp(entradaMinus.c_str(), "-u", 2) == 0) {
-                    i = entradaMinus.find("->") + 2;
+                } else if (strncmp(entradaMinus.c_str(), ">unit", 5) == 0) {
+                    i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
                     }
@@ -122,8 +122,8 @@ void Analizador::analizarEntrada() {
                     entradaMinus = entradaMinus.erase(0, i);
                     this->entrada = this->entrada.erase(0, i);
 
-                } else if (strncmp(entradaMinus.c_str(), "-path", 5) == 0) {
-                    i = entradaMinus.find("->") + 2;
+                } else if (strncmp(entradaMinus.c_str(), ">path", 5) == 0) {
+                    i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
                     }
@@ -174,8 +174,8 @@ void Analizador::analizarEntrada() {
 
             //parte de verificar comandos
             while (this->entrada.length() > 0) {
-                if (strncmp(entradaMinus.c_str(), "-path", 5) == 0) {
-                    i = entradaMinus.find("->") + 2;
+                if (strncmp(entradaMinus.c_str(), ">path", 5) == 0) {
+                    i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
                     }
@@ -226,8 +226,8 @@ void Analizador::analizarEntrada() {
             this->entrada = this->entrada.erase(0, i);
             //se ven que paremetros trae el comando
             while (this->entrada.length() > 0) {
-                if (strncmp(entradaMinus.c_str(), "-s", 2) == 0) {
-                    i = entradaMinus.find("->") + 2;
+                if (strncmp(entradaMinus.c_str(), ">size", 5) == 0) {
+                    i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
                     }
@@ -246,8 +246,8 @@ void Analizador::analizarEntrada() {
                     entradaMinus = entradaMinus.erase(0, i);
                     this->entrada = this->entrada.erase(0, i);
 
-                } else if (strncmp(entradaMinus.c_str(), "-u", 2) == 0) {
-                    i = entradaMinus.find("->") + 2;
+                } else if (strncmp(entradaMinus.c_str(), ">unit", 5) == 0) {
+                    i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
                     }
@@ -263,8 +263,8 @@ void Analizador::analizarEntrada() {
                     entradaMinus = entradaMinus.erase(0, i);
                     this->entrada = this->entrada.erase(0, i);
 
-                } else if (strncmp(entradaMinus.c_str(), "-path", 5) == 0) {
-                    i = entradaMinus.find("->") + 2;
+                } else if (strncmp(entradaMinus.c_str(), ">path", 5) == 0) {
+                    i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
                     }
@@ -294,8 +294,8 @@ void Analizador::analizarEntrada() {
                         this->entrada = this->entrada.erase(0, i);
                     }
 
-                } else if (strncmp(entradaMinus.c_str(), "-t", 2) == 0) {
-                    i = entradaMinus.find("->") + 2;
+                } else if (strncmp(entradaMinus.c_str(), ">type", 5) == 0) {
+                    i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
                     }
@@ -311,8 +311,8 @@ void Analizador::analizarEntrada() {
                     entradaMinus = entradaMinus.erase(0, i);
                     this->entrada = this->entrada.erase(0, i);
 
-                } else if (strncmp(entradaMinus.c_str(), "-f", 2) == 0) {
-                    i = entradaMinus.find("->") + 2;
+                } else if (strncmp(entradaMinus.c_str(), ">fit", 4) == 0) {
+                    i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
                     }
@@ -321,7 +321,7 @@ void Analizador::analizarEntrada() {
 
                     i = entradaMinus.find(" ");
                     string f = entradaMinus.substr(0, i);
-                    if (!(f == "bestfit" || f == "firstfit" || f == "worstfit")) {
+                    if (!(f == "bf" || f == "ff" || f == "wf")) {
                         cout << "OPCION INVALIDA PARA -f" << endl;
                         return;
                     }
@@ -332,8 +332,8 @@ void Analizador::analizarEntrada() {
                     entradaMinus = entradaMinus.erase(0, i);
                     this->entrada = this->entrada.erase(0, i);
 
-                } else if (strncmp(entradaMinus.c_str(), "-delete", 7) == 0) {
-                    i = entradaMinus.find("->") + 2;
+                } else if (strncmp(entradaMinus.c_str(), ">delete", 7) == 0) {
+                    i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
                     }
@@ -353,8 +353,8 @@ void Analizador::analizarEntrada() {
                     entradaMinus = entradaMinus.erase(0, i);
                     this->entrada = this->entrada.erase(0, i);
 
-                } else if (strncmp(entradaMinus.c_str(), "-name", 5) == 0) {
-                    i = entradaMinus.find("->") + 2;
+                } else if (strncmp(entradaMinus.c_str(), ">name", 5) == 0) {
+                    i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
                     }
@@ -384,8 +384,8 @@ void Analizador::analizarEntrada() {
                         this->entrada = this->entrada.erase(0, i);
                     }
 
-                } else if (strncmp(entradaMinus.c_str(), "-add", 4) == 0) {
-                    i = entradaMinus.find("->") + 2;
+                } else if (strncmp(entradaMinus.c_str(), ">add", 4) == 0) {
+                    i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
                     }
@@ -423,8 +423,8 @@ void Analizador::analizarEntrada() {
             entradaMinus = entradaMinus.erase(0, i);
             this->entrada = this->entrada.erase(0, i);
             while (entrada.length() > 0) {
-                if (strncmp(entradaMinus.c_str(), "-path", 5) == 0) {
-                    i = entradaMinus.find("->") + 2;
+                if (strncmp(entradaMinus.c_str(), ">path", 5) == 0) {
+                    i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
                     }
@@ -454,8 +454,8 @@ void Analizador::analizarEntrada() {
                         this->entrada = this->entrada.erase(0, i);
                     }
 
-                }else if (strncmp(entradaMinus.c_str(), "-name", 5) == 0) {
-                    i = entradaMinus.find("->") + 2;
+                }else if (strncmp(entradaMinus.c_str(), ">name", 5) == 0) {
+                    i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
                     }
@@ -506,8 +506,8 @@ void Analizador::analizarEntrada() {
             entradaMinus = entradaMinus.erase(0, i);
             this->entrada = this->entrada.erase(0, i);
             while (entrada.length() > 0) {
-                if (strncmp(entradaMinus.c_str(), "-id", 3) == 0) {
-                    i = entradaMinus.find("->") + 2;
+                if (strncmp(entradaMinus.c_str(), ">id", 3) == 0) {
+                    i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
                     }
@@ -548,10 +548,229 @@ void Analizador::analizarEntrada() {
             montar->unmount();
             this->mountList=montar->mountList;
         }
-        //EXEC
-        else if(strncmp(entradaMinus.c_str(), "exec", 4) == 0){
-            string path = "";
+        //MKFS
+        else if (strncmp(entradaMinus.c_str(), "mkfs", 4) == 0){
             int i = 4;
+            while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                i++;
+            }
+            entradaMinus = entradaMinus.erase(0, i);
+            this->entrada = this->entrada.erase(0, i);
+            while (entrada.length() > 0) {
+                if (strncmp(entradaMinus.c_str(), ">id", 3) == 0) {
+                    i = entradaMinus.find("=") + 1;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    if (entradaMinus[0] == '\"') {
+                        entradaMinus = entradaMinus.erase(0, 1);
+                        this->entrada = this->entrada.erase(0, 1);
+                        i = entradaMinus.find("\"");
+                        string id = this->entrada.substr(0, i);
+                        i += 2;
+                        this->montar->id = id;
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    } else {
+                        i = entradaMinus.find(" ");
+                        string id = this->entrada.substr(0, i);
+                        this->montar->id = id;
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    }
+                }else if (strncmp(entradaMinus.c_str(), ">type", 5) == 0) {
+                    i = entradaMinus.find("=") + 1;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    i = entradaMinus.find(" ");
+                    string type = entradaMinus.substr(0, i);
+                    this->montar->type = type;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                }else if (strncmp(entradaMinus.c_str(), ">fs", 3) == 0) {
+                    i = entradaMinus.find("=") + 1;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    i = entradaMinus.find(" ");
+                    string fs = entradaMinus.substr(0, i);
+                    this->montar->fs = fs;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                }else if (strncmp(entradaMinus.c_str(), "#", 1) == 0) {
+                    //No se opera, ya que entro un comentario
+                    break;
+                }else {
+                    cout << "ERROR EN EL COMANDO: " << entradaMinus << endl;
+                    return;
+                }
+            }
+
+            montar->mountList= this->mountList;
+            montar->mkfs();
+            this->mountList=montar->mountList;
+        }
+        //REP
+        else if (strncmp(entradaMinus.c_str(), "rep", 3) == 0) {
+            int i = 3;
+            while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                i++;
+            }
+            entradaMinus = entradaMinus.erase(0, i);
+            entrada = entrada.erase(0, i);
+
+            while (entrada.length() > 0) {
+                if (strncmp(entradaMinus.c_str(), ">path", 5) == 0) {
+                    i = entradaMinus.find("=") + 1;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    if (entradaMinus[0] == '\"') {
+                        entradaMinus = entradaMinus.erase(0, 1);
+                        this->entrada = this->entrada.erase(0, 1);
+                        i = entradaMinus.find("\"");
+                        string p = this->entrada.substr(0, i);
+                        i += 2;
+                        this->rep->path = p;
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    } else {
+                        i = entradaMinus.find(" ");
+                        string p = this->entrada.substr(0, i);
+                        this->rep->path = p;
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    }
+
+                }else if (strncmp(entradaMinus.c_str(), ">ruta", 5) == 0) {
+                    i = entradaMinus.find("=") + 1;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    if (entradaMinus[0] == '\"') {
+                        entradaMinus = entradaMinus.erase(0, 1);
+                        this->entrada = this->entrada.erase(0, 1);
+                        i = entradaMinus.find("\"");
+                        string r = this->entrada.substr(0, i);
+                        i += 2;
+                        this->rep->ruta = r;
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    } else {
+                        i = entradaMinus.find(" ");
+                        string r = this->entrada.substr(0, i);
+                        this->rep->ruta = r;
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    }
+
+                }else if (strncmp(entradaMinus.c_str(), ">name", 5) == 0) {
+                    i = entradaMinus.find("=") + 1;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    i = entradaMinus.find(" ");
+                    string n = entradaMinus.substr(0, i);
+                    this->rep->name = n;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+
+                }else if (strncmp(entradaMinus.c_str(), ">id", 3) == 0) {
+                    i = entradaMinus.find("=") + 1;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    if (entradaMinus[0] == '\"') {
+                        entradaMinus = entradaMinus.erase(0, 1);
+                        this->entrada = this->entrada.erase(0, 1);
+                        i = entradaMinus.find("\"");
+                        string id = this->entrada.substr(0, i);
+                        i += 2;
+                        this->rep->id = id;
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    } else {
+                        i = entradaMinus.find(" ");
+                        string id = this->entrada.substr(0, i);
+                        this->rep->id = id;
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    }
+
+                }else if (strncmp(entradaMinus.c_str(), "#", 1) == 0) {
+                    //No se opera, ya que entro un comentario
+                    break;
+                }else {
+                    cout << "ERROR EN EL COMANDO: " << entradaMinus << endl;
+                    return;
+                }
+            }
+            this->rep->mountList=this->mountList;
+            this->rep->generate();
+            this->mountList=this->rep->mountList;
+        }
+        //EXECUTE
+        else if(strncmp(entradaMinus.c_str(), "execute", 7) == 0){
+            string path = "";
+            int i = 7;
             while(entradaMinus[i] == ' ' && entradaMinus.length() > 0){
                 i++;
             }
@@ -560,8 +779,8 @@ void Analizador::analizarEntrada() {
 
             //Se comprueban que los parametros vengan correctos
             while(entrada.length() > 0){
-                if(strncmp(entradaMinus.c_str(), "-path", 5) == 0){
-                    i = entradaMinus.find("->") + 2;
+                if(strncmp(entradaMinus.c_str(), ">path", 5) == 0){
+                    i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
                     }
@@ -605,12 +824,19 @@ void Analizador::analizarEntrada() {
 }
 
 void Analizador::exec(string path) {
-    ifstream script(path.c_str());
+    ifstream file(path.c_str());
     string linea;
-    if (!script.is_open()){
-        cout << "NO EXISTE O NO SE PUEDE ABRIR EL ARCHIVOS. " << endl;
+    if (!file.is_open()){
+        cout << "NO EXISTE O NO SE PUEDE ABRIR EL ARCHIVO. " << endl;
     }
-    while(getline(script, linea)){
+
+    int i = path.find(".")+1;
+    path.erase(0,i);
+    if(strncmp(path.c_str(), "eea", 3) != 0){
+        cout << "EL ARCHIVO INGRESADO NO POSEE LA EXTENSION VALIDA .EEA" << endl;
+        return;
+    }
+    while(getline(file, linea)){
         if (linea != "\n" && linea.length() > 0){
             cout << "** "<<linea<<endl;
             Analizador *analizador = new Analizador(linea, this->mountList);

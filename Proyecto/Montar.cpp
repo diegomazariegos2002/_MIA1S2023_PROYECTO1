@@ -215,10 +215,11 @@ void Montar::mkfs() {
                 // si existe el disco
                 FILE *file;
                 if (file= fopen(nodoM->path.c_str(),"rb+")){
-                    TablaInodo inodo;
+                    //Todas las estructuras que vamos a formatear en el disco
+                    TablaInodo tablaInodo;
                     Journal journal;
-                    BloqueCarpeta carpeta;
-                    SuperBloque sb;
+                    BloqueCarpeta bloqueCarpeta;
+                    SuperBloque superBloque;
                     if (nodoM->type=='p'){
                         // ahora faltaría encontrar la particion montada en el mbr.
                         MBR mbr;
@@ -232,40 +233,265 @@ void Montar::mkfs() {
                                 break;
                             }
                         }
-                        int tamanio=mbr.mbr_partition[indiceParticion].part_s;
+                        int size=mbr.mbr_partition[indiceParticion].part_s;
                         double n=0;
+                        // formulas despejadas para encontrar n
                         if(this->fs=="3fs"){
-                            n=(tamanio- sizeof(SuperBloque))/(4+ sizeof(Journal) +sizeof(TablaInodo)+(3* sizeof(BloqueArchivo)));
-                            sb.s_filesystem_type=3;
+                            n= (size - sizeof(SuperBloque)) / (4 + sizeof(Journal) + sizeof(TablaInodo) + (3 * sizeof(BloqueArchivo)));
+                            superBloque.s_filesystem_type=3;
                         }else{ // por default 2fs
-                            n=(tamanio- sizeof(SuperBloque))/(4+ sizeof(TablaInodo)+(3* sizeof(BloqueArchivo)));
-                            sb.s_filesystem_type=2;
+                            n= (size - sizeof(SuperBloque)) / (4 + sizeof(TablaInodo) + (3 * sizeof(BloqueArchivo)));
+                            superBloque.s_filesystem_type=2;
                         }
 
+                        int numInodos=floor(n);
+                        int numBlocks= 3 * numInodos; // recordar que el número de bloques es el triple de inodos.
+                        int inode = numInodos * sizeof(TablaInodo);
+
+                        superBloque.s_inodes_count=numInodos;
+                        superBloque.s_blocks_count=numBlocks;
+                        superBloque.s_free_blocks_count= numBlocks - 2; //-2 debido a root y users
+                        superBloque.s_free_inodes_count= numInodos - 2; //-2 debido a root y users
+                        superBloque.s_mtime= time(nullptr);
+                        superBloque.s_umtime=0;
+                        superBloque.s_mnt_count=1; // recordar cuantos mounts han habido
+                        superBloque.s_magic=0xEF53;
+                        superBloque.s_inode_s= sizeof(TablaInodo);
+                        superBloque.s_block_s= sizeof(BloqueArchivo);
+                        superBloque.s_firts_ino=1;
+                        superBloque.s_first_blo=2;
+                        if (this->fs=="2fs"){
+                            superBloque.s_bm_inode_start = nodoM->start + sizeof(SuperBloque);
+                        }else{
+                            int journaling = numInodos * sizeof(Journal);
+                            superBloque.s_bm_inode_start = nodoM->start + sizeof(SuperBloque) + journaling;
+                        }
+                        superBloque.s_bm_block_start= superBloque.s_bm_inode_start + numInodos;
+                        superBloque.s_inode_start= superBloque.s_bm_block_start + numBlocks;
+                        superBloque.s_block_start= superBloque.s_inode_start + inode;
+
+                        tablaInodo.i_uid=1;
+                        tablaInodo.i_gid=1;
+                        tablaInodo.i_atime = time(nullptr);
+                        tablaInodo.i_ctime = time(nullptr);
+                        tablaInodo.i_mtime = time(nullptr);
+                        tablaInodo.i_perm=664;
+                        tablaInodo.i_block[0]=superBloque.s_block_start;
+                        for (int i = 1; i < 15; i++) {
+                            tablaInodo.i_block[i] = -1;
+                        }
+                        tablaInodo.i_type = '0'; // es de tipo carpeta por ser la carpeta madre
+                        tablaInodo.i_s=0;
+                        fseek(file, superBloque.s_inode_start, SEEK_SET);
+                        fwrite(&tablaInodo, sizeof(TablaInodo), 1, file);
+
+                        strcpy(bloqueCarpeta.b_content[0].b_name, ".");
+                        bloqueCarpeta.b_content[0].b_inodo=superBloque.s_inode_start;
+                        strcpy(bloqueCarpeta.b_content[1].b_name, "..");
+                        bloqueCarpeta.b_content[1].b_inodo = superBloque.s_inode_start;
+                        strcpy(bloqueCarpeta.b_content[2].b_name, "users.txt");
+                        bloqueCarpeta.b_content[2].b_inodo = superBloque.s_inode_start + sizeof(TablaInodo);
+                        strcpy(bloqueCarpeta.b_content[3].b_name, "");
+                        bloqueCarpeta.b_content[3].b_inodo = -1;
+                        fseek(file, superBloque.s_block_start, SEEK_SET);
+                        fwrite(&bloqueCarpeta, sizeof(BloqueCarpeta), 1, file);
+
+                        //Creando el archivo para administracion de usuarios
+                        TablaInodo inodoUsuarios;
+                        BloqueArchivo archivoUsuarios;
+
+                        inodoUsuarios.i_uid=1;
+                        inodoUsuarios.i_gid=1;
+                        inodoUsuarios.i_atime = time(nullptr);
+                        inodoUsuarios.i_ctime = time(nullptr);
+                        inodoUsuarios.i_mtime = time(nullptr);
+                        inodoUsuarios.i_perm=700; // solo se puede leer ningun usuario tiene permiso para modificarlo y así.
+                        inodoUsuarios.i_block[0]= superBloque.s_block_start + sizeof(BloqueCarpeta);
+                        for (int i = 1; i < 15; i++) {
+                            inodoUsuarios.i_block[i] = -1;
+                        }
+                        string s="1,G,root\n1,U,root,root,123\n";
+                        inodoUsuarios.i_s= sizeof(s);
+                        inodoUsuarios.i_type = '1';
+
+                        fseek(file, superBloque.s_inode_start + sizeof(TablaInodo), SEEK_SET);
+                        fwrite(&inodoUsuarios, sizeof(TablaInodo), 1, file);
+
+                        //utilizando memset para inicializar el bloque que almacenara el .txt
+                        memset(archivoUsuarios.b_content, '\0', sizeof(archivoUsuarios.b_content));
+                        strcpy(archivoUsuarios.b_content, "1,G,root\n1,U,root,root,123\n");
+                        fseek(file, superBloque.s_block_start + sizeof(BloqueCarpeta), SEEK_SET);
+                        fwrite(&archivoUsuarios, sizeof(BloqueArchivo), 1, file);
+
+                        // Cada acción en el 3fs se registra
+                        if (this->fs=="3fs"){
+                            journal.journal_Sig=-1;
+                            journal.journal_Tipo='0';
+                            journal.journal_Size=0;
+                            journal.journal_Fecha= time(nullptr);
+                            strcpy(journal.journal_Tipo_Operacion,"mkfs");
+                            journal.journal_Start=mbr.mbr_partition[indiceParticion].part_start + sizeof(SuperBloque);
+                        }
+
+                        mbr.mbr_partition[indiceParticion].part_status='2';
+                        fseek(file, 0, SEEK_SET);
+                        fwrite(&mbr, sizeof(MBR), 1, file);
+                        fseek(file, mbr.mbr_partition[indiceParticion].part_start, SEEK_SET);
+                        fwrite(&superBloque, sizeof(SuperBloque), 1, file);
+
+                        char ch0 = '0';
+                        char ch1 = '1';
+                        for (int i = 0; i < numInodos; i++) {
+                            fseek(file, superBloque.s_bm_inode_start + i, SEEK_SET);
+                            fwrite(&ch0, sizeof(char), 1, file);
+                        }
+                        fseek(file, superBloque.s_bm_inode_start, SEEK_SET);
+                        fwrite(&ch1, sizeof(char), 1, file);
+                        fwrite(&ch1, sizeof(char), 1, file);
+
+                        for (int i = 0; i < numBlocks; i++) {
+                            fseek(file, superBloque.s_bm_block_start + i, SEEK_SET);
+                            fwrite(&ch0, sizeof(char), 1, file);
+                        }
+                        fseek(file, superBloque.s_bm_block_start, SEEK_SET);
+                        fwrite(&ch1, sizeof(char), 1, file);
+                        fwrite(&ch1, sizeof(char), 1, file);
+
+                        if (this->fs=="3fs"){
+                            fseek(file, mbr.mbr_partition[indiceParticion].part_start + sizeof(SuperBloque), SEEK_SET);
+                            fwrite(&journal, sizeof(Journal), 1, file);
+                        }
+                        fclose(file);
+                        cout<<"PARTICION FORMATEADA CON EXITO"<<endl;
+
+                    }else if (nodoM->type=='l'){
+                        EBR ebr;
+                        fseek(file,nodoM->start,SEEK_SET);
+                        fread(&ebr, sizeof(EBR),1,file);
+
+                        int tamanio=ebr.part_s;
+                        double n=0;
+                        if (this->fs=="2fs"){
+                            n=(tamanio- sizeof(SuperBloque))/(4+ sizeof(TablaInodo)+(3* sizeof(BloqueArchivo)));
+                            superBloque.s_filesystem_type=2;
+                        }else{
+                            n=(tamanio- sizeof(SuperBloque))/(4+ sizeof(Journal) +sizeof(TablaInodo)+(3* sizeof(BloqueArchivo)));
+                            superBloque.s_filesystem_type=3;
+                        }
                         int numeroEstructuras=floor(n);
                         int nBloques=3*numeroEstructuras;
                         int inoding=numeroEstructuras* sizeof(TablaInodo);
 
+                        superBloque.s_inodes_count=numeroEstructuras;
+                        superBloque.s_blocks_count=nBloques;
+                        superBloque.s_free_blocks_count= nBloques - 2;
+                        superBloque.s_free_inodes_count= numeroEstructuras - 2;
+                        superBloque.s_mtime= time(nullptr);
+                        superBloque.s_umtime=0;
+                        superBloque.s_mnt_count=1;
+                        superBloque.s_magic=0xEF53;
+                        superBloque.s_inode_s= sizeof(TablaInodo);
+                        superBloque.s_block_s= sizeof(BloqueArchivo);
+                        superBloque.s_firts_ino=1;
+                        superBloque.s_first_blo=1;
+                        if (this->fs=="2fs"){
+                            superBloque.s_bm_inode_start = nodoM->start + sizeof(EBR) + sizeof(SuperBloque);
+                        }else{
+                            int journaling = numeroEstructuras * sizeof(Journal);
+                            superBloque.s_bm_inode_start = nodoM->start + sizeof(EBR) + sizeof(SuperBloque) + journaling;
+                        }
+                        superBloque.s_bm_block_start= superBloque.s_bm_inode_start + numeroEstructuras;
+                        superBloque.s_inode_start= superBloque.s_bm_block_start + nBloques;
+                        superBloque.s_block_start= superBloque.s_inode_start + inoding;
 
+                        tablaInodo.i_uid=1;
+                        tablaInodo.i_gid=1;
+                        tablaInodo.i_atime = time(nullptr);
+                        tablaInodo.i_ctime = time(nullptr);
+                        tablaInodo.i_mtime = time(nullptr);
+                        tablaInodo.i_perm=664;
+                        tablaInodo.i_block[0]=superBloque.s_block_start;
+                        for (int i = 1; i < 15; i++) {
+                            tablaInodo.i_block[i] = -1;
+                        }
+                        tablaInodo.i_type = '0';
+                        fseek(file, superBloque.s_inode_start, SEEK_SET);
+                        fwrite(&tablaInodo, sizeof(TablaInodo), 1, file);
 
+                        strcpy(bloqueCarpeta.b_content[0].b_name, ".");
+                        bloqueCarpeta.b_content[0].b_inodo=superBloque.s_inode_start;
+                        strcpy(bloqueCarpeta.b_content[1].b_name, "..");
+                        bloqueCarpeta.b_content[1].b_inodo = superBloque.s_inode_start;
+                        strcpy(bloqueCarpeta.b_content[2].b_name, "users.txt");
+                        bloqueCarpeta.b_content[2].b_inodo = superBloque.s_inode_start + sizeof(TablaInodo);
+                        strcpy(bloqueCarpeta.b_content[3].b_name, "");
+                        bloqueCarpeta.b_content[3].b_inodo = -1;
+                        fseek(file, superBloque.s_block_start, SEEK_SET);
+                        fwrite(&bloqueCarpeta, sizeof(BloqueCarpeta), 1, file);
 
+                        //Se crea users.txt
+                        TablaInodo inodoU;
+                        BloqueArchivo archivoU;
 
+                        inodoU.i_uid=1;
+                        inodoU.i_gid=1;
+                        inodoU.i_atime = time(nullptr);
+                        inodoU.i_ctime = time(nullptr);
+                        inodoU.i_mtime = time(nullptr);
+                        inodoU.i_perm=700;
+                        inodoU.i_block[0]= superBloque.s_block_start + sizeof(BloqueCarpeta);
+                        for (int i = 1; i < 15; i++) {
+                            inodoU.i_block[i] = -1;
+                        }
+                        inodoU.i_type = '1';
+                        fseek(file, superBloque.s_inode_start + sizeof(TablaInodo), SEEK_SET);
+                        fwrite(&inodoU, sizeof(TablaInodo), 1, file);
 
+                        memset(archivoU.b_content, '\0', sizeof(archivoU.b_content));
+                        strcpy(archivoU.b_content, "1,G,root,\n1,U,root,root,123,\n");
+                        fseek(file, superBloque.s_block_start + sizeof(BloqueCarpeta), SEEK_SET);
+                        fwrite(&archivoU, sizeof(BloqueArchivo), 1, file);
 
+                        //Se termina el proceso
+                        if (this->fs=="3fs"){
+                            journal.journal_Sig=-1;
+                            journal.journal_Tipo='0';
+                            journal.journal_Size=0;
+                            journal.journal_Fecha= time(nullptr);
+                            strcpy(journal.journal_Tipo_Operacion,"mkfs");
+                            journal.journal_Start=ebr.part_start + sizeof(SuperBloque) + sizeof(EBR);
+                        }
 
+                        ebr.part_status='2';
+                        fseek(file, nodoM->start, SEEK_SET);
+                        fwrite(&ebr, sizeof(EBR), 1, file);
+                        fseek(file, nodoM->start+ sizeof(EBR), SEEK_SET);
+                        fwrite(&superBloque, sizeof(SuperBloque), 1, file);
 
+                        char ch0 = '0';
+                        char ch1 = '1';
+                        for (int i = 0; i < numeroEstructuras; i++) {
+                            fseek(file, superBloque.s_bm_inode_start + i, SEEK_SET);
+                            fwrite(&ch0, sizeof(char), 1, file);
+                        }
+                        fseek(file, superBloque.s_bm_inode_start, SEEK_SET);
+                        fwrite(&ch1, sizeof(char), 1, file);
+                        fwrite(&ch1, sizeof(char), 1, file);
 
+                        for (int i = 0; i < nBloques; i++) {
+                            fseek(file, superBloque.s_bm_block_start + i, SEEK_SET);
+                            fwrite(&ch0, sizeof(char), 1, file);
+                        }
+                        fseek(file, superBloque.s_bm_block_start, SEEK_SET);
+                        fwrite(&ch1, sizeof(char), 1, file);
+                        fwrite(&ch1, sizeof(char), 1, file);
 
-
-
-
-
-
-
-
-
-
-                    }else if (nodoM->type=='l'){
+                        if (this->fs=="3fs"){
+                            fseek(file, ebr.part_start+ sizeof(EBR) + sizeof(SuperBloque), SEEK_SET);
+                            fwrite(&journal, sizeof(Journal), 1, file);
+                        }
+                        fclose(file);
+                        cout<<"PARTICION FORMATEADA CON EXITO"<<endl;
 
                     }
                 }else{

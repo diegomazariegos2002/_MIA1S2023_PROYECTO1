@@ -85,6 +85,18 @@ build CMakeFiles/Proyecto.dir/MountList.cpp.o: CXX_COMPILER__Proyecto_Debug /hom
   OBJECT_DIR = CMakeFiles/Proyecto.dir
   OBJECT_FILE_DIR = CMakeFiles/Proyecto.dir
 
+build CMakeFiles/Proyecto.dir/Montar.cpp.o: CXX_COMPILER__Proyecto_Debug /home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Proyecto/Montar.cpp || cmake_object_order_depends_target_Proyecto
+  DEP_FILE = CMakeFiles/Proyecto.dir/Montar.cpp.o.d
+  FLAGS = -g -fdiagnostics-color=always -std=gnu++17
+  OBJECT_DIR = CMakeFiles/Proyecto.dir
+  OBJECT_FILE_DIR = CMakeFiles/Proyecto.dir
+
+build CMakeFiles/Proyecto.dir/Rep.cpp.o: CXX_COMPILER__Proyecto_Debug /home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Proyecto/Rep.cpp || cmake_object_order_depends_target_Proyecto
+  DEP_FILE = CMakeFiles/Proyecto.dir/Rep.cpp.o.d
+  FLAGS = -g -fdiagnostics-color=always -std=gnu++17
+  OBJECT_DIR = CMakeFiles/Proyecto.dir
+  OBJECT_FILE_DIR = CMakeFiles/Proyecto.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target Proyecto
@@ -93,7 +105,7 @@ build CMakeFiles/Proyecto.dir/MountList.cpp.o: CXX_COMPILER__Proyecto_Debug /hom
 #############################################
 # Link the executable Proyecto
 
-build Proyecto: CXX_EXECUTABLE_LINKER__Proyecto_Debug CMakeFiles/Proyecto.dir/main.cpp.o CMakeFiles/Proyecto.dir/Disco.cpp.o CMakeFiles/Proyecto.dir/Analizador.cpp.o CMakeFiles/Proyecto.dir/Particion.cpp.o CMakeFiles/Proyecto.dir/Nodo_M.cpp.o CMakeFiles/Proyecto.dir/MountList.cpp.o
+build Proyecto: CXX_EXECUTABLE_LINKER__Proyecto_Debug CMakeFiles/Proyecto.dir/main.cpp.o CMakeFiles/Proyecto.dir/Disco.cpp.o CMakeFiles/Proyecto.dir/Analizador.cpp.o CMakeFiles/Proyecto.dir/Particion.cpp.o CMakeFiles/Proyecto.dir/Nodo_M.cpp.o CMakeFiles/Proyecto.dir/MountList.cpp.o CMakeFiles/Proyecto.dir/Montar.cpp.o CMakeFiles/Proyecto.dir/Rep.cpp.o
   FLAGS = -g
   OBJECT_DIR = CMakeFiles/Proyecto.dir
   POST_BUILD = :
