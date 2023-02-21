@@ -23,6 +23,7 @@ Analizador::Analizador(string entrada, MountList *mountList) {
     this->particion=new Particion();
     this->montar=new Montar();
     this->mountList=mountList;
+    this->rep=new Rep();
 }
 
 string Analizador::removeSpace(string entrada) {
