@@ -768,6 +768,12 @@ void Analizador::analizarEntrada() {
             this->rep->generate();
             this->mountList=this->rep->mountList;
         }
+        //PAUSE
+        else if (strncmp(entradaMinus.c_str(), "pause", 4) == 0){
+            cout<<"PRESIONE CUALQUIER TECLA PARA CONTINUAR"<<endl;
+            getchar();
+            return;
+        }
         //EXECUTE
         else if(strncmp(entradaMinus.c_str(), "execute", 7) == 0){
             string path = "";
@@ -820,6 +826,9 @@ void Analizador::analizarEntrada() {
             }
             exec(path);
             return;
+        }
+        else{
+            cout <<"COMANDO INVALIDO ASEGURESE DE ESCRIBIR BIEN TODO"<< endl;
         }
     }
 }
