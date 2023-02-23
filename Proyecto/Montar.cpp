@@ -246,7 +246,7 @@ void Montar::mkfs() {
 
                         int numInodos=floor(n);
                         int numBlocks= 3 * numInodos; // recordar que el número de bloques es el triple de inodos.
-                        int inode = numInodos * sizeof(TablaInodo);
+                        int espacioOcupado_Inodos = numInodos * sizeof(TablaInodo);
 
                         superBloque.s_inodes_count=numInodos;
                         superBloque.s_blocks_count=numBlocks;
@@ -258,8 +258,8 @@ void Montar::mkfs() {
                         superBloque.s_magic=0xEF53;
                         superBloque.s_inode_s= sizeof(TablaInodo);
                         superBloque.s_block_s= sizeof(BloqueArchivo);
-                        superBloque.s_firts_ino=1;
-                        superBloque.s_first_blo=2;
+                        superBloque.s_firts_ino=1; // Inodo root
+                        superBloque.s_first_blo=2; // solo usamos el bloque carpeta y el de users.txt
                         if (this->fs=="2fs"){
                             superBloque.s_bm_inode_start = nodoM->start + sizeof(SuperBloque);
                         }else{
@@ -268,58 +268,65 @@ void Montar::mkfs() {
                         }
                         superBloque.s_bm_block_start= superBloque.s_bm_inode_start + numInodos;
                         superBloque.s_inode_start= superBloque.s_bm_block_start + numBlocks;
-                        superBloque.s_block_start= superBloque.s_inode_start + inode;
+                        superBloque.s_block_start= superBloque.s_inode_start + espacioOcupado_Inodos;
 
+                        //Declarando primer Inodo para la raíz.
                         tablaInodo.i_uid=1;
                         tablaInodo.i_gid=1;
+                        tablaInodo.i_s=0;
                         tablaInodo.i_atime = time(nullptr);
                         tablaInodo.i_ctime = time(nullptr);
                         tablaInodo.i_mtime = time(nullptr);
-                        tablaInodo.i_perm=664;
                         tablaInodo.i_block[0]=superBloque.s_block_start;
                         for (int i = 1; i < 15; i++) {
                             tablaInodo.i_block[i] = -1;
                         }
                         tablaInodo.i_type = '0'; // es de tipo carpeta por ser la carpeta madre
-                        tablaInodo.i_s=0;
+                        tablaInodo.i_perm=664;
+
+                        //Escribir el primer inodo en la lista de Tablas de Inodos
                         fseek(file, superBloque.s_inode_start, SEEK_SET);
                         fwrite(&tablaInodo, sizeof(TablaInodo), 1, file);
 
+                        //Creando primer Bloque carpeta
                         strcpy(bloqueCarpeta.b_content[0].b_name, ".");
                         bloqueCarpeta.b_content[0].b_inodo=superBloque.s_inode_start;
                         strcpy(bloqueCarpeta.b_content[1].b_name, "..");
                         bloqueCarpeta.b_content[1].b_inodo = superBloque.s_inode_start;
                         strcpy(bloqueCarpeta.b_content[2].b_name, "users.txt");
-                        bloqueCarpeta.b_content[2].b_inodo = superBloque.s_inode_start + sizeof(TablaInodo);
+                        bloqueCarpeta.b_content[2].b_inodo = superBloque.s_inode_start + sizeof(TablaInodo); // Segundo Inodo utilizado para el archivo Users.txt
                         strcpy(bloqueCarpeta.b_content[3].b_name, "");
                         bloqueCarpeta.b_content[3].b_inodo = -1;
-                        fseek(file, superBloque.s_block_start, SEEK_SET);
+                        //Escribiendo el bloque
+                        fseek(file, superBloque.s_block_start, SEEK_SET); // Primer bloque utilizado, carpeta root
                         fwrite(&bloqueCarpeta, sizeof(BloqueCarpeta), 1, file);
 
                         //Creando el archivo para administracion de usuarios
-                        TablaInodo inodoUsuarios;
-                        BloqueArchivo archivoUsuarios;
+                        TablaInodo inodoUsuarios; // su Inodo respectivo
+                        BloqueArchivo archivoUsuarios; // su bloque respectivo
 
                         inodoUsuarios.i_uid=1;
                         inodoUsuarios.i_gid=1;
                         inodoUsuarios.i_atime = time(nullptr);
                         inodoUsuarios.i_ctime = time(nullptr);
                         inodoUsuarios.i_mtime = time(nullptr);
-                        inodoUsuarios.i_perm=700; // solo se puede leer ningun usuario tiene permiso para modificarlo y así.
-                        inodoUsuarios.i_block[0]= superBloque.s_block_start + sizeof(BloqueCarpeta);
+                        inodoUsuarios.i_perm=664; // Lectura y escritura (Owner y grupo), lectura (otros)
+                        inodoUsuarios.i_block[0]= superBloque.s_block_start + sizeof(BloqueCarpeta); // apunta al segundo Bloque (Bloque archivo Users.txt)
                         for (int i = 1; i < 15; i++) {
                             inodoUsuarios.i_block[i] = -1;
                         }
                         string s="1,G,root\n1,U,root,root,123\n";
                         inodoUsuarios.i_s= sizeof(s);
-                        inodoUsuarios.i_type = '1';
+                        inodoUsuarios.i_type = '1'; // tipo archivo
 
+                        // Segundo Inodo del archivo users.txt, segundo inodo
                         fseek(file, superBloque.s_inode_start + sizeof(TablaInodo), SEEK_SET);
                         fwrite(&inodoUsuarios, sizeof(TablaInodo), 1, file);
 
                         //utilizando memset para inicializar el bloque que almacenara el .txt
                         memset(archivoUsuarios.b_content, '\0', sizeof(archivoUsuarios.b_content));
                         strcpy(archivoUsuarios.b_content, "1,G,root\n1,U,root,root,123\n");
+                        //escribiendo el bloque de archivos (segundo bloque)
                         fseek(file, superBloque.s_block_start + sizeof(BloqueCarpeta), SEEK_SET);
                         fwrite(&archivoUsuarios, sizeof(BloqueArchivo), 1, file);
 
@@ -333,12 +340,14 @@ void Montar::mkfs() {
                             journal.journal_Start=mbr.mbr_partition[indiceParticion].part_start + sizeof(SuperBloque);
                         }
 
+                        // Actualización de datos
                         mbr.mbr_partition[indiceParticion].part_status='2';
                         fseek(file, 0, SEEK_SET);
                         fwrite(&mbr, sizeof(MBR), 1, file);
                         fseek(file, mbr.mbr_partition[indiceParticion].part_start, SEEK_SET);
                         fwrite(&superBloque, sizeof(SuperBloque), 1, file);
 
+                        // Escribiendo en el bitmap de Inodos.
                         char ch0 = '0';
                         char ch1 = '1';
                         for (int i = 0; i < numInodos; i++) {
@@ -349,6 +358,7 @@ void Montar::mkfs() {
                         fwrite(&ch1, sizeof(char), 1, file);
                         fwrite(&ch1, sizeof(char), 1, file);
 
+                        // Escribiendo en el BitMap de Bloques
                         for (int i = 0; i < numBlocks; i++) {
                             fseek(file, superBloque.s_bm_block_start + i, SEEK_SET);
                             fwrite(&ch0, sizeof(char), 1, file);
@@ -357,6 +367,7 @@ void Montar::mkfs() {
                         fwrite(&ch1, sizeof(char), 1, file);
                         fwrite(&ch1, sizeof(char), 1, file);
 
+                        //Actualización de Journal en el Disco
                         if (this->fs=="3fs"){
                             fseek(file, mbr.mbr_partition[indiceParticion].part_start + sizeof(SuperBloque), SEEK_SET);
                             fwrite(&journal, sizeof(Journal), 1, file);
@@ -365,6 +376,7 @@ void Montar::mkfs() {
                         cout<<"PARTICION FORMATEADA CON EXITO"<<endl;
 
                     }else if (nodoM->type=='l'){
+                        // Lo mismo que con la partición primara solo que aquí no es con el MBR sino con el EBR
                         EBR ebr;
                         fseek(file,nodoM->start,SEEK_SET);
                         fread(&ebr, sizeof(EBR),1,file);
