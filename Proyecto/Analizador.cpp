@@ -7,7 +7,7 @@
 #include "Analizador.h"
 #include "cstring"
 
-Analizador::Analizador(string entrada, MountList *mountList) {
+Analizador::Analizador(string entrada, MountList *mountList, Usuario *usuario) {
     //Quitando simbolos de saltos de líneas y esas cosas en la entrada
     while ((entrada.find("\t") != string::npos) || (entrada.find("\r") != string::npos) || (entrada.find("\n") != string::npos)){
         entrada= removeSpace(entrada);
@@ -24,6 +24,8 @@ Analizador::Analizador(string entrada, MountList *mountList) {
     this->montar=new Montar();
     this->mountList=mountList;
     this->rep=new Rep();
+    this->usuario=usuario;
+    this->adminU=new AdminUsuarios();
 }
 
 string Analizador::removeSpace(string entrada) {
@@ -588,7 +590,8 @@ void Analizador::analizarEntrada() {
                         entradaMinus = entradaMinus.erase(0, i);
                         this->entrada = this->entrada.erase(0, i);
                     }
-                }else if (strncmp(entradaMinus.c_str(), ">type", 5) == 0) {
+                }
+                else if (strncmp(entradaMinus.c_str(), ">type", 5) == 0) {
                     i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
@@ -605,7 +608,8 @@ void Analizador::analizarEntrada() {
                     entradaMinus = entradaMinus.erase(0, i);
                     this->entrada = this->entrada.erase(0, i);
 
-                }else if (strncmp(entradaMinus.c_str(), ">fs", 3) == 0) {
+                }
+                else if (strncmp(entradaMinus.c_str(), ">fs", 3) == 0) {
                     i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
@@ -622,10 +626,12 @@ void Analizador::analizarEntrada() {
                     entradaMinus = entradaMinus.erase(0, i);
                     this->entrada = this->entrada.erase(0, i);
 
-                }else if (strncmp(entradaMinus.c_str(), "#", 1) == 0) {
+                }
+                else if (strncmp(entradaMinus.c_str(), "#", 1) == 0) {
                     //No se opera, ya que entro un comentario
                     break;
-                }else {
+                }
+                else {
                     cout << "ERROR EN EL COMANDO: " << entradaMinus << endl;
                     return;
                 }
@@ -774,6 +780,110 @@ void Analizador::analizarEntrada() {
             getchar();
             return;
         }
+        //LOGIN
+        else if (strncmp(entradaMinus.c_str(), "login", 5) == 0) {
+            int i = 5;
+            while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                i++;
+            }
+            entradaMinus = entradaMinus.erase(0, i);
+            entrada = entrada.erase(0, i);
+
+            while (entrada.length() > 0) {
+                if (strncmp(entradaMinus.c_str(), ">usr", 4) == 0){
+                    i = entradaMinus.find("=") + 1;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    i = entradaMinus.find(" ");
+                    string name = this->entrada.substr(0, i);
+                    this->adminU->name = name;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                }else if (strncmp(entradaMinus.c_str(), ">pass", 5) == 0){
+                    i = entradaMinus.find("=") + 1;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    i = entradaMinus.find(" ");
+                    string pass = this->entrada.substr(0, i);
+                    this->adminU->pass = pass;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                }else if (strncmp(entradaMinus.c_str(), ">id", 3) == 0){
+                    i = entradaMinus.find("=") + 1;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    i = entradaMinus.find(" ");
+                    string id = this->entrada.substr(0, i);
+                    this->adminU->id = id;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                }else if (strncmp(entradaMinus.c_str(), "#", 1) == 0) {
+                    //Comentario
+                    break;
+                }else {
+                    cout << "ERROR EN EL COMANDO: " << entradaMinus << endl;
+                    return;
+                }
+            }
+
+            adminU->usuario=this->usuario;
+            adminU->mountList= this->mountList;
+            adminU->login();
+            this->mountList=adminU->mountList;
+            this->usuario=adminU->usuario;
+        }
+        //LOGOUT
+        else if (strncmp(entradaMinus.c_str(), "logout", 6) == 0) {
+            int i = 6;
+            while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                i++;
+            }
+            entradaMinus = entradaMinus.erase(0, i);
+            entrada = entrada.erase(0, i);
+
+            while (entrada.length() > 0) {
+                if (strncmp(entradaMinus.c_str(), "#", 1) == 0) {
+                    //No se opera, ya que entro un comentario
+                    break;
+                }else {
+                    cout << "ERROR EN EL COMANDO: " << entradaMinus << endl;
+                    return;
+                }
+            }
+
+            adminU->usuario=this->usuario;
+            adminU->mountList= this->mountList;
+            adminU->logout();
+            this->usuario=adminU->usuario;
+            this->mountList=adminU->mountList;
+        }
+        //MKGRP
+
+
         //EXECUTE
         else if(strncmp(entradaMinus.c_str(), "execute", 7) == 0){
             string path = "";
@@ -848,9 +958,11 @@ void Analizador::exec(string path) {
     }
     while(getline(file, linea)){
         if (linea != "\n" && linea.length() > 0){
-            cout << "** "<<linea<<endl;
-            Analizador *analizador = new Analizador(linea, this->mountList);
+            cout << "// "<<linea<<endl;
+            Analizador *analizador = new Analizador(linea, this->mountList, this->usuario);
             analizador->analizarEntrada();
+            this->mountList=analizador->mountList;
+            this->usuario=analizador->usuario;
         }
     }
 }

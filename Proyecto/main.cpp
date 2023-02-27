@@ -6,6 +6,12 @@ using namespace std;
 
 int main() {
     MountList *mountList=new MountList();
+    Usuario *usuario=new Usuario();
+    usuario->idG=0;
+    usuario->idU=0;
+    usuario->idMount=" ";
+    usuario->nombreU=" ";
+
     printf("Bienvenido add la consola!!! \n");
     while (true) {
         std::cout << ">> ";
@@ -19,10 +25,11 @@ int main() {
             break;
         }
 
-        Analizador *analizador = new Analizador(lectura, mountList);
+        Analizador *analizador = new Analizador(lectura, mountList, usuario);
         analizador->analizarEntrada();
         //para mantener guardadas las particiones montadas en "RAM", después de ejecutar cada comando.
         mountList = analizador->mountList;
+        usuario=analizador->usuario;
         std::printf("\n");
     }
     return 0;

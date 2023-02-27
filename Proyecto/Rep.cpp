@@ -277,13 +277,13 @@ void Rep::disk() {
                     if (i==4){
                         float porcentaje=(((tamanioT-inicio)*1.0)/tamanioT)*(100.0);
                         fprintf(dot, ("<td rowspan=\"2\">LIBRE <br/>"+ to_string(lround(porcentaje))+"</td>").c_str());
-                        goto t0;
+                        goto salto1;
                     }
                     i--;
                 }
                 i++;
             }
-            t0:
+            salto1:
             fprintf(dot,"</tr></table>>];\n");
             fprintf(dot,"}");
             fclose(dot);
@@ -291,7 +291,8 @@ void Rep::disk() {
             string command="sudo -S  dot -T"+this->extension+" rep.dot -o \""+ this->path+"\"";
             system(command.c_str());
             cout<<"SE GENERO EL REPORTE DISK"<<endl;
-        }else{
+        }
+        else{
             cout <<"DISCO INEXISTENTE"<<endl;
             return;
         }
