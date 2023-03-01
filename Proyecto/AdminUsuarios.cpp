@@ -50,7 +50,7 @@ void AdminUsuarios::login() {
                 fread(&this->sb, sizeof(SuperBloque),1,this->file);
             }
 
-            string contenido= this->getContenido(this->sb.s_inode_start + sizeof(TablaInodo));
+            string contenido= this->getContenido(this->sb.s_inode_start + sizeof(TablaInodo)); // segundo inodo el de users.txt
             vector<string>listaUsuarios= this->getUsers(contenido);
             vector<string> camposUsuario;
             vector<string>listaGrupos= this->getGrupos(contenido);
@@ -245,21 +245,697 @@ vector<string> AdminUsuarios::getCampos(std::string entrada) {
     return campos;
 }
 
-
-string AdminUsuarios::getGID(vector<string> grupos) {
-    return std::string();
-}
-
 string AdminUsuarios::getUID(vector<string> usuarios) {
     return std::string();
 }
 
-vector<string> AdminUsuarios::splitContent(string cadena) {
-    return vector<string>();
+// Array de bloques según una cadena.
+vector<string> AdminUsuarios::getArrayBlks(string cadena) {
+    vector<string> arrayBlks;
+    string aux="",linea;
+    int contador=0;
+    for (int i = 0; i < cadena.length(); ++i) {
+        if (aux.length()==64){
+            arrayBlks.push_back(aux);
+            aux="";
+            contador=0;
+        }
+        if (contador < 64){
+            aux+=cadena[i];
+            contador++;
+        }
+    }
+    if (contador != 0) {
+        arrayBlks.push_back(aux);
+    }
+    return arrayBlks;
 }
 
 void AdminUsuarios::mkgrp() {
+    if (this->usuario->idU==1 && this->usuario->idG==1){
+        if (this->name==" "){
+            cout<<"EL NOMBRE DE GRUPO ES UN PARAMETRO OBLIGATORIO Y NO PUEDE IR VACIO";
+            return;
+        }
+        Nodo_M *nodo=this->mountList->buscar(this->usuario->idMount);
+        if (nodo!=NULL) {
+            if ((this->file= fopen(nodo->path.c_str(),"rb+"))){
+                if (nodo->type=='p'){
+                    fseek(this->file,nodo->start,SEEK_SET);
+                    fread(&this->sb, sizeof(SuperBloque),1,this->file);
+                }else if (nodo->type=='l'){
+                    fseek(this->file,nodo->start+ sizeof(EBR),SEEK_SET);
+                    fread(&this->sb, sizeof(SuperBloque),1,this->file);
+                }
 
+                string grupoNuevo="";
+                string contenido=this->getContenido(this->sb.s_inode_start + sizeof(TablaInodo)); //Segundo Inodo (inodo users.txt)
+                int blksActuales= this->getArrayBlks(contenido).size(); // obteniendo el número de bloques utilizados en ese inodo
+                vector<string>listaGrupos=this->getGrupos(contenido);
+
+                if (!this->verificarGrupoExistencia(listaGrupos, this->name)){
+                    grupoNuevo= generarNuevoIdGrupos(listaGrupos) + ",G," + this->name + "\n";
+                    contenido+=grupoNuevo;
+                    vector<string> usersBlks= this->getArrayBlks(contenido);
+                    int blksActualizado=usersBlks.size();
+
+                    if ((blksActualizado - blksActuales) > this->sb.s_free_blocks_count){ // Si todavía quedan bloques libres disponibles en el sistema
+                        cout << "NO EXISTEN BLOQUES LIBRES EN EL SISTEMA" << endl;
+                        return;
+                    }
+
+                    if (usersBlks.size() > 4380){ // el 4380 es el número maximo de bloques por inodo
+                        cout<<"SE HA ALCANZADO EL NUMERO MAXIMO DE BLOQUES EN EL INODO";
+                        return;
+                    }
+
+                    //Posicionar nuevo bloque en el BitMap de Bloques
+                    int bitMapBlks_Start = this->sb.s_bm_block_start;
+                    int bitMapBlks_End = bitMapBlks_Start + this->sb.s_block_start;
+                    int blksLibresSeguidos = 0;
+                    int inicioBM = -1;
+                    int inicioB = -1;
+                    int contadorA = 0;
+                    char bit;
+                    if ((blksActualizado - blksActuales) > 0){
+                        for (int i = bitMapBlks_Start; i < bitMapBlks_End; ++i) { // Recorrer el BitMap
+                            fseek(this->file, i, SEEK_SET); // leer la posicion
+                            fread(&bit, sizeof(char), 1, this->file);
+
+                            if (bit == '1') {// Bloque no disponible
+                                blksLibresSeguidos = 0;
+                                inicioBM = -1;
+                                inicioB = -1;
+                            }
+                            else {// Bloque disponible
+                                if (blksLibresSeguidos == 0) {
+                                    inicioBM = i;
+                                    inicioB = contadorA;
+                                }
+                                blksLibresSeguidos++;
+                            }
+
+                            if (blksLibresSeguidos >= (blksActualizado - blksActuales)) break;
+                            contadorA++;
+                        }
+
+                        // Validar que si se encontro espacio libre
+                        if (inicioBM==-1 || (blksLibresSeguidos != (blksActualizado - blksActuales))){
+                            cout << "NO EXISTEN LOS SUFICIENTES BLOQUES O BLOQUES SEGUIDOS EN EL SISTEMA PARA ACTUALIZAR EL ARCHIVO" << endl;
+                            return;
+                        }
+
+                        for (int i = inicioBM; i < (inicioBM+blksLibresSeguidos); ++i) {
+                            char uno='1';
+                            fseek(this->file,i,SEEK_SET);
+                            fwrite(&uno, sizeof(char),1,this->file);
+
+                        }
+                        this->sb.s_free_blocks_count-=blksLibresSeguidos; // restar la cantidad de bloques disponibles
+
+                        //ACTUALIZAR PRIMER BLOQUE DISPONIBLE
+                        int primeraPosicionDisponible_BitMap_Blks = 0;
+                        for (int k = bitMapBlks_Start; k < bitMapBlks_End; k++) {
+                            fseek(this->file, k, SEEK_SET);
+                            fread(&bit, sizeof(char), 1, this->file);
+                            if (bit == '0') break;
+                            primeraPosicionDisponible_BitMap_Blks++;
+                        }
+                        this->sb.s_first_blo = primeraPosicionDisponible_BitMap_Blks;
+                    }
+
+                    // ACTUALIZAR DATOS del inodo 2 (Inodo Users.txt)
+                    TablaInodo inodo;
+                    int direccionInodo= this->sb.s_inode_start + sizeof(TablaInodo);
+                    fseek(this->file, direccionInodo, SEEK_SET);
+                    fread(&inodo, sizeof(TablaInodo),1,this->file);
+
+                    int size = 0;
+                    for (int tm = 0; tm < usersBlks.size(); tm++) {
+                        size += usersBlks[tm].length();
+                    }
+                    inodo.i_s= size;
+                    inodo.i_mtime = time(nullptr);
+
+                    int j=0,cont=0;
+                    while (j < usersBlks.size()){
+                        cambioCont=false;
+                        inodo=this->agregarArchivo(usersBlks[j], inodo, j, (inicioB + cont));
+                        if (cambioCont){
+                            cont++;
+                        }
+                        j++;
+                    }
+
+                    fseek(this->file, direccionInodo, SEEK_SET);
+                    fwrite(&inodo, sizeof(TablaInodo),1,this->file);
+                    if (nodo->type=='p'){
+                        fseek(this->file,nodo->start,SEEK_SET);
+                        fwrite(&this->sb, sizeof(SuperBloque),1,this->file);
+                    }else if (nodo->type=='l'){
+                        fseek(this->file,nodo->start+ sizeof(EBR),SEEK_SET);
+                        fwrite(&this->sb, sizeof(SuperBloque),1,this->file);
+                    }
+
+                    if (this->sb.s_filesystem_type==3){
+                        this->escribirJorunal("mkgrp", '1', "users.txt", grupoNuevo, nodo);
+                    }
+
+                    fclose(this->file);
+                    cout << "SE GUARDO EL GRUPO "<<this->name<< endl;
+
+                }else{
+                    cout<<"IMPOSIBLE REALIZAR ESTO, EL GRUPO INDICADO YA EXISTE"<<endl;
+                }
+            }else{
+                cout <<"NO EXISTE UN DISCO EN LA RUTA ESPECIFICADA"<<endl;
+                return;
+            }
+        }else{
+            cout <<"MONTURA CON EL ID: "<< this->usuario->idMount<< " NO ENCONTRADO" <<endl;
+            return;
+        }
+    }else{
+        cout <<"NECESITA SER ADMIN PARA ESTO :D"<<endl;
+    }
+}
+
+TablaInodo AdminUsuarios::agregarArchivo(std::string cadena, TablaInodo inodo, int j, int aux) {
+    TablaInodo tablaInodo;
+    tablaInodo.i_type = 'F';
+    BloqueApuntador puntero1, puntero2, puntero3, nuevoPuntero1, nuevoPuntero2, nuevoPuntero3;
+    for (int i = 0; i < 15; ++i) {
+        if (inodo.i_block[i]!=-1 && i<12 && i==j){
+            BloqueArchivo archivo;
+            fseek(this->file,inodo.i_block[i],SEEK_SET);
+            fread(&archivo, sizeof(BloqueArchivo),1,this->file);
+            strcpy(archivo.b_content, cadena.c_str());
+            fseek(this->file,inodo.i_block[i],SEEK_SET);
+            fwrite(&archivo, sizeof(BloqueArchivo),1,this->file);
+            return inodo;
+        }
+        else if (inodo.i_block[i]==-1 && i<12 && aux!=-1){
+            BloqueArchivo archivo;
+            int seek=this->sb.s_block_start+(aux* sizeof(BloqueArchivo));
+            strcpy(archivo.b_content, cadena.c_str());
+            fseek(this->file, seek, SEEK_SET);
+            fwrite(&archivo, sizeof(BloqueArchivo), 1, this->file);
+            inodo.i_block[i]=seek;
+            this->cambioCont=true;
+            return inodo;
+        }
+        else if (i == 12 && inodo.i_block[i] == -1 && aux!=-1) {
+            if (this->sb.s_free_blocks_count > 0) {
+                int bit2 = 0;
+                char bit;
+                char one = '1';
+                int start = this->sb.s_bm_block_start;
+                int end = start + this->sb.s_blocks_count;
+                for (int i = start; i < end; i++) {
+                    fseek(this->file, i, SEEK_SET);
+                    fread(&bit, sizeof(char), 1, this->file);
+                    if (bit == '0') {
+                        fseek(this->file, i, SEEK_SET);
+                        fwrite(&one, sizeof(char), 1, this->file);
+                        break;
+                    }
+                    bit2++;
+                }
+
+                inodo.i_block[i] = this->sb.s_block_start + (bit2 * sizeof(BloqueApuntador));
+
+                BloqueArchivo archivo;
+                int posBloque=this->sb.s_block_start+(aux* sizeof(BloqueArchivo));
+                strcpy(archivo.b_content, cadena.c_str());
+                fseek(this->file, posBloque, SEEK_SET);
+                fwrite(&archivo, sizeof(BloqueArchivo), 1, this->file);
+                nuevoPuntero1.b_pointers[0] = posBloque;
+                this->cambioCont=true;
+                for (int j = 1; j < 16; j++) {
+                    nuevoPuntero1.b_pointers[j] = -1;
+                }
+                fseek(this->file, inodo.i_block[i], SEEK_SET);
+                fwrite(&nuevoPuntero1, sizeof(BloqueApuntador), 1, this->file);
+
+                bit2 = 0;
+                for (int bmI = start; bmI < end; bmI++) {
+                    fseek(this->file, bmI, SEEK_SET);
+                    fread(&bit, sizeof(char), 1, this->file);
+                    if (bit == '0') break;
+                    bit2++;
+                }
+                this->sb.s_free_blocks_count -= 1;
+                this->sb.s_first_blo = bit2;
+                return inodo;
+            } else {
+                cout << "NO HAY SUFICIENTES BLOQUES" << endl;
+                return tablaInodo;
+            }
+        }
+        else if (i == 12 && inodo.i_block[i] != -1) {
+            fseek(this->file, inodo.i_block[i], SEEK_SET);
+            fread(&puntero1, sizeof(BloqueApuntador), 1, this->file);
+            for (int p1 = 0; p1 < 16; p1++) {
+                if (puntero1.b_pointers[p1] == -1 && aux != -1) {
+                    BloqueArchivo archivo;
+                    int posBloque=this->sb.s_block_start+(aux* sizeof(BloqueArchivo));
+                    strcpy(archivo.b_content, cadena.c_str());
+                    fseek(this->file, posBloque, SEEK_SET);
+                    fwrite(&archivo, sizeof(BloqueArchivo), 1, this->file);
+                    this->cambioCont=true;
+                    puntero1.b_pointers[p1] = posBloque;
+                    fseek(this->file, inodo.i_block[i], SEEK_SET);
+                    fwrite(&puntero1, sizeof(BloqueApuntador), 1, this->file);
+                    return inodo;
+                } else if ((puntero1.b_pointers[p1] != -1) && (j == (12 + p1))){
+                    BloqueArchivo archivo;
+                    fseek(this->file, puntero1.b_pointers[p1], SEEK_SET);
+                    fread(&archivo, sizeof(BloqueArchivo),1,this->file);
+                    strcpy(archivo.b_content, cadena.c_str());
+                    fseek(this->file, puntero1.b_pointers[p1], SEEK_SET);
+                    fwrite(&archivo, sizeof(BloqueArchivo),1,this->file);
+                    return inodo;
+                }
+            }
+        }
+        else if (i == 13 && inodo.i_block[i] == -1 && aux!=-1) {
+            if (this->sb.s_free_blocks_count > 1) {
+                //Primer apuntador
+                int bit2 = 0;
+                char bit;
+                char one = '1';
+                int start = this->sb.s_bm_block_start;
+                int end = start + this->sb.s_blocks_count;
+                for (int i = start; i < end; i++) {
+                    fseek(this->file, i, SEEK_SET);
+                    fread(&bit, sizeof(char), 1, this->file);
+                    if (bit == '0') {
+                        fseek(this->file, i, SEEK_SET);
+                        fwrite(&one, sizeof(char), 1, this->file);
+                        break;
+                    }
+                    bit2++;
+                }
+
+                inodo.i_block[i] = this->sb.s_block_start + (bit2 * sizeof(BloqueApuntador));
+
+                //Segundo apuntador
+                bit2=0;
+                for (int i = start; i < end; i++) {
+                    fseek(this->file, i, SEEK_SET);
+                    fread(&bit, sizeof(char), 1, this->file);
+                    if (bit == '0') {
+                        fseek(this->file, i, SEEK_SET);
+                        fwrite(&one, sizeof(char), 1, this->file);
+                        break;
+                    }
+                    bit2++;
+                }
+
+                nuevoPuntero1.b_pointers[0] = this->sb.s_block_start + (bit2 * sizeof(BloqueApuntador));
+
+                BloqueArchivo archivo;
+                int posBloque=this->sb.s_block_start+(aux* sizeof(BloqueArchivo));
+                strcpy(archivo.b_content, cadena.c_str());
+                fseek(this->file, posBloque, SEEK_SET);
+                fwrite(&archivo, sizeof(BloqueArchivo), 1, this->file);
+                this->cambioCont=true;
+                nuevoPuntero2.b_pointers[0] = posBloque;
+
+                for (int j = 1; j < 16; j++) {
+                    nuevoPuntero1.b_pointers[j] = -1;
+                    nuevoPuntero2.b_pointers[j] = -1;
+                }
+                fseek(this->file, inodo.i_block[i], SEEK_SET);
+                fwrite(&nuevoPuntero1, sizeof(BloqueApuntador), 1, this->file);
+                fseek(this->file, nuevoPuntero1.b_pointers[0], SEEK_SET);
+                fwrite(&nuevoPuntero2, sizeof(BloqueApuntador), 1, this->file);
+
+                bit2 = 0;
+                for (int bmI = start; bmI < end; bmI++) {
+                    fseek(this->file, bmI, SEEK_SET);
+                    fread(&bit, sizeof(char), 1, this->file);
+                    if (bit == '0') break;
+                    bit2++;
+                }
+                this->sb.s_free_blocks_count -= 2;
+                this->sb.s_first_blo = bit2;
+                return inodo;
+            } else {
+                cout << "NO HAY SUFICIENTES BLOQUES" << endl;
+                return tablaInodo;
+            }
+
+        }
+        else if (i == 13 && inodo.i_block[i] != -1) {
+            fseek(this->file, inodo.i_block[i], SEEK_SET);
+            fread(&puntero1, sizeof(BloqueApuntador), 1, this->file);
+            for (int p1 = 0; p1 < 16; p1++) {
+                if (puntero1.b_pointers[p1] != -1){
+                    fseek(this->file, puntero1.b_pointers[p1], SEEK_SET);
+                    fread(&puntero2, sizeof(BloqueApuntador), 1, this->file);
+                    for (int p2 = 0; p2 < 16; p2++) {
+                        if (puntero2.b_pointers[p2] == -1 && aux != -1) {
+                            BloqueArchivo archivo;
+                            int posBloque=this->sb.s_block_start+(aux* sizeof(BloqueArchivo));
+                            strcpy(archivo.b_content, cadena.c_str());
+                            fseek(this->file, posBloque, SEEK_SET);
+                            fwrite(&archivo, sizeof(BloqueArchivo), 1, this->file);
+                            this->cambioCont=true;
+                            puntero2.b_pointers[p2] = posBloque;
+                            fseek(this->file, puntero1.b_pointers[p1], SEEK_SET);
+                            fwrite(&puntero2, sizeof(BloqueApuntador), 1, this->file);
+                            return inodo;
+                        } else if ((puntero2.b_pointers[p2] != -1) && (j == (28 + p2 + (16 * p1)))){
+                            BloqueArchivo archivo;
+                            fseek(this->file, puntero2.b_pointers[p2], SEEK_SET);
+                            fread(&archivo, sizeof(BloqueArchivo),1,this->file);
+                            strcpy(archivo.b_content, cadena.c_str());
+                            fseek(this->file, puntero2.b_pointers[p2], SEEK_SET);
+                            fwrite(&archivo, sizeof(BloqueArchivo),1,this->file);
+                            return inodo;
+                        }
+                    }
+                }else if (puntero1.b_pointers[p1] == -1 && aux != -1) {
+                    if (this->sb.s_free_blocks_count > 0) {
+                        puntero1.b_pointers[p1] = this->sb.s_block_start + (this->sb.s_first_blo * sizeof(BloqueApuntador));
+
+                        BloqueArchivo archivo;
+                        int posBloque=this->sb.s_block_start+(aux* sizeof(BloqueArchivo));
+                        strcpy(archivo.b_content, cadena.c_str());
+                        fseek(this->file, posBloque, SEEK_SET);
+                        fwrite(&archivo, sizeof(BloqueArchivo), 1, this->file);
+                        this->cambioCont=true;
+                        nuevoPuntero2.b_pointers[0] = posBloque;
+                        for (int inicializer = 1; inicializer < 16; inicializer++) {
+                            nuevoPuntero2.b_pointers[inicializer] = -1;
+                        }
+
+                        fseek(this->file, puntero1.b_pointers[p1], SEEK_SET);
+                        fwrite(&nuevoPuntero2, sizeof(BloqueApuntador), 1, this->file);
+
+                        fseek(this->file, inodo.i_block[i], SEEK_SET);
+                        fwrite(&puntero1, sizeof(BloqueApuntador), 1, this->file);
+
+                        int start = this->sb.s_bm_block_start;
+                        int end = start + this->sb.s_blocks_count;
+                        int bit2 = 0;
+                        char bit;
+                        bool bandera = false;
+                        char one = '1';
+                        //actualizacion sb
+                        for (int bmI = start; bmI < end; bmI++) {
+                            fseek(this->file, bmI, SEEK_SET);
+                            fread(&bit, sizeof(char), 1, this->file);
+                            if (bit == '0' && bandera)break;
+                            if (bit == '0' && !bandera) {
+                                fseek(this->file, bmI, SEEK_SET);
+                                fwrite(&one, sizeof(char), 1, this->file);
+                                bandera = true;
+                            }
+                            bit2++;
+                        }
+                        this->sb.s_free_blocks_count -= 1;
+                        this->sb.s_first_blo = bit2;
+                        return inodo;
+
+                    } else {
+                        cout << "NO HAY SUFICIENTES BLOQUES" << endl;
+                        cout << "" << endl;
+                        return tablaInodo;
+                    }
+                }
+            }
+        }
+        else if ((i == 14) && (inodo.i_block[i] == -1) && aux!=-1) {
+            if (this->sb.s_free_blocks_count > 2) {
+                //Primer apuntador
+                int bit2 = 0;
+                char bit;
+                char one = '1';
+                int start = this->sb.s_bm_block_start;
+                int end = start + this->sb.s_blocks_count;
+                for (int i = start; i < end; i++) {
+                    fseek(this->file, i, SEEK_SET);
+                    fread(&bit, sizeof(char), 1, this->file);
+                    if (bit == '0') {
+                        fseek(this->file, i, SEEK_SET);
+                        fwrite(&one, sizeof(char), 1, this->file);
+                        break;
+                    }
+                    bit2++;
+                }
+
+                inodo.i_block[i] = this->sb.s_block_start + (bit2 * sizeof(BloqueApuntador));
+
+                //Segundo apuntador
+                bit2=0;
+                for (int i = start; i < end; i++) {
+                    fseek(this->file, i, SEEK_SET);
+                    fread(&bit, sizeof(char), 1, this->file);
+                    if (bit == '0') {
+                        fseek(this->file, i, SEEK_SET);
+                        fwrite(&one, sizeof(char), 1, this->file);
+                        break;
+                    }
+                    bit2++;
+                }
+
+                nuevoPuntero1.b_pointers[0] = this->sb.s_block_start + (bit2 * sizeof(BloqueApuntador));
+
+                //Tercer apuntador
+                bit2=0;
+                for (int i = start; i < end; i++) {
+                    fseek(this->file, i, SEEK_SET);
+                    fread(&bit, sizeof(char), 1, this->file);
+                    if (bit == '0') {
+                        fseek(this->file, i, SEEK_SET);
+                        fwrite(&one, sizeof(char), 1, this->file);
+                        break;
+                    }
+                    bit2++;
+                }
+                nuevoPuntero2.b_pointers[0] = this->sb.s_block_start + (bit2 * sizeof(BloqueApuntador));
+
+                BloqueArchivo archivo;
+                int posBloque=this->sb.s_block_start+(aux* sizeof(BloqueArchivo));
+                strcpy(archivo.b_content, cadena.c_str());
+                fseek(this->file, posBloque, SEEK_SET);
+                fwrite(&archivo, sizeof(BloqueArchivo), 1, this->file);
+                this->cambioCont=true;
+                nuevoPuntero3.b_pointers[0] = posBloque;
+
+                for (int j = 1; j < 16; j++) {
+                    nuevoPuntero1.b_pointers[j] = -1;
+                    nuevoPuntero2.b_pointers[j] = -1;
+                    nuevoPuntero3.b_pointers[j] = -1;
+                }
+                fseek(this->file, inodo.i_block[i], SEEK_SET);
+                fwrite(&nuevoPuntero1, sizeof(BloqueApuntador), 1, this->file);
+                fseek(this->file, nuevoPuntero1.b_pointers[0], SEEK_SET);
+                fwrite(&nuevoPuntero2, sizeof(BloqueApuntador), 1, this->file);
+                fseek(this->file, nuevoPuntero2.b_pointers[0], SEEK_SET);
+                fwrite(&nuevoPuntero3, sizeof(BloqueApuntador), 1, this->file);
+
+                bit2 = 0;
+                for (int bmI = start; bmI < end; bmI++) {
+                    fseek(this->file, bmI, SEEK_SET);
+                    fread(&bit, sizeof(char), 1, this->file);
+                    if (bit == '0') break;
+                    bit2++;
+                }
+                this->sb.s_free_blocks_count -= 3;
+                this->sb.s_first_blo = bit2;
+                return inodo;
+            } else {
+                cout << "NO HAY SUFICIENTES BLOQUES" << endl;
+                return tablaInodo;
+            }
+        }
+        else if ((i == 14) && (inodo.i_block[i] != -1)) {
+            fseek(this->file, inodo.i_block[i], SEEK_SET);
+            fread(&puntero1, sizeof(BloqueApuntador), 1, this->file);
+            for (int p1 = 0; p1 < 16; p1++) {
+                if (puntero1.b_pointers[p1] != -1){
+                    fseek(this->file, puntero1.b_pointers[p1], SEEK_SET);
+                    fread(&puntero2, sizeof(BloqueApuntador), 1, this->file);
+                    for (int p2 = 0; p2 < 16; p2++) {
+                        if (puntero2.b_pointers[p2] != -1){
+                            fseek(this->file, puntero2.b_pointers[p2], SEEK_SET);
+                            fread(&puntero3, sizeof(BloqueApuntador), 1, this->file);
+                            for (int p3 = 0; p3 < 16; ++p3) {
+                                if (puntero3.b_pointers[p3] == -1 && aux != -1){
+                                    BloqueArchivo archivo;
+                                    int posBloque=this->sb.s_block_start+(aux* sizeof(BloqueArchivo));
+                                    strcpy(archivo.b_content, cadena.c_str());
+                                    fseek(this->file, posBloque, SEEK_SET);
+                                    fwrite(&archivo, sizeof(BloqueArchivo), 1, this->file);
+                                    this->cambioCont=true;
+                                    puntero3.b_pointers[p3] = posBloque;
+                                    fseek(this->file, puntero2.b_pointers[p2], SEEK_SET);
+                                    fwrite(&puntero3, sizeof(BloqueApuntador), 1, this->file);
+                                    return inodo;
+                                }else if ((puntero3.b_pointers[p3] != -1) && (j == (284 + p3 + (16 * p2) + (256 * p1)))){
+                                    BloqueArchivo archivo;
+                                    fseek(this->file, puntero3.b_pointers[p3], SEEK_SET);
+                                    fread(&archivo, sizeof(BloqueArchivo),1,this->file);
+                                    strcpy(archivo.b_content, cadena.c_str());
+                                    fseek(this->file, puntero3.b_pointers[p3], SEEK_SET);
+                                    fwrite(&archivo, sizeof(BloqueArchivo),1,this->file);
+                                    return inodo;
+                                }
+                            }
+                        }else if (puntero2.b_pointers[p2] == -1 && aux != -1) {
+                            if (this->sb.s_free_blocks_count > 0) {
+                                puntero2.b_pointers[p2] = this->sb.s_block_start + (this->sb.s_first_blo * sizeof(BloqueApuntador));
+
+                                BloqueArchivo archivo;
+                                int posBloque=this->sb.s_block_start+(aux* sizeof(BloqueArchivo));
+                                strcpy(archivo.b_content, cadena.c_str());
+                                fseek(this->file, posBloque, SEEK_SET);
+                                fwrite(&archivo, sizeof(BloqueArchivo), 1, this->file);
+                                this->cambioCont=true;
+                                nuevoPuntero3.b_pointers[0] = posBloque;
+                                for (int inicializer = 1; inicializer < 16; inicializer++) {
+                                    nuevoPuntero3.b_pointers[inicializer] = -1;
+                                }
+
+                                fseek(this->file, puntero2.b_pointers[p2], SEEK_SET);
+                                fwrite(&nuevoPuntero3, sizeof(BloqueApuntador), 1, this->file);
+
+                                fseek(this->file, puntero1.b_pointers[p1], SEEK_SET);
+                                fwrite(&puntero2, sizeof(BloqueApuntador), 1, this->file);
+
+                                int start = this->sb.s_bm_block_start;
+                                int end = start + this->sb.s_blocks_count;
+                                int bit2 = 0;
+                                char bit;
+                                bool bandera = false;
+                                char one = '1';
+                                //actualizacion sb
+                                for (int bmI = start; bmI < end; bmI++) {
+                                    fseek(this->file, bmI, SEEK_SET);
+                                    fread(&bit, sizeof(char), 1, this->file);
+                                    if (bit == '0' && bandera)break;
+                                    if (bit == '0' && !bandera) {
+                                        fseek(this->file, bmI, SEEK_SET);
+                                        fwrite(&one, sizeof(char), 1, this->file);
+                                        bandera = true;
+                                    }
+                                    bit2++;
+                                }
+                                this->sb.s_free_blocks_count -= 1;
+                                this->sb.s_first_blo = bit2;
+                                return inodo;
+
+                            } else {
+                                cout << "NO HAY SUFICIENTES BLOQUES" << endl;
+                                cout << "" << endl;
+                                return tablaInodo;
+                            }
+                        }
+                    }
+                }else if (puntero1.b_pointers[p1] == -1 && aux != -1) {
+                    if (this->sb.s_free_blocks_count > 1) {
+                        puntero1.b_pointers[p1] = this->sb.s_block_start + (this->sb.s_first_blo * sizeof(BloqueApuntador));
+                        int start = this->sb.s_bm_block_start;
+                        int end = start + this->sb.s_blocks_count;
+                        int bit2 = 0;
+                        char bit;
+                        bool bandera = false;
+                        char one = '1';
+                        //actualizacion sb
+                        for (int bmI = start; bmI < end; bmI++) {
+                            fseek(this->file, bmI, SEEK_SET);
+                            fread(&bit, sizeof(char), 1, this->file);
+                            if (bit == '0' && bandera)break;
+                            if (bit == '0' && !bandera) {
+                                fseek(this->file, bmI, SEEK_SET);
+                                fwrite(&one, sizeof(char), 1, this->file);
+                                bandera = true;
+                            }
+                            bit2++;
+                        }
+                        this->sb.s_free_blocks_count -= 1;
+                        this->sb.s_first_blo = bit2;
+
+                        nuevoPuntero2.b_pointers[0] = this->sb.s_block_start + (this->sb.s_first_blo * sizeof(BloqueApuntador));
+
+                        BloqueArchivo archivo;
+                        int posBloque=this->sb.s_block_start+(aux* sizeof(BloqueArchivo));
+                        strcpy(archivo.b_content, cadena.c_str());
+                        fseek(this->file, posBloque, SEEK_SET);
+                        fwrite(&archivo, sizeof(BloqueArchivo), 1, this->file);
+                        this->cambioCont=true;
+                        nuevoPuntero3.b_pointers[0] = posBloque;
+                        for (int inicializer = 1; inicializer < 16; inicializer++) {
+                            nuevoPuntero2.b_pointers[inicializer] = -1;
+                            nuevoPuntero3.b_pointers[inicializer] = -1;
+                        }
+
+                        fseek(this->file, puntero1.b_pointers[p1], SEEK_SET);
+                        fwrite(&nuevoPuntero2, sizeof(BloqueApuntador), 1, this->file);
+
+                        fseek(this->file, nuevoPuntero2.b_pointers[0], SEEK_SET);
+                        fwrite(&nuevoPuntero3, sizeof(BloqueApuntador), 1, this->file);
+
+                        fseek(this->file, inodo.i_block[i], SEEK_SET);
+                        fwrite(&puntero1, sizeof(BloqueApuntador), 1, this->file);
+
+                        bit2 = 0;
+                        bandera = false;
+                        //actualizacion sb
+                        for (int bmI = start; bmI < end; bmI++) {
+                            fseek(this->file, bmI, SEEK_SET);
+                            fread(&bit, sizeof(char), 1, this->file);
+                            if (bit == '0' && bandera)break;
+                            if (bit == '0' && !bandera) {
+                                fseek(this->file, bmI, SEEK_SET);
+                                fwrite(&one, sizeof(char), 1, this->file);
+                                bandera = true;
+                            }
+                            bit2++;
+                        }
+                        this->sb.s_free_blocks_count -= 1;
+                        this->sb.s_first_blo = bit2;
+                        return inodo;
+
+                    } else {
+                        cout << "NO HAY SUFICIENTES BLOQUES" << endl;
+                        cout << "" << endl;
+                        return tablaInodo;
+                    }
+
+                }
+            }
+        }
+
+    }
+    return tablaInodo;
+}
+
+bool AdminUsuarios::verificarGrupoExistencia(vector<string> listaGrupos, string name) {
+    vector<string> camposGrupo;
+    for (int i = 0; i < listaGrupos.size(); ++i) {
+        camposGrupo = getCampos(listaGrupos[i]);
+        if (camposGrupo[2] == name && camposGrupo[0] != "0"){
+            return true;
+        }
+    }
+    return false;
+}
+
+string AdminUsuarios::generarNuevoIdGrupos(vector<string> grupos) {
+    int idGrupo=0;
+    vector<string> camposGrupo;
+    for (int i = 0; i < grupos.size(); ++i) {
+        camposGrupo= getCampos(grupos[i]);
+        int id= stoi(camposGrupo[0]);
+        if (idGrupo < id){
+            idGrupo++;
+        }
+    }
+    return to_string(idGrupo + 1);
 }
 
 void AdminUsuarios::rmgrp() {
@@ -278,16 +954,8 @@ void AdminUsuarios::chgrp() {
 
 }
 
-bool AdminUsuarios::grupoExist(vector<string> grupos, string name) {
-    return false;
-}
-
 bool AdminUsuarios::usrExist(vector<string> usuarios, string name) {
     return false;
-}
-
-TablaInodo AdminUsuarios::agregarArchivo(string cadena, TablaInodo inodo, int j, int aux) {
-    return TablaInodo();
 }
 
 void AdminUsuarios::escribirJorunal(string tipo_Op, char tipo, string nombre, string contenido, Nodo_M *nodo) {
