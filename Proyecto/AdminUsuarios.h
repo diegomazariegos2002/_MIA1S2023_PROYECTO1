@@ -21,10 +21,10 @@ class AdminUsuarios {
         Usuario *usuario;
         FILE *file;
         SuperBloque sb;
-        bool cambioCont;
+        bool flagGlobal;
         void login();
         void logout();
-        string getContenido(int startInodo);
+        string getStringAlmacenadoInodo(int startInodo);
         vector<string>getUsers(string entrada);
         vector<string>getGrupos(string entrada);
         vector<string> getCampos(string entrada);
@@ -39,7 +39,7 @@ class AdminUsuarios {
         string generarNuevoIdGrupos(vector<string> grupos);
         string getUID(vector<string> usuarios);
 
-        TablaInodo agregarArchivo(string cadena, TablaInodo inodo, int j,int aux);
+        TablaInodo addFile(int blckActual, int noBlckBitMap, string cadena, TablaInodo inodo);
         void escribirJorunal(string tipo_Op,char tipo,string nombre,string contenido,Nodo_M *nodo);
 };
 
