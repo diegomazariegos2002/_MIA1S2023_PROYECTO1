@@ -398,7 +398,7 @@ void AdminUsuarios::mkgrp() {
                     }
 
                     if (this->sb.s_filesystem_type==3){ // EXT3 -> JOURNAL
-                        this->escribirJorunal("mkgrp", '1', "users.txt", grupoNuevo, nodo);
+                        this->registrarJournal("mkgrp", '1', "users.txt", grupoNuevo, nodo);
                     }
 
                     fclose(this->file);
@@ -937,8 +937,126 @@ string AdminUsuarios::generarNuevoIdGrupos(vector<string> grupos) {
     return to_string(idGrupo + 1);
 }
 
-void AdminUsuarios::rmgrp() {
+void AdminUsuarios::registrarJournal(string tipo_Op, char tipo, string nombre, string contenido, Nodo_M *nodo) {
+    Journal ultimoJournal,journalNuevo;
+    // Posicionarnos después del SuperBloque, que es donde viene el Journal
+    if (nodo->type=='l'){
+        fseek(this->file,nodo->start+ sizeof(EBR)+ sizeof(SuperBloque),SEEK_SET);
+    }else if (nodo->type=='p'){
+        fseek(this->file,nodo->start+ sizeof(SuperBloque),SEEK_SET);
+    }
+    // Leer el primer Journal
+    fread(&ultimoJournal, sizeof(Journal), 1, this->file);
+    // Recorrer Journals hasta el último ingresado
+    while (ultimoJournal.journal_Sig != -1){
+        fseek(this->file, ultimoJournal.journal_Start + sizeof(Journal), SEEK_SET);
+        fread(&ultimoJournal, sizeof(Journal), 1, this->file);
+    }
+    // Validar que todavía entre un Journal
+    if (this->sb.s_bm_inode_start < (ultimoJournal.journal_Start + sizeof(Journal))){
+        return;
+    }
+    // Ingresar el Journal nuevo
+    ultimoJournal.journal_Sig= ultimoJournal.journal_Start + sizeof(Journal);
+    journalNuevo.journal_Start=ultimoJournal.journal_Sig;
+    strcpy(journalNuevo.journal_Tipo_Operacion, tipo_Op.c_str());
+    journalNuevo.journal_Tipo=tipo;
+    strcpy(journalNuevo.journal_Path, nombre.c_str());
+    strcpy(journalNuevo.journal_Contenido, contenido.c_str());
+    journalNuevo.journal_Fecha = time(nullptr);
+    journalNuevo.journal_Sig=-1;
+    // Escribiendolo después del último Journal
+    fseek(this->file, ultimoJournal.journal_Start, SEEK_SET);
+    fwrite(&ultimoJournal, sizeof(Journal), 1, this->file);
+    fseek(this->file, journalNuevo.journal_Start, SEEK_SET);
+    fwrite(&journalNuevo, sizeof(Journal), 1, this->file);
+    return;
+}
 
+void AdminUsuarios::rmgrp() {
+    if (this->usuario->idU==1 && this->usuario->idG==1){
+        if (this->name==" "){
+            cout<<"EL NOMBRE DEL GRUPO A BORRAR ES OBLIGATORIO";
+            return;
+        }
+        Nodo_M *nodoParticionMontada=this->mountList->buscar(this->usuario->idMount);
+        if (nodoParticionMontada != NULL) {
+            if ((this->file= fopen(nodoParticionMontada->path.c_str(), "rb+"))){
+                // Obteniendo el superbloque para poder acceder a los inodos y luego a los bloques del archivo users.txt
+                if (nodoParticionMontada->type == 'p'){
+                    fseek(this->file, nodoParticionMontada->start, SEEK_SET);
+                    fread(&this->sb, sizeof(SuperBloque),1,this->file);
+                }
+                else if (nodoParticionMontada->type == 'l'){
+                    fseek(this->file, nodoParticionMontada->start + sizeof(EBR), SEEK_SET);
+                    fread(&this->sb, sizeof(SuperBloque),1,this->file);
+                }
+                // Listando grupos
+                string contenidoArchivo = this->getStringAlmacenadoInodo(this->sb.s_inode_start + sizeof(TablaInodo));
+                vector<string>listadoGrupos = this->getGrupos(contenidoArchivo);
+                // Verificando si existe el grupo
+                if (this->verificarGrupoExistencia(listadoGrupos, this->name)){
+                    for (int i = 0; i < listadoGrupos.size(); ++i) { // iterar cada grupo y buscar el grupo que es
+                        vector<string> camposGrupoIteracion = this->getCampos(listadoGrupos[i]); //id, tipo, nombre
+                        if (camposGrupoIteracion[2] == this->name){ // si el nombre coincide
+                            int posGrupoEncontrado=contenidoArchivo.find(listadoGrupos[i]); // guardar la posGrupoEncontrado
+                            int idGrupoEncontrado=listadoGrupos[i].find(',');
+                            contenidoArchivo.replace(posGrupoEncontrado, idGrupoEncontrado, "0"); // poniendo "0" en el grupo para identificar que esta eliminado
+                        }
+                    }
+                    vector<string> arrayBlks=this->getArrayBlks(contenidoArchivo);
+
+                    TablaInodo tablaInodo;
+                    int direccionInodo = this->sb.s_inode_start + sizeof(TablaInodo);
+                    fseek(this->file, direccionInodo, SEEK_SET);
+                    fread(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+
+                    int size = 0;
+                    for (int k = 0; k < arrayBlks.size(); k++) {
+                        size += arrayBlks[k].length();
+                    }
+                    tablaInodo.i_s=size;
+                    tablaInodo.i_atime = time(nullptr);
+                    tablaInodo.i_mtime = time(nullptr);
+
+                    int j=0;
+                    while (j < arrayBlks.size()){
+                        tablaInodo=this->addFile(j, -1, arrayBlks[j], tablaInodo);
+                        j++;
+                    }
+
+                    fseek(this->file, direccionInodo, SEEK_SET);
+                    fwrite(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+                    if (nodoParticionMontada->type == 'p'){
+                        fseek(this->file, nodoParticionMontada->start, SEEK_SET);
+                        fwrite(&this->sb, sizeof(SuperBloque),1,this->file);
+                    }else if (nodoParticionMontada->type == 'l'){
+                        fseek(this->file, nodoParticionMontada->start + sizeof(EBR), SEEK_SET);
+                        fwrite(&this->sb, sizeof(SuperBloque),1,this->file);
+                    }
+
+                    if (this->sb.s_filesystem_type==3){
+                        this->registrarJournal("rmgrp", '1', "users.txt", this->name, nodoParticionMontada);
+                    }
+
+                    fclose(this->file);
+                    cout << "EL COMANDO SE HA REALIZADO CON EXITO Y SE HA REMOVIDO EL GRUPO"<<this->name<< endl;
+
+                }
+                else{
+                    cout<<"NO EXISTE EL GRUPO CON NOMBRE "<<this->name<< " EN EL LISTADO DE GRUPOS"<<endl;
+                }
+            }else{
+                cout <<"EL DISCO NO EXISTE O NO SE ENCONTRO"<<endl;
+                return;
+            }
+        }else{
+            cout <<"VERIFICAR MONTURAS, PORQUE NO SE ENCONTRO "<< this->usuario->idMount<< " EN LOS ID'S DE MONTURAS EXISTENTES"<<endl;
+            return;
+        }
+    }else{
+        cout <<"SOLAMENTO EL USUARIO ROOT PUEDE EJECUTAR ESTO"<<endl;
+    }
 }
 
 void AdminUsuarios::mkusr() {
@@ -957,7 +1075,4 @@ bool AdminUsuarios::usrExist(vector<string> usuarios, string name) {
     return false;
 }
 
-void AdminUsuarios::escribirJorunal(string tipo_Op, char tipo, string nombre, string contenido, Nodo_M *nodo) {
-
-}
 

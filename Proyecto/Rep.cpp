@@ -23,27 +23,38 @@ void Rep::generate() {
         if (this->id!=" "){
             if (this->name=="mbr"){
                 this->mbr();
-            }else if (this->name=="disk"){
+            }
+            else if (this->name=="disk"){
                 this->disk();
-            }else if (this->name=="inode"){
+            }
+            else if (this->name=="inode"){
                 this->inode();
-            }else if (this->name=="journaling"){
+            }
+            else if (this->name=="journaling"){
                 this->journaling();
-            }else if (this->name=="block"){
+            }
+            else if (this->name=="block"){
                 this->block();
-            }else if (this->name=="bm_inode"){
+            }
+            else if (this->name=="bm_inode"){
                 this->bm_inode();
-            }else if (this->name=="bm_block"){
+            }
+            else if (this->name=="bm_block"){
                 this->bm_block();
-            }else if (this->name=="tree"){
+            }
+            else if (this->name=="tree"){
                 this->tree();
-            }else if (this->name=="sb"){
+            }
+            else if (this->name=="sb"){
                 this->sb();
-            }else if (this->name=="file"){
+            }
+            else if (this->name=="file"){
                 this->file();
-            }else if (this->name=="ls"){
+            }
+            else if (this->name=="ls"){
                 this->ls();
-            }else{
+            }
+            else{
                 cout << "EL NOMBRE ASIGNADO PARA EL REPORTE ES INVALIDO"<< endl;
             }
         }else{

@@ -40,7 +40,7 @@ class AdminUsuarios {
         string getUID(vector<string> usuarios);
 
         TablaInodo addFile(int blckActual, int noBlckBitMap, string cadena, TablaInodo inodo);
-        void escribirJorunal(string tipo_Op,char tipo,string nombre,string contenido,Nodo_M *nodo);
+        void registrarJournal(string tipo_Op, char tipo, string nombre, string contenido, Nodo_M *nodo);
 };
 
 
