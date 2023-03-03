@@ -293,7 +293,7 @@ void AdminUsuarios::mkgrp() {
                 int blksActuales= this->getArrayBlks(contenido).size(); // obteniendo el número de bloques utilizados en ese inodo
                 vector<string>listaGrupos=this->getGrupos(contenido);
 
-                if (!this->verificarGrupoExistencia(listaGrupos, this->name)){
+                if (!this->verificarGrupoExistencia(this->name, listaGrupos)){
                     grupoNuevo= generarNuevoIdGrupos(listaGrupos) + ",G," + this->name + "\n";
                     contenido+=grupoNuevo;
                     vector<string> usersBlks= this->getArrayBlks(contenido);
@@ -420,12 +420,15 @@ void AdminUsuarios::mkgrp() {
     }
 }
 
+// podría mejorar esto (creo)
 TablaInodo AdminUsuarios::addFile(int blckActual, int noBlckBitMap, std::string cadena, TablaInodo inodo) {
     TablaInodo tablaInodo;
     BloqueApuntador puntero1, puntero2, puntero3, nuevoPuntero1, nuevoPuntero2, nuevoPuntero3;
     for (int i = 0; i < 15; ++i) { // recorrer los 15 punteros del inodo
         //Recordar si no son utilizados su valor es -1
-        if (inodo.i_block[i]!=-1 && i<12 && i == blckActual){ // el puntero ya apuntaba a algo,
+        // PUNTEROS DIRECTOS
+        // si ya existía el bloque se modifica con la nueva info.
+        if (inodo.i_block[i]!=-1 && i<12 && i == blckActual){
             BloqueArchivo bloqueArchivo;
             fseek(this->file,inodo.i_block[i],SEEK_SET);
             fread(&bloqueArchivo, sizeof(BloqueArchivo), 1, this->file);
@@ -433,7 +436,8 @@ TablaInodo AdminUsuarios::addFile(int blckActual, int noBlckBitMap, std::string 
             fseek(this->file,inodo.i_block[i],SEEK_SET);
             fwrite(&bloqueArchivo, sizeof(BloqueArchivo), 1, this->file);
             return inodo;
-        } // puntero directo
+        }
+        // si no existía se crea el bloque en la dirección indicada.
         else if (inodo.i_block[i]==-1 && i<12 && noBlckBitMap != -1){
             BloqueArchivo bloqueArchivo;
             int direc= this->sb.s_block_start + (noBlckBitMap * sizeof(BloqueArchivo));
@@ -444,6 +448,8 @@ TablaInodo AdminUsuarios::addFile(int blckActual, int noBlckBitMap, std::string 
             this->flagGlobal=true;
             return inodo;
         }
+        // PUNTEROS SIMPLES
+        // si ya existía el bloque se modifica con la nueva info.
         else if (i == 12 && inodo.i_block[i] == -1 && noBlckBitMap != -1) {
             if (this->sb.s_free_blocks_count > 0) {
                 char bit;
@@ -487,10 +493,11 @@ TablaInodo AdminUsuarios::addFile(int blckActual, int noBlckBitMap, std::string 
                 this->sb.s_first_blo = bit_2;
                 return inodo;
             } else {
-                cout << "NO EXISTEN LOS BLOQUES NECESARIOS" << endl;
+                cout << "BLOQUES INSUFICIENTES PARA REALIZAR ESTE COMANDO" << endl;
                 return tablaInodo;
             }
         }
+        // si no existía se crea el bloque en la dirección indicada.
         else if (i == 12 && inodo.i_block[i] != -1) {
             fseek(this->file, inodo.i_block[i], SEEK_SET);
             fread(&puntero1, sizeof(BloqueApuntador), 1, this->file);
@@ -517,6 +524,8 @@ TablaInodo AdminUsuarios::addFile(int blckActual, int noBlckBitMap, std::string 
                 }
             }
         }
+        // PUNTEROS DOBLES
+        // si ya existía el bloque se modifica con la nueva info.
         else if (i == 13 && inodo.i_block[i] == -1 && noBlckBitMap != -1) {
             if (this->sb.s_free_blocks_count > 1) {
                 //PASO PARA EL PRIMER APUNTADOR
@@ -581,11 +590,12 @@ TablaInodo AdminUsuarios::addFile(int blckActual, int noBlckBitMap, std::string 
                 this->sb.s_first_blo = bit_2;
                 return inodo;
             } else {
-                cout << "NO EXISTEN LOS BLOQUES NECESARIOS" << endl;
+                cout << "BLOQUES INSUFICIENTES PARA REALIZAR ESTE COMANDO" << endl;
                 return tablaInodo;
             }
 
         }
+        // si no existía se crea el bloque en la dirección indicada.
         else if (i == 13 && inodo.i_block[i] != -1) {
             fseek(this->file, inodo.i_block[i], SEEK_SET);
             fread(&puntero1, sizeof(BloqueApuntador), 1, this->file);
@@ -666,6 +676,8 @@ TablaInodo AdminUsuarios::addFile(int blckActual, int noBlckBitMap, std::string 
                 }
             }
         }
+        // PUNTEROS TRIPLES
+        // si ya existía el bloque se modifica con la nueva info.
         else if ((i == 14) && (inodo.i_block[i] == -1) && noBlckBitMap != -1) {
             if (this->sb.s_free_blocks_count > 2) {
                 // Paso para el primer apuntador
@@ -747,10 +759,11 @@ TablaInodo AdminUsuarios::addFile(int blckActual, int noBlckBitMap, std::string 
                 this->sb.s_first_blo = bit2;
                 return inodo;
             } else {
-                cout << "NO EXISTEN LOS BLOQUES NECESARIOS" << endl;
+                cout << "BLOQUES INSUFICIENTES PARA REALIZAR ESTE COMANDO" << endl;
                 return tablaInodo;
             }
         }
+        // si no existía se crea el bloque en la dirección indicada.
         else if ((i == 14) && (inodo.i_block[i] != -1)) {
             fseek(this->file, inodo.i_block[i], SEEK_SET);
             fread(&puntero1, sizeof(BloqueApuntador), 1, this->file);
@@ -913,7 +926,7 @@ TablaInodo AdminUsuarios::addFile(int blckActual, int noBlckBitMap, std::string 
     return tablaInodo;
 }
 
-bool AdminUsuarios::verificarGrupoExistencia(vector<string> listaGrupos, string name) {
+bool AdminUsuarios::verificarGrupoExistencia( string name, vector<string> listaGrupos) {
     vector<string> camposGrupo;
     for (int i = 0; i < listaGrupos.size(); ++i) {
         camposGrupo = getCampos(listaGrupos[i]);
@@ -995,7 +1008,7 @@ void AdminUsuarios::rmgrp() {
                 string contenidoArchivo = this->getStringAlmacenadoInodo(this->sb.s_inode_start + sizeof(TablaInodo));
                 vector<string>listadoGrupos = this->getGrupos(contenidoArchivo);
                 // Verificando si existe el grupo
-                if (this->verificarGrupoExistencia(listadoGrupos, this->name)){
+                if (this->verificarGrupoExistencia(this->name, listadoGrupos)){
                     for (int i = 0; i < listadoGrupos.size(); ++i) { // iterar cada grupo y buscar el grupo que es
                         vector<string> camposGrupoIteracion = this->getCampos(listadoGrupos[i]); //id, tipo, nombre
                         if (camposGrupoIteracion[2] == this->name){ // si el nombre coincide
@@ -1060,7 +1073,166 @@ void AdminUsuarios::rmgrp() {
 }
 
 void AdminUsuarios::mkusr() {
+    if (this->usuario->idU==1 && this->usuario->idG==1){
+        if (this->name==" " || this->pass==" " || this->group==" "){
+            cout<<"ERROR SE NECESITAN QUE ESTEN TODOS LOS CAMPOS DE USUARIO PARA EJECUTAR";
+            return;
+        }
+        Nodo_M *nodo=this->mountList->buscar(this->usuario->idMount);
+        if (nodo!=NULL) {
+            if ((this->file= fopen(nodo->path.c_str(),"rb+"))){
+                // Extrayendo superbloque
+                if (nodo->type=='l'){
+                    fseek(this->file,nodo->start+ sizeof(EBR),SEEK_SET);
+                    fread(&this->sb, sizeof(SuperBloque),1,this->file);
+                }else if (nodo->type=='p'){
+                    fseek(this->file,nodo->start,SEEK_SET);
+                    fread(&this->sb, sizeof(SuperBloque),1,this->file);
+                }
+                // Extrayendo Inodo y datos de usuarios.
+                string textoInodo=this->getStringAlmacenadoInodo(this->sb.s_inode_start + sizeof(TablaInodo));
+                // Extrayendo información de los datos almacenados
+                vector<string>listadoUsuarios=this->getUsers(textoInodo);
+                vector<string>listadoGrupos=this->getGrupos(textoInodo);
+                int numBlcksInodo=this->getArrayBlks(textoInodo).size();
+                string newUser="";
+                // Validar existencia usuario
+                if (this->validarUserExistencia(this->name, listadoUsuarios)){
+                    cout<<"ERROR EL USUARIO QUE SE QUIERE INGRESAR YA EXISTE"<<endl;
+                    return;
+                }
 
+                if (this->verificarGrupoExistencia(this->group, listadoGrupos)){
+                    newUser = getUID(listadoUsuarios) + ",U," + this->group + "," + this->name + "," + this->pass + "\n";
+                    textoInodo+=newUser;
+                    vector<string> blcksInodoActualizado =this->getArrayBlks(textoInodo);
+                    int numBlcksActualizado=blcksInodoActualizado.size();
+
+                    if (this->sb.s_free_blocks_count<(numBlcksActualizado - numBlcksInodo)){
+                        cout << "NO EXISTEN LOS BLOQUES LIBRES EN EL SISTEMA PARA INGRESAR OTRO USUARIO" << endl;
+                        return;
+                    }
+
+                    if (blcksInodoActualizado.size() > 4380){
+                        cout<<"SE HA ALCANZADO EL LIMITE DE BLOQUES EN EL INODO ASIGNADO";
+                        return;
+                    }
+
+                    // si es necesario actualizar el bitmap de bloques
+                    char bit;
+                    int start = this->sb.s_bm_block_start;
+                    int end = start + this->sb.s_block_start;
+                    int cantContiguos = 0;
+                    int inicioBM = -1;
+                    int inicioB = -1;
+                    int contadorA = 0;
+                    if ((numBlcksActualizado - numBlcksInodo) > 0){
+                        for (int i = start; i < end; ++i) {
+                            fseek(this->file, i, SEEK_SET);
+                            fread(&bit, sizeof(char), 1, this->file);
+                            //ocupado
+                            if (bit == '1') {
+                                cantContiguos = 0;
+                                inicioBM = -1;
+                                inicioB = -1;
+                            }
+                                //desocupados
+                            else {
+                                if (cantContiguos == 0) {
+                                    inicioBM = i;
+                                    inicioB = contadorA;
+                                }
+                                cantContiguos++;
+                            }
+
+                            if (cantContiguos >= (numBlcksActualizado - numBlcksInodo)) break;
+                            contadorA++;
+                        }
+                        if (inicioBM==-1 || (cantContiguos!=(numBlcksActualizado - numBlcksInodo))){
+                            cout << "NO HAY SUFICIENTES BLOQUES CONTIGUOS PARA ACTUALIZAR EL ARCHIVO" << endl;
+                            return;
+                        }
+
+                        for (int i = inicioBM; i < (inicioBM+(numBlcksActualizado - numBlcksInodo)); ++i) {
+                            char uno='1';
+                            fseek(this->file,i,SEEK_SET);
+                            fwrite(&uno, sizeof(char),1,this->file);
+
+                        }
+                        this->sb.s_free_blocks_count-=(numBlcksActualizado - numBlcksInodo);
+                        int bit2 = 0;
+                        //nueva posicion disponible
+                        for (int k = start; k < end; k++) {
+                            fseek(this->file, k, SEEK_SET);
+                            fread(&bit, sizeof(char), 1, this->file);
+                            if (bit == '0') break;
+                            bit2++;
+                        }
+                        this->sb.s_first_blo = bit2;
+                    }
+
+                    TablaInodo inodo;
+                    int seekInodo=this->sb.s_inode_start+ sizeof(TablaInodo);
+                    fseek(this->file,seekInodo,SEEK_SET);
+                    fread(&inodo, sizeof(TablaInodo),1,this->file);
+
+                    int tamanio = 0;
+                    for (int tm = 0; tm < blcksInodoActualizado.size(); tm++) {
+                        tamanio += blcksInodoActualizado[tm].length();
+                    }
+                    inodo.i_s=tamanio;
+                    inodo.i_mtime = time(nullptr);
+
+                    int contador=0,j=0;
+                    while (j < blcksInodoActualizado.size()){
+                        cambioCont=false;
+                        inodo=this->agregarArchivo(blcksInodoActualizado[j], inodo, j, (inicioB + contador));
+                        if (cambioCont){
+                            contador++;
+                        }
+                        j++;
+                    }
+
+                    fseek(this->file,seekInodo,SEEK_SET);
+                    fwrite(&inodo, sizeof(TablaInodo),1,this->file);
+                    if (nodo->type=='p'){
+                        fseek(this->file,nodo->start,SEEK_SET);
+                        fwrite(&this->sb, sizeof(SuperBloque),1,this->file);
+                    }else if (nodo->type=='l'){
+                        fseek(this->file,nodo->start+ sizeof(EBR),SEEK_SET);
+                        fwrite(&this->sb, sizeof(SuperBloque),1,this->file);
+                    }
+
+                    if (this->sb.s_filesystem_type==3){
+                        this->escribirJorunal("mkgrp", '1', "users.txt", newUser, nodo);
+                    }
+
+                    fclose(this->file);
+                    cout << "SE REGISTRO AL USUARIO "<<this->name<< endl;
+
+                }else{
+                    cout<<"EL GRUPO "<<this->group<<" AL CUAL SE QUIERE ASIGNAR EL USUARIO NO EXISTE"<<endl;
+                }
+            }else{
+                cout <<"ERROR EL DISCO SE MOVIO O DEJO DE EXISTIR"<<endl;
+            }
+        }else{
+            cout <<"ERROR NO EXISTE O NO SE ENCONTRO MONTURA CON ID: "<< this->usuario->idMount<<" EN LA LISTA DE MONTURAS"<<endl;
+        }
+    }else{
+        cout <<"ERROR SOLO COMANDO ROOT CON GRUPO 1 PUEDE EJECUTAR ESTE COMANDO"<<endl;
+    }
+}
+
+bool AdminUsuarios::validarUserExistencia(string name, vector<string> usuarios) {
+    vector<string> camposUsuario;
+    for (int i = 0; i < usuarios.size(); ++i) {
+        camposUsuario = getCampos(usuarios[i]);
+        if (camposUsuario[3] == name && camposUsuario[0] != "0"){
+            return true;
+        }
+    }
+    return false;
 }
 
 void AdminUsuarios::rmusr() {
@@ -1071,8 +1243,6 @@ void AdminUsuarios::chgrp() {
 
 }
 
-bool AdminUsuarios::usrExist(vector<string> usuarios, string name) {
-    return false;
-}
+
 
 

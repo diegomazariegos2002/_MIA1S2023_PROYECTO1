@@ -937,7 +937,63 @@ void Analizador::analizarEntrada() {
             this->mountList=adminU->mountList;
 
         }
+        //RMGRP
+        else if (strncmp(entradaMinus.c_str(), "rmgrp", 5) == 0) {
+            int i = 5;
+            while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                i++;
+            }
 
+            entrada = entrada.erase(0, i);
+            entradaMinus = entradaMinus.erase(0, i);
+
+            while (entrada.length() > 0) {
+                if (strncmp(entradaMinus.c_str(), ">name", 4) == 0){
+                    i = entradaMinus.find("=") + 1;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    if (entradaMinus[0] == '\"') {
+                        entradaMinus = entradaMinus.erase(0, 1);
+                        this->entrada = this->entrada.erase(0, 1);
+                        i = entradaMinus.find("\"");
+                        string name = this->entrada.substr(0, i);
+                        i += 2;
+                        this->adminU->name = name;
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    } else {
+                        i = entradaMinus.find(" ");
+                        string name = this->entrada.substr(0, i);
+                        this->adminU->name = name;
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    }
+
+                }else if (strncmp(entradaMinus.c_str(), "#", 1) == 0) {
+                    //No se opera, ya que entro un comentario
+                    break;
+                }else {
+                    cout << "ERROR EN EL COMANDO: " << entradaMinus << endl;
+                    return;
+                }
+            }
+            adminU->mountList= this->mountList;
+            adminU->usuario=this->usuario;
+            adminU->rmgrp();
+            this->usuario=adminU->usuario;
+            this->mountList=adminU->mountList;
+
+        }
         //EXECUTE
         else if(strncmp(entradaMinus.c_str(), "execute", 7) == 0){
             string path = "";
