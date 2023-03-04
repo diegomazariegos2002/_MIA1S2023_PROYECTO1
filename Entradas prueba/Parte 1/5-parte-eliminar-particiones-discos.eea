@@ -1,0 +1,14 @@
+#ELIMINACION DE PARTICIONES PRIMARIAS
+fdisk >delete=full >name=Part2 >path="/home/pruebas/misdiscos/Disco1.dsk"
+
+#ELIMINACION DE PARTICIONES LOGICAS
+fdisk >delete=full >name=Part3 >path="/home/pruebas/misdiscos/Disco2.dsk"
+
+#ELIMINACION DE PARTICIONES EXTENDIDAS
+fdisk >delete=full >name=Part1 >path="/home/pruebas/misdiscos/Disco3.dsk"
+
+#Reporte disk despues de eliminar
+rep >id=751Disco1 >path=/home/pruebas/particiones/Disco1_Delete.jpg >name=disk
+rep >id=751Disco2 >path=/home/pruebas/particiones/Disco2_Delete.jpg >name=disk
+rep >id=751Disco3 >path=/home/pruebas/particiones/Disco3_Delete.jpg >name=disk
+

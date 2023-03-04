@@ -1,0 +1,6 @@
+1-parte-crear-discos
+2-parte-crear-particiones
+3-parte-montar-particiones
+4-parte-editar-particiones
+5-parte-eliminar-particiones-discos
+6-parte-reportes-mbr

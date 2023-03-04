@@ -1,0 +1,12 @@
+#PARTE 1
+execute >path="/home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Entradas prueba/Parte 1/1-parte-crear-discos.eea"
+
+execute >path="/home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Entradas prueba/Parte 1/2-parte-crear-particiones.eea"
+
+execute >path="/home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Entradas prueba/Parte 1/3-parte-montar-particiones.eea"
+
+execute >path="/home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Entradas prueba/Parte 1/4-parte-editar-particiones.eea"
+
+execute >path="/home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Entradas prueba/Parte 1/5-parte-eliminar-particiones-discos.eea"
+
+execute >path="/home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Entradas prueba/Parte 1/6-parte-reportes-mbr.eea"

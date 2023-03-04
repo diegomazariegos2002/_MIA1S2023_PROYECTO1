@@ -1,0 +1,33 @@
+#Calificacion MIA 2022 > Parte 1
+
+#RESETEO DE DISCOS
+
+#Eliminacion del Disco1.mia
+rmdisk >path="/home/pruebas/misdiscos/Disco1.dsk”
+#Eliminacion del Disco2.mia
+rmdisk >path="/home/pruebas/misdiscos/Disco2.dsk”
+#Eliminacion del Disco3.mia
+rmdisk >path="/home/pruebas/misdiscos/Disco3.dsk”
+#Eliminacion del Disco4.mia
+rmdisk >path="/home/pruebas/misdiscos/Disco4.dsk”
+#Eliminacion del Disco5.mia
+rmdisk >path="/home/pruebas/misdiscos/Disco5.dsk”
+
+#CREACION DE DISCOS
+
+#Disco con primer ajuste
+mkdisk >size=75 >unit=M >path=/home/pruebas/misdiscos/Disco1.dsk
+
+#Tamaño de 50mb
+mkdisk >unit=m >path=/home/pruebas/misdiscos/Disco2.dsk >fit=BF >size=50
+
+#Debe crear discos en MB
+mkdisk >size=101 >path=/home/pruebas/misdiscos/Disco3.dsk >fit=WF            	 
+mkdisk >size=1 >path="/home/pruebas/misdiscos/Disco4.dsk"
+mkdisk >size=1 >path="/home/pruebas/misdiscos/Disco5.dsk"
+
+#ELIMINACION DE DISCOS
+
+#Eliminacion del Disco5.mia
+rmdisk >path="/home/pruebas/misdiscos/Disco5.dsk”
+

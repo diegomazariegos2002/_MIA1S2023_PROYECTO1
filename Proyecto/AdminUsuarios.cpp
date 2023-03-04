@@ -1239,7 +1239,87 @@ bool AdminUsuarios::validarUserExistencia(string name, vector<string> usuarios) 
 }
 
 void AdminUsuarios::rmusr() {
+    if (this->usuario->idU==1 && this->usuario->idG==1){
+        if (this->name==" "){
+            cout<<"ERROR SE NECESITAN QUE ESTEN TODOS LOS CAMPOS DE USUARIO PARA EJECUTAR";
+            return;
+        }
+        Nodo_M *nodo=this->mountList->buscar(this->usuario->idMount);
+        if (nodo!=NULL) {
+            if ((this->file= fopen(nodo->path.c_str(),"rb+"))){
+                if (nodo->type=='l'){
+                    fseek(this->file,nodo->start+ sizeof(EBR),SEEK_SET);
+                    fread(&this->sb, sizeof(SuperBloque),1,this->file);
+                }else if (nodo->type=='p'){
+                    fseek(this->file,nodo->start,SEEK_SET);
+                    fread(&this->sb, sizeof(SuperBloque),1,this->file);
+                }
 
+                // Listando grupos
+                string contenidoArchivo = this->getStringAlmacenadoInodo(this->sb.s_inode_start + sizeof(TablaInodo));
+                vector<string>listadoUsers = this->getUsers(contenidoArchivo);
+
+                if (this->validarUserExistencia(this->name, listadoUsers)){
+                    for (int i = 0; i < listadoUsers.size(); ++i) {
+                        vector<string> camposUser=this->getCampos(listadoUsers[i]);
+                        if (camposUser[3] == this->name){
+                            int posUsuarioEncontrado=contenidoArchivo.find(listadoUsers[i]);
+                            int idUsuarioEncontrado=listadoUsers[i].find(',');
+                            contenidoArchivo.replace(posUsuarioEncontrado, idUsuarioEncontrado, "0");
+                        }
+                    }
+                    vector<string> arrayBlks=this->getArrayBlks(contenidoArchivo);
+
+                    TablaInodo tablaInodo;
+                    int direccionInodo= this->sb.s_inode_start + sizeof(TablaInodo);
+                    fseek(this->file, direccionInodo, SEEK_SET);
+                    fread(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+
+                    int size = 0;
+                    for (int k = 0; k < arrayBlks.size(); k++) {
+                        size += arrayBlks[k].length();
+                    }
+                    tablaInodo.i_s=size;
+                    tablaInodo.i_atime = time(nullptr);
+                    tablaInodo.i_mtime = time(nullptr);
+
+                    int j=0;
+                    while (j < arrayBlks.size()){
+                        tablaInodo=this->addFile(j, -1, arrayBlks[j], tablaInodo);
+                        j++;
+                    }
+
+                    fseek(this->file, direccionInodo, SEEK_SET);
+                    fwrite(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+                    if (nodo->type=='l'){
+                        fseek(this->file,nodo->start+ sizeof(EBR),SEEK_SET);
+                        fwrite(&this->sb, sizeof(SuperBloque),1,this->file);
+                    }
+                    else if (nodo->type=='p'){
+                        fseek(this->file,nodo->start,SEEK_SET);
+                        fwrite(&this->sb, sizeof(SuperBloque),1,this->file);
+                    }
+
+                    if (this->sb.s_filesystem_type==3){
+                        this->registrarJournal("rmusr",'1',"users.txt",this->name,nodo);
+                    }
+
+                    cout << "COMANDO EJECUTADO CON EXITO, EL USUARIO "<<this->name<< " FUE ELIMINADO"<< endl;
+                    fclose(this->file);
+                }else{
+                    cout<<"EL USUARIO"<<this->name<<" EL CUAL SE QUIERE ELIMINAR NO EXISTE"<<endl;
+                }
+            }else{
+                cout <<"ERROR EL DISCO SE MOVIO O DEJO DE EXISTIR"<<endl;
+                return;
+            }
+        }else{
+            cout <<"ERROR NO EXISTE O NO SE ENCONTRO MONTURA CON ID: "<< this->usuario->idMount<<" EN LA LISTA DE MONTURAS"<<endl;
+            return;
+        }
+    }else{
+        cout <<"ERROR SOLO COMANDO ROOT CON GRUPO 1 PUEDE EJECUTAR ESTE COMANDO"<<endl;
+    }
 }
 
 void AdminUsuarios::chgrp() {

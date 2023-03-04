@@ -1,0 +1,10 @@
+Execute con errores
+execute >path="/home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Entradas prueba/Parte 1/hola.txt"
+
+PARTE 1 GENERAL
+execute >path="/home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Entradas prueba/Parte 1/general.eea"
+
+PARTE 2 GENERAL
+
+execute >path="/home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Entradas prueba/Parte 2/parte2-formateo.eea"
+

@@ -1,0 +1,89 @@
+#-----------------
+# PARTE 2 - Sistema de archivos EXT2/EXT3
+#----------------
+
+#PASO 1 - Creacion de disco, particiones y monturas
+rmdisk >path="/home/pruebas/DiscoParte2.dsk”
+mkdisk >size=150 >unit=M >path=/home/pruebas/DiscoParte2.dsk
+fdisk >type=P >unit=M >name=Part1 >size=25 >path=/home/pruebas/DiscoParte2.dsk
+fdisk >type=P >unit=M >name=Part2 >size=25 >path=/home/pruebas/DiscoParte2.dsk
+fdisk >type=P >unit=M >name=Part3 >size=25 >path=/home/pruebas/DiscoParte2.dsk
+fdisk >type=P >unit=M >name=Part4 >size=25 >path=/home/pruebas/DiscoParte2.dsk
+mount >path=/home/pruebas/DiscoParte2.dsk >name=Part1 #id 751DiscoParte2
+mount >path=/home/pruebas/DiscoParte2.dsk >name=Part2 #id 752DiscoParte2
+mount >path=/home/pruebas/DiscoParte2.dsk >name=Part3 #id 753DiscoParte2
+mount >path=/home/pruebas/DiscoParte2.dsk >name=Part4 #id 754DiscoParte2
+
+#MKFS A PARTICIONES
+mkfs >type=full >id=751DiscoParte2
+mkfs >type=full >id=752DiscoParte2 >fs=3fs
+
+#REPORTES INICIALES
+rep >id=751DiscoParte2 >path="/home/pruebas/parte2/ext2_sb_1.pdf" >name=sb
+rep >id=751DiscoParte2 >path="/home/pruebas/parte2/ext2_tree_1.pdf" >name=tree
+
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_mbr_1.pdf" >name=mbr
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_disk_1.pdf" >name=disk
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_inode_1.pdf" >name=inode
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_block_1.pdf" >name=block
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_journal_1.pdf" >name=journaling
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_bm_inode_1.pdf" >name=bm_inode
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_bm_block_1.pdf" >name=bm_block
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_tree_1.pdf" >name=tree
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_sb_1.pdf" >name=sb
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_ls_1.pdf" >name=ls
+
+#INICIO DE SESION
+
+#Debe dar error porque no existe el usuario diego
+Login >pass=123 >usr=diego >id=751DiscoParte2
+#Debe dar error porque no existe nada activo
+logout
+
+Login >pass=123 >usr=root >id=751DiscoParte2
+
+#PARTE GRUPOS
+#CREACION GRUPOS EXT2
+mkgrp >name="Archivos 1"
+mkgrp >naMe=Archivos2
+mkgrp >name="Archivos 3"
+mkgrp >NamE=Archivos4
+
+rep >id=751DiscoParte2 >path="/home/pruebas/parte2/ext2_sb_1.pdf" >name=sb
+rep >id=751DiscoParte2 >path="/home/pruebas/parte2/ext2_tree_1.pdf" >name=tree
+
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_sb_1.pdf" >name=sb
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_tree_1.pdf" >name=tree
+
+logout
+
+login >pass=123 >usr=root >id=752DiscoParte2
+#CREACION GRUPOS EXT3
+mkgrp >name="Archivos 1"
+mkgrp >naMe=Archivos2
+mkgrp >name="Archivos 3"
+mkgrp >NamE=Archivos4
+
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_journal_1.pdf" >name=journaling
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_tree_1.pdf" >name=tree
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_sb_1.pdf" >name=sb
+
+#ELIMINACION DE GRUPOS
+rmgrp >name=Archivos4
+
+#CREACION DE USUARIOS
+Mkusr >user=user1 >grp=root >pass=123
+mkusr >user="user2" >grp="Archivos 1" >pass=abc123
+mkUsr >user="user3" >grp=Archivos2 >pass=123
+mkusr >user="user4" >grp="Archivos 1" >pass=123
+
+execute >path="/home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Entradas prueba/Parte 2/parte2-reportes.eea"
+
+pause
+
+logout
+unmount >id=751DiscoParte2
+unmount >id=752DiscoParte2
+unmount >id=753DiscoParte2
+unmount >id=754DiscoParte2
+

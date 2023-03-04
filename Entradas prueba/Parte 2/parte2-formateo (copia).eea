@@ -1,0 +1,14 @@
+#-----------------
+# PARTE 2 - GENERAR REPORTES
+#----------------
+
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_mbr_1.pdf" >name=mbr
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_disk_1.pdf" >name=disk
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_inode_1.pdf" >name=inode
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_block_1.pdf" >name=block
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_journal_1.pdf" >name=journaling
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_bm_inode_1.pdf" >name=bm_inode
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_bm_block_1.pdf" >name=bm_block
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_tree_1.pdf" >name=tree
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_sb_1.pdf" >name=sb
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_ls_1.pdf" >name=ls
