@@ -34,7 +34,7 @@ class AdminUsuarios {
         void mkusr();
         void rmusr();
         void chgrp();
-        bool verificarGrupoExistencia(string name, vector<string> listaGrupos);
+        bool validarGrupoExistencia(string name, vector<string> listaGrupos);
         bool validarUserExistencia(string name, vector<string> usuarios);
         string generarNuevoIdGrupos(vector<string> grupos);
         string generarNuevoIdUsuarios(vector<string> listadoUsuarios);

@@ -302,7 +302,7 @@ void AdminUsuarios::mkgrp() {
                 int blksActuales= this->getArrayBlks(contenido).size(); // obteniendo el número de bloques utilizados en ese inodo
                 vector<string>listaGrupos=this->getGrupos(contenido);
 
-                if (!this->verificarGrupoExistencia(this->name, listaGrupos)){
+                if (!this->validarGrupoExistencia(this->name, listaGrupos)){
                     grupoNuevo= generarNuevoIdGrupos(listaGrupos) + ",G," + this->name + "\n";
                     contenido+=grupoNuevo;
                     vector<string> usersBlks= this->getArrayBlks(contenido);
@@ -935,7 +935,7 @@ TablaInodo AdminUsuarios::addFile(int blckActual, int noBlckBitMap, std::string 
     return tablaInodo;
 }
 
-bool AdminUsuarios::verificarGrupoExistencia( string name, vector<string> listaGrupos) {
+bool AdminUsuarios::validarGrupoExistencia(string name, vector<string> listaGrupos) {
     vector<string> camposGrupo;
     for (int i = 0; i < listaGrupos.size(); ++i) {
         camposGrupo = getCampos(listaGrupos[i]);
@@ -1017,7 +1017,7 @@ void AdminUsuarios::rmgrp() {
                 string contenidoArchivo = this->getStringAlmacenadoInodo(this->sb.s_inode_start + sizeof(TablaInodo));
                 vector<string>listadoGrupos = this->getGrupos(contenidoArchivo);
                 // Verificando si existe el grupo
-                if (this->verificarGrupoExistencia(this->name, listadoGrupos)){
+                if (this->validarGrupoExistencia(this->name, listadoGrupos)){
                     for (int i = 0; i < listadoGrupos.size(); ++i) { // iterar cada grupo y buscar el grupo que es
                         vector<string> camposGrupoIteracion = this->getCampos(listadoGrupos[i]); //id, tipo, nombre
                         if (camposGrupoIteracion[2] == this->name){ // si el nombre coincide
@@ -1111,7 +1111,7 @@ void AdminUsuarios::mkusr() {
                     return;
                 }
 
-                if (this->verificarGrupoExistencia(this->group, listadoGrupos)){
+                if (this->validarGrupoExistencia(this->group, listadoGrupos)){
                     newUser = generarNuevoIdUsuarios(listadoUsuarios) + ",U," + this->group + "," + this->name + "," + this->pass + "\n";
                     textoInodo+=newUser;
                     vector<string> blcksInodoActualizado =this->getArrayBlks(textoInodo);
@@ -1332,9 +1332,103 @@ void AdminUsuarios::rmusr() {
 }
 
 void AdminUsuarios::chgrp() {
+    if (this->usuario->idU==1 && this->usuario->idG==1){
 
+        if (this->group==" "){
+            cout<<"ERROR EL PARAMETRO DE GRUPO ES OBLIGATORIO" << endl;
+            return;
+        }
+        if (this->name==" ") {
+            cout << "ERROR EL PARAMETRO DEL NOMBRE DE USUARIO ES OBLIGATORIO" << endl;
+            return;
+        }
+        if (this->name=="root"){
+            cout<<"ERROR AL USUARIO ROOT ES IMPOSIBLE CAMBIARLE SU GRUPO" <<endl;
+            return;
+        }
+        Nodo_M *nodo=this->mountList->buscar(this->usuario->idMount);
+        if (nodo!=NULL) {
+            if ((this->file= fopen(nodo->path.c_str(),"rb+"))){
+                if (nodo->type=='l') {
+                    fseek(this->file, nodo->start + sizeof(EBR), SEEK_SET);
+                    fread(&this->sb, sizeof(SuperBloque), 1, this->file);
+                }else if (nodo->type=='p'){
+                    fseek(this->file,nodo->start,SEEK_SET);
+                    fread(&this->sb, sizeof(SuperBloque),1,this->file);
+                }
+
+
+                string contenidoArchivo=this->getStringAlmacenadoInodo(this->sb.s_inode_start + sizeof(TablaInodo));
+                int blcksActuales=this->getArrayBlks(contenidoArchivo).size();
+                vector<string> camposGrupo;
+                vector<string>listaGrupos=this->getGrupos(contenidoArchivo);
+                vector<string>listaUsuarios=this->getUsers(contenidoArchivo);
+
+                if (!this->validarGrupoExistencia(this->group,listaGrupos)){
+                    cout<<"EL GRUPO "<<this->group<< " NO EXISTE EN EL SISTEMA" <<endl;
+                    return;
+                }
+
+                if (this->validarUserExistencia(this->name, listaUsuarios)){
+                    for (int i = 0; i < listaUsuarios.size(); ++i) {
+                        vector<string> camposUsuario=this->getCampos(listaUsuarios[i]);
+                        if (camposUsuario[3] == this->name){
+                            int posUsuarioStringInodo=contenidoArchivo.find(listaUsuarios[i]);
+                            camposUsuario[2]=this->group;
+                            string usuarioModificado= camposUsuario[0] + "," + camposUsuario[1] + "," + camposUsuario[2] + "," + camposUsuario[3] + "," + camposUsuario[4];
+                            // Modificar el usuario Modificado en la posicion del usuario encontrado en el String del tablaInodo.
+                            contenidoArchivo.replace(posUsuarioStringInodo, listaUsuarios[i].length(), usuarioModificado);
+                        }
+                    }
+                    vector<string> arrayBlks=this->getArrayBlks(contenidoArchivo);
+
+                    TablaInodo tablaInodo;
+                    int direccionInodo= this->sb.s_inode_start + sizeof(TablaInodo);
+                    fseek(this->file, direccionInodo, SEEK_SET);
+                    fread(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+
+                    int size = 0;
+                    for (int k = 0; k < arrayBlks.size(); k++) {
+                        size += arrayBlks[k].length();
+                    }
+                    tablaInodo.i_s=size;
+                    tablaInodo.i_atime = time(nullptr);
+                    tablaInodo.i_mtime = time(nullptr);
+
+                    int j=0;
+                    while (j<arrayBlks.size()){
+                        tablaInodo=this->addFile(j, -1, arrayBlks[j], tablaInodo);
+                        j++;
+                    }
+
+                    fseek(this->file, direccionInodo, SEEK_SET);
+                    fwrite(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+                    if (nodo->type=='l'){
+                        fseek(this->file,nodo->start+ sizeof(EBR),SEEK_SET);
+                        fwrite(&this->sb, sizeof(SuperBloque),1,this->file);
+                    }
+                    else if (nodo->type=='p'){
+                        fseek(this->file,nodo->start,SEEK_SET);
+                        fwrite(&this->sb, sizeof(SuperBloque),1,this->file);
+                    }
+
+                    if (this->sb.s_filesystem_type==3){
+                        this->registrarJournal("rmusr",'1',"users.txt",this->name,nodo);
+                    }
+
+                    cout << "COMANDO EJECUTADO CON EXITO, EL USUARIO "<<this->name<< " SE CAMBIO SU GRUPO A: " << this->group<< endl;
+                    fclose(this->file);
+                }else{
+                    cout<<"EL USUARIO "<<this->name<<" EL CUAL SE QUIERE ELIMINAR NO EXISTE"<<endl;
+                }
+            }else{
+                cout <<"ERROR EL DISCO SE MOVIO DE SU RUTA PROBABLEMENTE"<<endl;
+                return;
+            }
+        }else{
+            cout <<"VERIFICAR MONTURAS, PORQUE NO SE ENCONTRO "<< this->usuario->idMount<< " EN LOS ID'S DE MONTURAS EXISTENTES"<<endl;
+        }
+    }else{
+        cout <<"ERROR SOLO COMANDO ROOT CON GRUPO 1 PUEDE EJECUTAR ESTE COMANDO"<<endl;
+    }
 }
-
-
-
-
