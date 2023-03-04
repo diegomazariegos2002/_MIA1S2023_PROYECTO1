@@ -1094,7 +1094,7 @@ void AdminUsuarios::mkusr() {
                 // Extrayendo información de los datos almacenados
                 vector<string>listadoUsuarios=this->getUsers(textoInodo);
                 vector<string>listadoGrupos=this->getGrupos(textoInodo);
-                int numBlcksInodo=this->getArrayBlks(textoInodo).size();
+                int blksActuales=this->getArrayBlks(textoInodo).size();
                 string newUser="";
                 // Validar existencia usuario
                 if (this->validarUserExistencia(this->name, listadoUsuarios)){
@@ -1106,9 +1106,9 @@ void AdminUsuarios::mkusr() {
                     newUser = getUID(listadoUsuarios) + ",U," + this->group + "," + this->name + "," + this->pass + "\n";
                     textoInodo+=newUser;
                     vector<string> blcksInodoActualizado =this->getArrayBlks(textoInodo);
-                    int numBlcksActualizado=blcksInodoActualizado.size();
+                    int blksActualizado=blcksInodoActualizado.size();
 
-                    if (this->sb.s_free_blocks_count<(numBlcksActualizado - numBlcksInodo)){
+                    if (this->sb.s_free_blocks_count<(blksActualizado - blksActuales)){
                         cout << "NO EXISTEN LOS BLOQUES LIBRES EN EL SISTEMA PARA INGRESAR OTRO USUARIO" << endl;
                         return;
                     }
@@ -1119,96 +1119,99 @@ void AdminUsuarios::mkusr() {
                     }
 
                     // si es necesario actualizar el bitmap de bloques
-                    char bit;
-                    int start = this->sb.s_bm_block_start;
-                    int end = start + this->sb.s_block_start;
-                    int cantContiguos = 0;
+                    int bitMapBlks_Start = this->sb.s_bm_block_start;
+                    int bitMapBlks_End = bitMapBlks_Start + this->sb.s_block_start;
+                    int blksLibresSeguidos = 0;
                     int inicioBM = -1;
-                    int inicioB = -1;
-                    int contadorA = 0;
-                    if ((numBlcksActualizado - numBlcksInodo) > 0){
-                        for (int i = start; i < end; ++i) {
+                    int startB = -1;
+                    int contAux = 0;
+                    char bit;
+
+                    if ((blksActualizado - blksActuales) > 0){
+                        for (int i = bitMapBlks_Start; i < bitMapBlks_End; ++i) {
                             fseek(this->file, i, SEEK_SET);
                             fread(&bit, sizeof(char), 1, this->file);
-                            //ocupado
-                            if (bit == '1') {
-                                cantContiguos = 0;
+
+                            if (bit == '1') {// Bloque no disponible
+                                blksLibresSeguidos = 0;
                                 inicioBM = -1;
-                                inicioB = -1;
+                                startB = -1;
                             }
-                                //desocupados
-                            else {
-                                if (cantContiguos == 0) {
+                            else {// Bloque disponible
+                                if (blksLibresSeguidos == 0) {
                                     inicioBM = i;
-                                    inicioB = contadorA;
+                                    startB = contAux;
                                 }
-                                cantContiguos++;
+                                blksLibresSeguidos++;
                             }
 
-                            if (cantContiguos >= (numBlcksActualizado - numBlcksInodo)) break;
-                            contadorA++;
+                            if (blksLibresSeguidos >= (blksActualizado - blksActuales)) break;
+                            contAux++;
                         }
-                        if (inicioBM==-1 || (cantContiguos!=(numBlcksActualizado - numBlcksInodo))){
-                            cout << "NO HAY SUFICIENTES BLOQUES CONTIGUOS PARA ACTUALIZAR EL ARCHIVO" << endl;
+                        if ((blksLibresSeguidos != (blksActualizado - blksActuales)) || inicioBM==-1){
+                            cout << "NO EXISTEN LOS SUFICIENTES BLOQUES O BLOQUES SEGUIDOS EN EL SISTEMA PARA ACTUALIZAR EL ARCHIVO" << endl;
                             return;
                         }
-
-                        for (int i = inicioBM; i < (inicioBM+(numBlcksActualizado - numBlcksInodo)); ++i) {
+                        //Escribiendo en el bloque de bitmaps los bitmaps a utilizar
+                        for (int i = inicioBM; i < (inicioBM+(blksActualizado - blksActuales)); ++i) {
                             char uno='1';
                             fseek(this->file,i,SEEK_SET);
                             fwrite(&uno, sizeof(char),1,this->file);
 
                         }
-                        this->sb.s_free_blocks_count-=(numBlcksActualizado - numBlcksInodo);
-                        int bit2 = 0;
+                        this->sb.s_free_blocks_count-=(blksActualizado - blksActuales); // actualizando el número de bloques libres
+                        int bit_2 = 0;
                         //nueva posicion disponible
-                        for (int k = start; k < end; k++) {
+                        for (int k = bitMapBlks_Start; k < bitMapBlks_End; k++) {
                             fseek(this->file, k, SEEK_SET);
                             fread(&bit, sizeof(char), 1, this->file);
                             if (bit == '0') break;
-                            bit2++;
+                            bit_2++;
                         }
-                        this->sb.s_first_blo = bit2;
+                        this->sb.s_first_blo = bit_2;
                     }
 
-                    TablaInodo inodo;
+                    TablaInodo tablaInodo;
                     int seekInodo=this->sb.s_inode_start+ sizeof(TablaInodo);
                     fseek(this->file,seekInodo,SEEK_SET);
-                    fread(&inodo, sizeof(TablaInodo),1,this->file);
+                    fread(&tablaInodo, sizeof(TablaInodo), 1, this->file);
 
-                    int tamanio = 0;
-                    for (int tm = 0; tm < blcksInodoActualizado.size(); tm++) {
-                        tamanio += blcksInodoActualizado[tm].length();
+                    // Calculando Size con los nuevos bloques
+                    int size = 0;
+                    for (int k = 0; k < blcksInodoActualizado.size(); k++) {
+                        size += blcksInodoActualizado[k].length();
                     }
-                    inodo.i_s=tamanio;
-                    inodo.i_mtime = time(nullptr);
+                    // Actualizando el nuevo size y tiempo de actualización
+                    tablaInodo.i_s=size;
+                    tablaInodo.i_mtime = time(nullptr);
 
-                    int contador=0,j=0;
+                    int j=0,cont=0;
                     while (j < blcksInodoActualizado.size()){
-                        cambioCont=false;
-                        inodo=this->agregarArchivo(blcksInodoActualizado[j], inodo, j, (inicioB + contador));
-                        if (cambioCont){
-                            contador++;
+                        flagGlobal=false;
+                        tablaInodo = this->addFile(j, (startB + cont), blcksInodoActualizado[j], tablaInodo);
+                        if (flagGlobal){
+                            cont++;
                         }
                         j++;
                     }
 
                     fseek(this->file,seekInodo,SEEK_SET);
-                    fwrite(&inodo, sizeof(TablaInodo),1,this->file);
-                    if (nodo->type=='p'){
-                        fseek(this->file,nodo->start,SEEK_SET);
-                        fwrite(&this->sb, sizeof(SuperBloque),1,this->file);
-                    }else if (nodo->type=='l'){
+                    fwrite(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+
+                    if (nodo->type=='l'){
                         fseek(this->file,nodo->start+ sizeof(EBR),SEEK_SET);
+                        fwrite(&this->sb, sizeof(SuperBloque),1,this->file);
+                    }else if (nodo->type=='p'){
+                        fseek(this->file,nodo->start,SEEK_SET);
                         fwrite(&this->sb, sizeof(SuperBloque),1,this->file);
                     }
 
                     if (this->sb.s_filesystem_type==3){
-                        this->escribirJorunal("mkgrp", '1', "users.txt", newUser, nodo);
+                        this->registrarJournal("mkgrp", '1', "users.txt", newUser, nodo);
                     }
 
                     fclose(this->file);
-                    cout << "SE REGISTRO AL USUARIO "<<this->name<< endl;
+                    cout << "USUARIO "<<this->name<<" REGISTRADO EN EL SISTEMA"<<endl;
 
                 }else{
                     cout<<"EL GRUPO "<<this->group<<" AL CUAL SE QUIERE ASIGNAR EL USUARIO NO EXISTE"<<endl;
