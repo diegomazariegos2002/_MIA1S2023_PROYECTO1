@@ -12,7 +12,7 @@ int main() {
     usuario->idMount=" ";
     usuario->nombreU=" ";
 
-    printf("Bienvenido add la consola!!! \n");
+    printf("Bienvenido a la consola!!! \n");
     while (true) {
         std::cout << ">> ";
         char temporal[1000];

@@ -77,9 +77,10 @@ mkusr >user="user2" >grp="Archivos 1" >pass=abc123
 mkUsr >user="user3" >grp=Archivos2 >pass=123
 mkusr >user="user4" >grp="Archivos 1" >pass=123
 
-execute >path="/home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Entradas prueba/Parte 2/parte2-reportes.eea"
+#ELIMINACION DE USUARIOS
+rmusr >user=user3
 
-pause
+execute >path="/home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Entradas prueba/Parte 2/parte2-reportes.eea"
 
 logout
 unmount >id=751DiscoParte2

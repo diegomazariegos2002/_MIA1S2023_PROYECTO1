@@ -37,7 +37,7 @@ class AdminUsuarios {
         bool verificarGrupoExistencia(string name, vector<string> listaGrupos);
         bool validarUserExistencia(string name, vector<string> usuarios);
         string generarNuevoIdGrupos(vector<string> grupos);
-        string getUID(vector<string> usuarios);
+        string generarNuevoIdUsuarios(vector<string> listadoUsuarios);
 
         TablaInodo addFile(int blckActual, int noBlckBitMap, string cadena, TablaInodo inodo);
         void registrarJournal(string tipo_Op, char tipo, string nombre, string contenido, Nodo_M *nodo);

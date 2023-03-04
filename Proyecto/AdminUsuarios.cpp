@@ -245,8 +245,17 @@ vector<string> AdminUsuarios::getCampos(std::string entrada) {
     return campos;
 }
 
-string AdminUsuarios::getUID(vector<string> usuarios) {
-    return std::string();
+string AdminUsuarios::generarNuevoIdUsuarios(vector<string> listadoUsuarios) {
+    vector<string> camposUsuario;
+    int idUltimoUser=0;
+    for (int i = 0; i < listadoUsuarios.size(); ++i) {
+        camposUsuario= getCampos(listadoUsuarios[i]);
+        int idUsuarioActual= stoi(camposUsuario[0]);
+        if (idUltimoUser < idUsuarioActual){
+            idUltimoUser++;
+        }
+    }
+    return to_string(idUltimoUser + 1);
 }
 
 // Array de bloques según una cadena.
@@ -1103,7 +1112,7 @@ void AdminUsuarios::mkusr() {
                 }
 
                 if (this->verificarGrupoExistencia(this->group, listadoGrupos)){
-                    newUser = getUID(listadoUsuarios) + ",U," + this->group + "," + this->name + "," + this->pass + "\n";
+                    newUser = generarNuevoIdUsuarios(listadoUsuarios) + ",U," + this->group + "," + this->name + "," + this->pass + "\n";
                     textoInodo+=newUser;
                     vector<string> blcksInodoActualizado =this->getArrayBlks(textoInodo);
                     int blksActualizado=blcksInodoActualizado.size();
@@ -1257,14 +1266,14 @@ void AdminUsuarios::rmusr() {
 
                 // Listando grupos
                 string contenidoArchivo = this->getStringAlmacenadoInodo(this->sb.s_inode_start + sizeof(TablaInodo));
-                vector<string>listadoUsers = this->getUsers(contenidoArchivo);
+                vector<string>listadoUsuarios = this->getUsers(contenidoArchivo);
 
-                if (this->validarUserExistencia(this->name, listadoUsers)){
-                    for (int i = 0; i < listadoUsers.size(); ++i) {
-                        vector<string> camposUser=this->getCampos(listadoUsers[i]);
+                if (this->validarUserExistencia(this->name, listadoUsuarios)){
+                    for (int i = 0; i < listadoUsuarios.size(); ++i) {
+                        vector<string> camposUser=this->getCampos(listadoUsuarios[i]);
                         if (camposUser[3] == this->name){
-                            int posUsuarioEncontrado=contenidoArchivo.find(listadoUsers[i]);
-                            int idUsuarioEncontrado=listadoUsers[i].find(',');
+                            int posUsuarioEncontrado=contenidoArchivo.find(listadoUsuarios[i]);
+                            int idUsuarioEncontrado=listadoUsuarios[i].find(',');
                             contenidoArchivo.replace(posUsuarioEncontrado, idUsuarioEncontrado, "0");
                         }
                     }
@@ -1307,7 +1316,7 @@ void AdminUsuarios::rmusr() {
                     cout << "COMANDO EJECUTADO CON EXITO, EL USUARIO "<<this->name<< " FUE ELIMINADO"<< endl;
                     fclose(this->file);
                 }else{
-                    cout<<"EL USUARIO"<<this->name<<" EL CUAL SE QUIERE ELIMINAR NO EXISTE"<<endl;
+                    cout<<"EL USUARIO "<<this->name<<" EL CUAL SE QUIERE ELIMINAR NO EXISTE"<<endl;
                 }
             }else{
                 cout <<"ERROR EL DISCO SE MOVIO O DEJO DE EXISTIR"<<endl;
