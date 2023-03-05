@@ -1229,6 +1229,8 @@ void Analizador::analizarEntrada() {
             this->mountList=adminU->mountList;
 
         }
+        //MKFILE
+
         //EXECUTE
         else if(strncmp(entradaMinus.c_str(), "execute", 7) == 0){
             string path = "";

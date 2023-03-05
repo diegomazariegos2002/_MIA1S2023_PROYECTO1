@@ -80,6 +80,9 @@ mkusr >user="user4" >grp="Archivos 1" >pass=123
 #ELIMINACION DE USUARIOS
 rmusr >user=user3
 
+#CAMBIAR USUARIO DE GRUPO
+chgrp >user=user4 >grp=Archivos2
+
 execute >path="/home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Entradas prueba/Parte 2/parte2-reportes.eea"
 
 logout
