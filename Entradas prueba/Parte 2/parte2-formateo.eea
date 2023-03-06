@@ -17,6 +17,10 @@ mount >path=/home/pruebas/DiscoParte2.dsk >name=Part4 #id 754DiscoParte2
 #MKFS A PARTICIONES
 mkfs >type=full >id=751DiscoParte2
 mkfs >type=full >id=752DiscoParte2 >fs=3fs
+mkfs >type=full >id=753DiscoParte2
+
+#REPORTE POR DUDAS X
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_journal_1.pdf" >name=journaling
 
 #REPORTES INICIALES
 rep >id=751DiscoParte2 >path="/home/pruebas/parte2/ext2_sb_1.pdf" >name=sb
@@ -82,6 +86,11 @@ rmusr >user=user3
 
 #CAMBIAR USUARIO DE GRUPO
 chgrp >user=user4 >grp=Archivos2
+
+# PARTE DE ADMINISTRACION DE ARCHIVOS Y CARPETAS
+
+#Imprimir archivos
+Cat >file1=/users.txt
 
 execute >path="/home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Entradas prueba/Parte 2/parte2-reportes.eea"
 
