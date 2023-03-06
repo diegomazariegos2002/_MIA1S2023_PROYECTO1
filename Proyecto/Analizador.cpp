@@ -1241,7 +1241,7 @@ void Analizador::analizarEntrada() {
 
             entradaMinus = entradaMinus.erase(0, i);
             entrada = entrada.erase(0, i);
-            this->adminArcCarpt->rutasCat = new vector<string>;
+            this->adminArcCarpt->rutasCat = *new vector<string>;
 
             while (entrada.length() > 0) {
                 if (strncmp(entradaMinus.c_str(), ">file", 5) == 0){
@@ -1260,7 +1260,7 @@ void Analizador::analizarEntrada() {
                         string r = this->entrada.substr(0, i);
                         i += 2;
 
-                        this->adminArcCarpt->rutasCat->push_back(r);
+                        this->adminArcCarpt->rutasCat.push_back(r);
 
                         while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                             i++;
@@ -1270,7 +1270,7 @@ void Analizador::analizarEntrada() {
                     } else {
                         i = entradaMinus.find(" ");
                         string r = this->entrada.substr(0, i);
-                        this->adminArcCarpt->rutasCat->push_back(r);
+                        this->adminArcCarpt->rutasCat.push_back(r);
                         while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                             i++;
                         }

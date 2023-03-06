@@ -57,21 +57,45 @@ void AdminArchivosCarpetas::cat() {
             }
 
             TablaInodo tablaInodo;
-            int posicionInodoArchivo;
+            int direccionInodoArchivo;
 
-            if (rutaDividida.size() > 2){
-                // (int numCarpetas, int rutaActual, FILE *discoActual, vector<string> rutaDividida, int direccionActual)
-                posicionInodoArchivo = this->getDireccionInodoFile(rutaDividida, 0, rutaDividida.size() - 1, this->sb.s_inode_start, this->file);
-                if (posicionInodoArchivo == -1){
-                    cout << "ARCHIVO NO ENCONTRADO " << endl;
-                    fclose(this->file);
-                    return;
-                }
-            }else{
-                posicionInodoArchivo=this->sb.s_inode_start;
+            // (int numCarpetas, int rutaActual, FILE *discoActual, vector<string> rutaDividida, int direccionActual)
+            direccionInodoArchivo = this->getDireccionInodoFile(rutaDividida, 0, rutaDividida.size() - 1, this->sb.s_inode_start, this->file);
+            if (direccionInodoArchivo == -1){
+                cout << "ARCHIVO NO ENCONTRADO " << endl;
+                fclose(this->file);
+                return;
             }
 
 
+            if (!this->verificarPermisoInodo_Lectura(direccionInodoArchivo)){
+                cout<<"ERROR NO SE POSEEN LOS PERMISOS DE LECTURA PARA "<< rutaDividida[rutaDividida.size()-1]<<endl;
+                fclose(this->file);
+                return;
+            }
+
+            // Si hay permisos
+
+            fseek(this->file, direccionInodoArchivo, SEEK_SET);
+            fread(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+
+            if (tablaInodo.i_type == '0'){
+                cout<<"ERROR LA RUTA NO HACE REFERENCIA A UN ARCHIVO: "<< this->path <<endl;
+                fclose(this->file);
+                return;
+            }
+
+            tablaInodo.i_atime= time(nullptr);
+            string stringInodoArchivo=this->getStringAlmacenadoInodo(direccionInodoArchivo);
+            // Imprimir el contenido del Inodo.
+            cout << stringInodoArchivo << endl;
+
+            fseek(this->file, direccionInodoArchivo, SEEK_SET);
+            fwrite(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+
+            if (this->sb.s_filesystem_type==3){
+                this->registrarJournal("cat",'1',this->path,"",nodo);
+            }
         }
 
         fclose(this->file);
@@ -101,12 +125,13 @@ int AdminArchivosCarpetas::getDireccionInodoFile(vector<string> rutaDividida, in
     fseek(discoActual, rutaActual, SEEK_SET);
     fread(&tablaInodo, sizeof(TablaInodo), 1, discoActual);
 
-    if (tablaInodo.i_type == '1'){ // si se encuentra un inodo Archivo
+    // si se encuentra un inodo Archivo
+    if (tablaInodo.i_type == '1'){
         cout<<"NO EXISTE UNA CARPETA EN LA RUTA ESPECIFICADA"<<endl;
         return -1;
     }
-
     // Si es un bloque carpeta
+
     for (int i = 0; i < 15; ++i) {
         if (tablaInodo.i_block[i] != -1){
             if (i<12){ // punteros directos
@@ -220,3 +245,166 @@ int AdminArchivosCarpetas::getDireccionInodoFile(vector<string> rutaDividida, in
     }
     return -1;
 }
+
+bool AdminArchivosCarpetas::verificarPermisoInodo_Lectura(int direccionInodo) {
+    TablaInodo tablaInodo;
+    fseek(this->file,direccionInodo,SEEK_SET);
+    fread(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+    string permisos= to_string(tablaInodo.i_perm);
+
+    if (permisos.length() == 2){
+        permisos= "0" + permisos;
+    }
+    else if (permisos.length() == 1){
+        permisos= "00" + permisos;
+    }
+
+    // si es el admin
+    if (this->usuario->idU==1 && this->usuario->idG==1){
+        return true;
+    }
+    // si el usuario pertenece al grupo
+    else if (tablaInodo.i_gid == usuario->idG){
+        // 4 = lectura, 5 = ......
+        if ((permisos[1] == '4') || (permisos[1] == '5') || (permisos[1] == '6') || (permisos[1] == '7')){
+            return true;
+        }
+    }
+    // si es el propietario
+    else if ((tablaInodo.i_uid == usuario->idU) && (tablaInodo.i_gid == usuario->idG)){
+        if ((permisos[0] == '4') || (permisos[0] == '5') || (permisos[0] == '6') || (permisos[0] == '7')){
+            return true;
+        }
+    }
+    // otros
+    else{
+        if ((permisos[2] == '4') || (permisos[2] == '5') || (permisos[2] == '6') || (permisos[2] == '7')){
+            return true;
+        }
+    }
+    return false;
+}
+string AdminArchivosCarpetas::getStringAlmacenadoInodo(int startInodo) {
+    string contenido="";
+    BloqueApuntador b_Apuntador1,b_Apuntador2,b_Apuntador3;
+    BloqueArchivo b_Archivo;
+    TablaInodo tablaInodo;
+    fseek(this->file, startInodo, SEEK_SET);
+    fread(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+    for (int i = 0; i < 15; ++i) {
+        if (tablaInodo.i_block[i] != -1){ // si, si poseen información
+            if (i<12){ // apuntadores directos - leer el bloque de archivos
+                fseek(this->file, tablaInodo.i_block[i], SEEK_SET); // nos posicionamos en la dirección de cada bloque de archivos
+                fread(&b_Archivo, sizeof(BloqueArchivo), 1, this->file);
+                for (int j = 0; j < 64; ++j) {
+                    if (b_Archivo.b_content[j] == '\000'){ // si encuentra un dato nulo
+                        break;
+                    }
+                    contenido+=b_Archivo.b_content[j]; // ir concatenando la información
+                }
+            }
+            else if (i==12){ // apuntador simple - leer el bloque de apuntadores - leer el bloque de archivos
+                // Leer el bloque de apuntadores
+                fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
+                fread(&b_Apuntador1, sizeof(BloqueApuntador), 1, this->file);
+                for (int j = 0; j < 16; ++j) { // leer apuntadores directos
+                    if (b_Apuntador1.b_pointers[j] != -1){
+                        fseek(this->file, b_Apuntador1.b_pointers[j], SEEK_SET);
+                        fread(&b_Archivo, sizeof(BloqueArchivo), 1, this->file);
+                        for (int k = 0; k < 64; ++k) { // leer bloques de archivos
+                            if (b_Archivo.b_content[k] == '\000'){
+                                break;
+                            }
+                            contenido+=b_Archivo.b_content[k];
+                        }
+                    }
+                }
+            }
+            else if (i==13){ // apuntador doble - leer el bloque de apuntadores - leer el bloque de apuntadores - leer el bloque de archivos
+                fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
+                fread(&b_Apuntador1, sizeof(BloqueApuntador), 1, this->file);
+                for (int j = 0; j < 16; ++j) { // leer apuntador simple
+                    if (b_Apuntador1.b_pointers[j] != -1){
+                        fseek(this->file, b_Apuntador1.b_pointers[j], SEEK_SET);
+                        fread(&b_Apuntador2, sizeof(BloqueApuntador), 1, this->file);
+                        for (int k = 0; k < 16; ++k) { // leer apuntador directo
+                            if (b_Apuntador2.b_pointers[k] != -1){
+                                fseek(this->file, b_Apuntador2.b_pointers[k], SEEK_SET);
+                                fread(&b_Archivo, sizeof(BloqueArchivo), 1, this->file);
+                                for (int z = 0; z < 64; ++z) { // leer bloque de archivos
+                                    if (b_Archivo.b_content[z] == '\000'){
+                                        break;
+                                    }
+                                    contenido+=b_Archivo.b_content[z];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else if (i==14){ // apuntador triple - leer el bloque de apuntadores - leer el bloque de apuntadores - leer el bloque de apuntadores - leer el bloque de archivos
+                fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
+                fread(&b_Apuntador1, sizeof(BloqueApuntador), 1, this->file);
+                for (int j = 0; j < 16; ++j) { // leer apuntador doble
+                    if (b_Apuntador1.b_pointers[j] != -1){
+                        fseek(this->file, b_Apuntador1.b_pointers[j], SEEK_SET);
+                        fread(&b_Apuntador2, sizeof(BloqueApuntador), 1, this->file);
+                        for (int k = 0; k < 16; ++k) { // leer apuntador simple
+                            if (b_Apuntador2.b_pointers[k] != -1){
+                                fseek(this->file, b_Apuntador2.b_pointers[k], SEEK_SET);
+                                fread(&b_Apuntador3, sizeof(BloqueApuntador), 1, this->file);
+                                for (int z = 0; z < 16; ++z) { // leer apuntador directo
+                                    fseek(this->file, b_Apuntador3.b_pointers[z], SEEK_SET);
+                                    fread(&b_Archivo, sizeof(BloqueArchivo), 1, this->file);
+                                    for (int y = 0; y < 64; ++y) { // leer bloque archivo
+                                        if (b_Archivo.b_content[y] == '\000'){
+                                            break;
+                                        }
+                                        contenido+=b_Archivo.b_content[y];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return contenido;
+}
+void AdminArchivosCarpetas::registrarJournal(string tipo_Op, char tipo, string nombre, string contenido, Nodo_M *nodo) {
+    Journal ultimoJournal,journalNuevo;
+    // Posicionarnos después del SuperBloque, que es donde viene el Journal
+    if (nodo->type=='l'){
+        fseek(this->file,nodo->start+ sizeof(EBR)+ sizeof(SuperBloque),SEEK_SET);
+    }else if (nodo->type=='p'){
+        fseek(this->file,nodo->start+ sizeof(SuperBloque),SEEK_SET);
+    }
+    // Leer el primer Journal
+    fread(&ultimoJournal, sizeof(Journal), 1, this->file);
+    // Recorrer Journals hasta el último ingresado
+    while (ultimoJournal.journal_Sig != -1){
+        fseek(this->file, ultimoJournal.journal_Start + sizeof(Journal), SEEK_SET);
+        fread(&ultimoJournal, sizeof(Journal), 1, this->file);
+    }
+    // Validar que todavía entre un Journal
+    if (this->sb.s_bm_inode_start < (ultimoJournal.journal_Start + sizeof(Journal))){
+        return;
+    }
+    // Ingresar el Journal nuevo
+    ultimoJournal.journal_Sig= ultimoJournal.journal_Start + sizeof(Journal);
+    journalNuevo.journal_Start=ultimoJournal.journal_Sig;
+    strcpy(journalNuevo.journal_Tipo_Operacion, tipo_Op.c_str());
+    journalNuevo.journal_Tipo=tipo;
+    strcpy(journalNuevo.journal_Path, nombre.c_str());
+    strcpy(journalNuevo.journal_Contenido, contenido.c_str());
+    journalNuevo.journal_Fecha = time(nullptr);
+    journalNuevo.journal_Sig=-1;
+    // Escribiendolo después del último Journal
+    fseek(this->file, ultimoJournal.journal_Start, SEEK_SET);
+    fwrite(&ultimoJournal, sizeof(Journal), 1, this->file);
+    fseek(this->file, journalNuevo.journal_Start, SEEK_SET);
+    fwrite(&journalNuevo, sizeof(Journal), 1, this->file);
+    return;
+}
+
