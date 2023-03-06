@@ -60,7 +60,8 @@ void AdminArchivosCarpetas::cat() {
             int direccionInodoArchivo;
 
             // (int numCarpetas, int rutaActual, FILE *discoActual, vector<string> rutaDividida, int direccionActual)
-            direccionInodoArchivo = this->getDireccionInodoFile(rutaDividida, 0, rutaDividida.size() - 1, this->sb.s_inode_start, this->file);
+            direccionInodoArchivo = this->getDireccionInodo(rutaDividida, 0, rutaDividida.size() - 1,
+                                                            this->sb.s_inode_start, this->file);
             if (direccionInodoArchivo == -1){
                 cout << "ARCHIVO NO ENCONTRADO " << endl;
                 fclose(this->file);
@@ -117,7 +118,7 @@ vector<string> AdminArchivosCarpetas::getRutaDividida(std::string cadena) {
 }
 // (vector<string> rutaDividida, int direccionActual,   int numCarpetas,         int rutaActual,         FILE *discoActual)
 // (          rutaDividida,               0,           rutaDividida.size() - 1,  this->sb.s_inode_start,    this->file);
-int AdminArchivosCarpetas::getDireccionInodoFile(vector<string> rutaDividida, int direccionActual, int numCarpetas, int rutaActual, FILE *discoActual) {
+int AdminArchivosCarpetas::getDireccionInodo(vector<string> rutaDividida, int direccionActual, int numCarpetas, int rutaActual, FILE *discoActual) {
     TablaInodo tablaInodo;
     BloqueCarpeta blck_Carpeta;
     BloqueApuntador blck_apuntador1,blck_apuntador2,blck_apuntador3;
@@ -141,11 +142,11 @@ int AdminArchivosCarpetas::getDireccionInodoFile(vector<string> rutaDividida, in
                     // si existe una carpeta en bloque de carpetas que coincida con la carpeta que toca
                     if (blck_Carpeta.b_content[j].b_name == rutaDividida[direccionActual]){
                         if (direccionActual < numCarpetas) { // si todavía falta recorrer más carpetas, continuar en la siguiente
-                            return this->getDireccionInodoFile(rutaDividida,
-                                                   direccionActual + 1,
-                                                   numCarpetas,
-                                                   blck_Carpeta.b_content[j].b_inodo,
-                                                   discoActual);
+                            return this->getDireccionInodo(rutaDividida,
+                                                           direccionActual + 1,
+                                                           numCarpetas,
+                                                           blck_Carpeta.b_content[j].b_inodo,
+                                                           discoActual);
                         }
                         if (direccionActual == numCarpetas) { // si ya se llego al limite de carpetas, devolver el recursivo
                             return blck_Carpeta.b_content[j].b_inodo;
@@ -165,11 +166,11 @@ int AdminArchivosCarpetas::getDireccionInodoFile(vector<string> rutaDividida, in
                             // si existe una carpeta en bloque de carpetas que coincida con la carpeta que toca
                             if (blck_Carpeta.b_content[k].b_name == rutaDividida[direccionActual]){
                                 if (direccionActual < numCarpetas) { // si todavía falta recorrer más carpetas, continuar en la siguiente
-                                    return this->getDireccionInodoFile(rutaDividida,
-                                                                       direccionActual + 1,
-                                                                       numCarpetas,
-                                                                        blck_Carpeta.b_content[k].b_inodo,
-                                                                        discoActual);
+                                    return this->getDireccionInodo(rutaDividida,
+                                                                   direccionActual + 1,
+                                                                   numCarpetas,
+                                                                   blck_Carpeta.b_content[k].b_inodo,
+                                                                   discoActual);
                                 }
                                 if (direccionActual == numCarpetas) { // si ya se llego al limite de carpetas, devolver el recursivo
                                     return blck_Carpeta.b_content[k].b_inodo;
@@ -194,8 +195,10 @@ int AdminArchivosCarpetas::getDireccionInodoFile(vector<string> rutaDividida, in
                                     // si existe una carpeta en bloque de carpetas que coincida con la carpeta que toca
                                     if (blck_Carpeta.b_content[z].b_name == rutaDividida[direccionActual]){
                                         if (direccionActual < numCarpetas) { // si todavía falta recorrer más carpetas, continuar en la siguiente
-                                            return this->getDireccionInodoFile(rutaDividida, direccionActual + 1, numCarpetas,
-                                                                               blck_Carpeta.b_content[z].b_inodo, discoActual);
+                                            return this->getDireccionInodo(rutaDividida, direccionActual + 1,
+                                                                           numCarpetas,
+                                                                           blck_Carpeta.b_content[z].b_inodo,
+                                                                           discoActual);
                                         }
                                         if (direccionActual == numCarpetas) { // si ya se llego al limite de carpetas, devolver el recursivo
                                             return blck_Carpeta.b_content[z].b_inodo;
@@ -226,8 +229,10 @@ int AdminArchivosCarpetas::getDireccionInodoFile(vector<string> rutaDividida, in
                                             // si existe una carpeta en bloque de carpetas que coincida con la carpeta que toca
                                             if (blck_Carpeta.b_content[y].b_name == rutaDividida[direccionActual]) {
                                                 if (direccionActual < numCarpetas) { // si todavía falta recorrer más carpetas, continuar en la siguiente
-                                                    return this->getDireccionInodoFile(rutaDividida, direccionActual + 1, numCarpetas,
-                                                                                       blck_Carpeta.b_content[y].b_inodo, discoActual);
+                                                    return this->getDireccionInodo(rutaDividida, direccionActual + 1,
+                                                                                   numCarpetas,
+                                                                                   blck_Carpeta.b_content[y].b_inodo,
+                                                                                   discoActual);
                                                 }
                                                 if (direccionActual == numCarpetas) { // si ya se llego al limite de carpetas, devolver el recursivo
                                                     return blck_Carpeta.b_content[y].b_inodo;
@@ -407,4 +412,623 @@ void AdminArchivosCarpetas::registrarJournal(string tipo_Op, char tipo, string n
     fwrite(&journalNuevo, sizeof(Journal), 1, this->file);
     return;
 }
+
+void AdminArchivosCarpetas::mkdir() {
+    Nodo_M *nodo=this->mountList->buscar(usuario->idMount);
+    if (nodo==NULL){
+        cout <<"NO EXISTE MONTURA CON EL ID: "<< this->usuario->idMount<< "EN EL SISTEMA, FAVOR REVISAR"<<endl;
+        return;
+    }
+    if (this->path==" "){
+        cout<<"EL PARAMETRO PATH ES OBLIGATORIO Y NO DEBE ESTAR VACIO"<<endl;
+        return;
+    }
+
+    if ((this->file= fopen(nodo->path.c_str(),"rb+"))){
+        if (nodo->type=='l'){
+            EBR ebr;
+            fseek(file,nodo->start,SEEK_SET);
+            fread(&ebr, sizeof(EBR),1,file);
+            if (ebr.part_status != '2') {
+                cout<<"MONTURA SIN FORMATEAR "<<nodo->name<< " ,VERIFICAR ESO" <<endl;
+                fclose(file); return;
+            }
+            fseek(file,nodo->start+ sizeof(EBR),SEEK_SET);
+        }
+        else if (nodo->type=='p'){
+            MBR mbr;
+            fseek(this->file,0,SEEK_SET);
+            fread(&mbr, sizeof(MBR),1,file);
+            if (mbr.mbr_partition[nodo->pos].part_status!='2'){
+                cout<<"MONTURA SIN FORMATEAR "<<nodo->name<< " ,VERIFICAR ESO" <<endl;
+                fclose(file); return;
+            }
+            fseek(this->file,nodo->start,SEEK_SET);
+        }
+
+        fread(&this->sb, sizeof(SuperBloque),1,file);
+
+        vector<string> rutaDividida= this->getRutaDividida(this->path);
+        if (rutaDividida.empty()){
+            cout<<"ERROR LA RUTA INGRESADA NO ES VALIDA, VERIFICAR"<<endl;
+            fclose(this->file); return;
+        }
+
+        int direccionInodoRuta=this->getDireccionInodo(rutaDividida, 0, rutaDividida.size() - 1, this->sb.s_inode_start, this->file);
+        if (direccionInodoRuta != -1){
+            cout << "ERROR IMPOSIBLE CREAR ALGO QUE YA EXISTE: " << this->path << endl;
+            fclose(this->file);
+            return;
+        }
+
+        // FIN VALIDACIONES GENERALES
+
+        // Crear carpeta
+        bool existeCarpeta=true;
+        int direccionInodoActual=this->sb.s_inode_start;
+        // Si la ruta de la carpeta va más allá de '/' (carpeta raiz).
+        if (rutaDividida.size() > 1){
+            for (int i = 0; i < rutaDividida.size() - 1; ++i) {
+                if (existeCarpeta){
+                    int aux=direccionInodoActual;
+                    direccionInodoActual= this->existeCarpeta(rutaDividida, i, direccionInodoActual);
+                    if (direccionInodoActual == aux){
+                        existeCarpeta= false;
+                    }
+                }
+                if(!existeCarpeta){
+                    if (this->r){
+                        direccionInodoActual=this->crearCarpeta(rutaDividida, i, direccionInodoActual);
+                        if (nodo->type=='p'){
+                            fseek(this->file,nodo->start,SEEK_SET);
+                        }else if (nodo->type=='l'){
+                            fseek(file,nodo->start+ sizeof(EBR),SEEK_SET);
+                        }
+                        fwrite(&this->sb, sizeof(SuperBloque),1,file);
+                        if (direccionInodoActual == -1){
+                            return;
+                        }
+                    }else{
+                        cout<<"NO SE PUEDE CREAR EL ARCHIVO"<<endl;
+                        return;
+                    }
+                }
+            }
+        }
+
+        if (direccionInodoActual == -1){
+            cout<<"ERROR AL CREAR LA CARPETA, REVISAR TODO"<<endl;
+            return;
+        }
+        // Si la ruta es en '/' (carpeta raiz)
+        this->crearCarpeta(rutaDividida, rutaDividida.size() - 1, direccionInodoActual);
+        if (nodo->type=='p'){
+            fseek(this->file,nodo->start,SEEK_SET);
+        }else if (nodo->type=='l'){
+            fseek(this->file,nodo->start+ sizeof(EBR),SEEK_SET);
+        }
+        fwrite(&this->sb, sizeof(SuperBloque),1,this->file);
+        if (this->sb.s_filesystem_type==3){
+            this->escribirJorunal("mkdir",'1',this->path,"",nodo);
+        }
+        fclose(this->file);
+        cout<<"SE CREO LA CARPETA "<<this->path<<endl;
+        return;
+    }else{
+        cout <<"EL DISCO SE CAMBIO DE LUGAR O NO SE ENCUENTRA"<<endl;
+    }
+}
+
+int AdminArchivosCarpetas::existeCarpeta(vector<std::string> rutaDivida, int carpetaActual, int direccionInodo) {
+
+    BloqueApuntador puntero1,puntero2,puntero3;
+    BloqueCarpeta blckCarpeta;
+    TablaInodo tablaInodo;
+
+    fseek(file, direccionInodo, SEEK_SET);
+    fread(&tablaInodo, sizeof(TablaInodo), 1, file);
+
+    if (tablaInodo.i_type == '1'){
+        cout<<"ERROR SE ESTA BUSCANDO UNA CARPETA EN UN ARCHIVO"<<endl;
+        return direccionInodo;
+    }
+
+    for (int i = 0; i < 15; ++i) {
+        if (tablaInodo.i_block[i] != -1){
+            if (i<12){
+                fseek(file, tablaInodo.i_block[i], SEEK_SET);
+                fread(&blckCarpeta, sizeof(BloqueCarpeta), 1, file);
+                for (int j = 0; j < 4; ++j) {
+                    if (blckCarpeta.b_content[j].b_name == rutaDivida[carpetaActual]){
+                        return blckCarpeta.b_content[j].b_inodo;
+                    }
+                }
+
+            }
+            else if (i==12){
+                fseek(file, tablaInodo.i_block[i], SEEK_SET);
+                fread(&puntero1, sizeof(BloqueApuntador), 1, file);
+                for (int j = 0; j < 16; ++j) {
+                    if (puntero1.b_pointers[j] != -1){
+                        fseek(file, puntero1.b_pointers[j], SEEK_SET);
+                        fread(&blckCarpeta, sizeof(BloqueCarpeta), 1, file);
+                        for (int k = 0; k < 4; ++k) {
+                            if (blckCarpeta.b_content[k].b_name == rutaDivida[carpetaActual]){
+                                return blckCarpeta.b_content[k].b_inodo;
+                            }
+                        }
+                    }
+                }
+            }
+            else if (i==13){
+                fseek(file, tablaInodo.i_block[i], SEEK_SET);
+                fread(&puntero1, sizeof(BloqueApuntador), 1, file);
+                for (int j = 0; j < 16; ++j) {
+                    if (puntero1.b_pointers[j] != -1){
+                        fseek(file, puntero1.b_pointers[j], SEEK_SET);
+                        fread(&puntero2, sizeof(BloqueApuntador), 1, file);
+                        for (int k = 0; k < 16; ++k) {
+                            if (puntero2.b_pointers[k] != -1){
+                                fseek(file, puntero2.b_pointers[k], SEEK_SET);
+                                fread(&blckCarpeta, sizeof(BloqueCarpeta), 1, file);
+                                for (int z = 0; z < 4; ++z) {
+                                    if (blckCarpeta.b_content[z].b_name == rutaDivida[carpetaActual]){
+                                        return blckCarpeta.b_content[z].b_inodo;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else if (i==14){
+                fseek(file, tablaInodo.i_block[i], SEEK_SET);
+                fread(&puntero1, sizeof(BloqueApuntador), 1, file);
+                for (int j = 0; j < 16; ++j) {
+                    if (puntero1.b_pointers[j] != -1){
+                        fseek(file, puntero1.b_pointers[j], SEEK_SET);
+                        fread(&puntero2, sizeof(BloqueApuntador), 1, file);
+                        for (int k = 0; k < 16; ++k) {
+                            if (puntero2.b_pointers[k] != -1){
+                                fseek(file, puntero2.b_pointers[k], SEEK_SET);
+                                fread(&puntero3, sizeof(BloqueApuntador), 1, file);
+                                for (int z = 0; z < 16; ++z) {
+                                    if (puntero3.b_pointers[z] != -1) {
+                                        fseek(file, puntero3.b_pointers[z], SEEK_SET);
+                                        fread(&blckCarpeta, sizeof(BloqueCarpeta), 1, file);
+                                        for (int y = 0; y < 4; ++y) {
+                                            if (blckCarpeta.b_content[y].b_name == rutaDivida[carpetaActual]){
+                                                return blckCarpeta.b_content[y].b_inodo;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return direccionInodo;
+}
+/**
+ * Procesos:
+ *          - Buscar Rutas recursivamente ( Obtener la direccion final )
+ *          - Validar permisos de escritura en el inodo final
+ *          - Crear Inodo para la carpeta ( modificar bitmap de inodos, actualizar sb.s_firts_ino )
+ *          - Crear bloque carpeta en el Inodo Anteriro ( modificar bitmap de bloques, actualizar sb.s_firsts_blck)
+ * @param rutaDividida
+ * @param carpetaActual
+ * @param direccionInodo
+ * @return
+ */
+int AdminArchivosCarpetas::crearCarpeta(vector<std::string> rutaDividida, int carpetaActual, int direccionInodo) {
+    if (!this->verificarPermisoInodo_Escritura(direccionInodo)){
+        cout << "IMPOSIBLE DE CREAR CARPETA POR FALTA DE PERMISOS EN LA CARPETA: " << rutaDividida[carpetaActual] << endl;
+        return -1;
+    }
+
+    BloqueCarpeta carpeta, carpetaNueva;
+    BloqueApuntador puntero_1, puntero_2, puntero_3, punteroNuevo;
+    TablaInodo tablaInodo, InodoCarpetaNueva;
+
+    int direccionCarpetaNueva=0;
+
+    fseek(this->file, direccionInodo, SEEK_SET);
+    fread(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+
+    if (tablaInodo.i_type == '1'){
+        cout<<"IMPOSIBLE CREAR UNA CARPETA EN UN ARCHIVO"<<endl;
+        return -1;
+    }
+    // Recorrido de los punteros en el inodo
+    for (int i = 0; i < 15; ++i) {
+        // Recordar que el -1 hace referencia a que si el puntero esta sin utilizar.
+        // Punteros directos
+        if (tablaInodo.i_block[i] != -1 && i < 12){ // si esta ocupado el puntero por un bloque carpeta
+            fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
+            fread(&carpeta, sizeof(BloqueCarpeta), 1, this->file);
+            for (int j = 0; j < 4; ++j) { // Recorrer el bloque carpeta para ver si tiene espacio para guardar algo más.
+                if (carpeta.b_content[j].b_inodo == -1) { // si, tiene espacio
+                    if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>0) {
+                        int posInodo= this->getPosicionInodoNuevo();
+                        int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
+                        this->crearInodoCarpeta(posInodo,posCarpetaI);
+                        carpeta.b_content[j].b_inodo=posInodo;
+                        strcpy(carpeta.b_content[j].b_name, rutaDividida[carpetaActual].c_str());
+                        fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
+                        fwrite(&carpeta, sizeof(BloqueCarpeta), 1, this->file);
+                        return posInodo;
+                    }else{
+                        cout << "IMPOSBILE CREAR LA CARPETA " << rutaDividida[carpetaActual] << " DEBIDO A QUE YA NO HAY ESPACIO EN EL SISTEMA" << endl;
+                        return -1;
+                    }
+                }
+            }
+        }
+        else if (tablaInodo.i_block[i] == -1 && i < 12){
+            if (this->sb.s_free_blocks_count > 1 && this->sb.s_free_inodes_count>0) {
+                int posInodo= this->getPosicionInodoNuevo();
+                int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
+                this->crearInodoCarpeta(posInodo,posCarpetaI);
+                int posCarpetaO=this->crearBloqueCarpetaOtra(posInodo, rutaDividida[carpetaActual]);
+                tablaInodo.i_block[i]=posCarpetaO;
+                fseek(this->file, direccionInodo, SEEK_SET);
+                fwrite(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+                return posInodo;
+            }else{
+                cout << "NO HAY SUFICIENTES BLOQUES" << endl;
+                return -1;
+            }
+        }
+        // Puntero simple
+        else if (i == 12 && tablaInodo.i_block[i] == -1) {
+            if (this->sb.s_free_blocks_count > 2 && this->sb.s_free_inodes_count>0) {
+                int posInodo= this->getPosicionInodoNuevo();
+                int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
+                this->crearInodoCarpeta(posInodo,posCarpetaI);
+                int posCarpetaO=this->crearBloqueCarpetaOtra(posInodo, rutaDividida[carpetaActual]);
+                int posApuntador=this->crearBloqueApuntador(posCarpetaO);
+                tablaInodo.i_block[i]=posApuntador;
+                fseek(this->file, direccionInodo, SEEK_SET);
+                fwrite(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+                return posInodo;
+            }else{
+                cout << "NO HAY SUFICIENTES BLOQUES" << endl;
+                return -1;
+            }
+        }
+        else if (i == 12 && tablaInodo.i_block[i] != -1) {
+            fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
+            fread(&puntero_1, sizeof(BloqueApuntador), 1, this->file);
+            for (int p1 = 0; p1 < 16; p1++) {
+                if (puntero_1.b_pointers[p1] == -1) {
+                    if (this->sb.s_free_blocks_count > 1 && this->sb.s_free_inodes_count>0) {
+                        int posInodo= this->getPosicionInodoNuevo();
+                        int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
+                        this->crearInodoCarpeta(posInodo,posCarpetaI);
+                        int posCarpetaO=this->crearBloqueCarpetaOtra(posInodo, rutaDividida[carpetaActual]);
+                        puntero_1.b_pointers[p1]=posCarpetaO;
+                        fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
+                        fwrite(&puntero_1, sizeof(BloqueApuntador), 1, this->file);
+                        return posInodo;
+                    }else{
+                        cout << "NO HAY SUFICIENTES BLOQUES" << endl;
+                        return -1;
+                    }
+                } else if ((puntero_1.b_pointers[p1] != -1)){
+                    fseek(this->file, puntero_1.b_pointers[p1], SEEK_SET);
+                    fread(&carpeta, sizeof(BloqueCarpeta), 1, this->file);
+                    for (int c = 0; c < 4; ++c) {
+                        if (carpeta.b_content[c].b_inodo == -1) {
+                            if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>0) {
+                                int posInodo= this->getPosicionInodoNuevo();
+                                int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
+                                this->crearInodoCarpeta(posInodo,posCarpetaI);
+                                carpeta.b_content[c].b_inodo=posInodo;
+                                strcpy(carpeta.b_content[c].b_name, rutaDividida[carpetaActual].c_str());
+                                fseek(this->file, puntero_1.b_pointers[p1], SEEK_SET);
+                                fwrite(&carpeta, sizeof(BloqueCarpeta), 1, this->file);
+                                return posInodo;
+                            }else{
+                                cout << "NO SE PUEDE CREAR LA CARPETA " << rutaDividida[carpetaActual] << endl;
+                                return -1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Puntero doble
+        else if (i == 13 && tablaInodo.i_block[i] == -1) {
+            if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>3) {
+                int posInodo= this->getPosicionInodoNuevo();
+                int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
+                this->crearInodoCarpeta(posInodo,posCarpetaI);
+                int posCarpetaO=this->crearBloqueCarpetaOtra(posInodo, rutaDividida[carpetaActual]);
+                int point1=this->crearBloqueApuntador(posCarpetaO);
+                int point2=this->crearBloqueApuntador(point1);
+                tablaInodo.i_block[i]=point2;
+                fseek(this->file, direccionInodo, SEEK_SET);
+                fwrite(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+                return posInodo;
+            }else{
+                cout << "NO SE PUEDE CREAR LA CARPETA " << rutaDividida[carpetaActual] << endl;
+                return -1;
+            }
+        }
+        else if (i == 13 && tablaInodo.i_block[i] != -1) {
+            fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
+            fread(&puntero_1, sizeof(BloqueApuntador), 1, this->file);
+            for (int p1 = 0; p1 < 16; ++p1) {
+                if (puntero_1.b_pointers[p1] == -1){
+                    if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>2) {
+                        int posInodo= this->getPosicionInodoNuevo();
+                        int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
+                        this->crearInodoCarpeta(posInodo,posCarpetaI);
+                        int posCarpetaO=this->crearBloqueCarpetaOtra(posInodo, rutaDividida[carpetaActual]);
+                        int point1=this->crearBloqueApuntador(posCarpetaO);
+                        puntero_1.b_pointers[p1]=point1;
+                        fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
+                        fwrite(&puntero_1, sizeof(TablaInodo), 1, this->file);
+                        return posInodo;
+                    }else{
+                        cout << "NO SE PUEDE CREAR LA CARPETA " << rutaDividida[carpetaActual] << endl;
+                        return -1;
+                    }
+                }else if(puntero_1.b_pointers[p1] != -1){
+                    fseek(this->file, puntero_1.b_pointers[p1], SEEK_SET);
+                    fread(&puntero_2, sizeof(BloqueApuntador), 1, this->file);
+                    for (int p2 = 0; p2 < 16; ++p2) {
+                        if (puntero_2.b_pointers[p2] == -1){
+                            if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>1) {
+                                int posInodo= this->getPosicionInodoNuevo();
+                                int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
+                                this->crearInodoCarpeta(posInodo,posCarpetaI);
+                                int posCarpetaO=this->crearBloqueCarpetaOtra(posInodo, rutaDividida[carpetaActual]);
+                                puntero_2.b_pointers[p2]=posCarpetaO;
+                                fseek(this->file, puntero_1.b_pointers[p1], SEEK_SET);
+                                fwrite(&puntero_2, sizeof(TablaInodo), 1, this->file);
+                                return posInodo;
+                            }else{
+                                cout << "NO SE PUEDE CREAR LA CARPETA " << rutaDividida[carpetaActual] << endl;
+                                return -1;
+                            }
+                        }else if (puntero_2.b_pointers[p2] != -1){
+                            fseek(this->file, puntero_2.b_pointers[p2], SEEK_SET);
+                            fread(&carpeta, sizeof(BloqueCarpeta), 1, this->file);
+                            for (int c = 0; c < 4; ++c) {
+                                if (carpeta.b_content[c].b_inodo == -1) {
+                                    if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>0) {
+                                        int posInodo= this->getPosicionInodoNuevo();
+                                        int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
+                                        this->crearInodoCarpeta(posInodo,posCarpetaI);
+                                        carpeta.b_content[c].b_inodo=posInodo;
+                                        strcpy(carpeta.b_content[c].b_name, rutaDividida[carpetaActual].c_str());
+                                        fseek(this->file, puntero_2.b_pointers[p2], SEEK_SET);
+                                        fwrite(&carpeta, sizeof(BloqueCarpeta), 1, this->file);
+                                        return posInodo;
+                                    }else{
+                                        cout << "NO SE PUEDE CREAR LA CARPETA " << rutaDividida[carpetaActual] << endl;
+                                        return -1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Puntero triple
+        else if ((i == 14) && (tablaInodo.i_block[i] == -1)) {
+            if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>4) {
+                int posInodo= this->getPosicionInodoNuevo();
+                int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
+                this->crearInodoCarpeta(posInodo,posCarpetaI);
+                int posCarpetaO=this->crearBloqueCarpetaOtra(posInodo, rutaDividida[carpetaActual]);
+                int point1=this->crearBloqueApuntador(posCarpetaO);
+                int point2=this->crearBloqueApuntador(point1);
+                int point3=this->crearBloqueApuntador(point2);
+                tablaInodo.i_block[i]=point3;
+                fseek(this->file, direccionInodo, SEEK_SET);
+                fwrite(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+                return posInodo;
+            }else{
+                cout << "NO SE PUEDE CREAR LA CARPETA " << rutaDividida[carpetaActual] << endl;
+                return -1;
+            }
+        }
+        else if ((i == 14) && (tablaInodo.i_block[i] != -1)) {
+            fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
+            fread(&puntero_1, sizeof(BloqueApuntador), 1, this->file);
+            for (int p1 = 0; p1 < 16; ++p1) {
+                if (puntero_1.b_pointers[p1] == -1){
+                    if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>3) {
+                        int posInodo= this->getPosicionInodoNuevo();
+                        int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
+                        this->crearInodoCarpeta(posInodo,posCarpetaI);
+                        int posCarpetaO=this->crearBloqueCarpetaOtra(posInodo, rutaDividida[carpetaActual]);
+                        int point1=this->crearBloqueApuntador(posCarpetaO);
+                        int point2=this->crearBloqueApuntador(point1);
+                        puntero_1.b_pointers[p1]=point2;
+                        fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
+                        fwrite(&puntero_1, sizeof(TablaInodo), 1, this->file);
+                        return posInodo;
+                    }else{
+                        cout << "NO SE PUEDE CREAR LA CARPETA " << rutaDividida[carpetaActual] << endl;
+                        return -1;
+                    }
+                }else if (puntero_1.b_pointers[p1] != -1){
+                    fseek(this->file, puntero_1.b_pointers[p1], SEEK_SET);
+                    fread(&puntero_2, sizeof(BloqueApuntador), 1, this->file);
+                    for (int p2 = 0; p2 < 16; ++p2) {
+                        if (puntero_2.b_pointers[p2] == -1){
+                            if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>2) {
+                                int posInodo= this->getPosicionInodoNuevo();
+                                int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
+                                this->crearInodoCarpeta(posInodo,posCarpetaI);
+                                int posCarpetaO=this->crearBloqueCarpetaOtra(posInodo, rutaDividida[carpetaActual]);
+                                int point1=this->crearBloqueApuntador(posCarpetaO);
+                                puntero_2.b_pointers[p2]=point1;
+                                fseek(this->file, puntero_1.b_pointers[p1], SEEK_SET);
+                                fwrite(&puntero_2, sizeof(TablaInodo), 1, this->file);
+                                return posInodo;
+                            }else{
+                                cout << "NO SE PUEDE CREAR LA CARPETA " << rutaDividida[carpetaActual] << endl;
+                                return -1;
+                            }
+                        }else if (puntero_2.b_pointers[p2] != -1){
+                            fseek(this->file, puntero_2.b_pointers[p2], SEEK_SET);
+                            fread(&puntero_3, sizeof(BloqueApuntador), 1, this->file);
+                            for (int p3 = 0; p3 < 16; ++p3) {
+                                if (puntero_3.b_pointers[p3] == -1){
+                                    if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>1) {
+                                        int posInodo= this->getPosicionInodoNuevo();
+                                        int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
+                                        this->crearInodoCarpeta(posInodo,posCarpetaI);
+                                        int posCarpetaO=this->crearBloqueCarpetaOtra(posInodo, rutaDividida[carpetaActual]);
+                                        puntero_3.b_pointers[p3]=posCarpetaO;
+                                        fseek(this->file, puntero_2.b_pointers[p2], SEEK_SET);
+                                        fwrite(&puntero_3, sizeof(TablaInodo), 1, this->file);
+                                        return posInodo;
+                                    }else{
+                                        cout << "NO SE PUEDE CREAR LA CARPETA " << rutaDividida[carpetaActual] << endl;
+                                        return -1;
+                                    }
+                                }else if (puntero_3.b_pointers[p3] != -1){
+                                    fseek(this->file, puntero_3.b_pointers[p3], SEEK_SET);
+                                    fread(&carpeta, sizeof(BloqueCarpeta), 1, this->file);
+                                    for (int c = 0; c < 4; ++c) {
+                                        if (carpeta.b_content[c].b_inodo == -1) {
+                                            if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>0) {
+                                                int posInodo= this->getPosicionInodoNuevo();
+                                                int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
+                                                this->crearInodoCarpeta(posInodo,posCarpetaI);
+                                                carpeta.b_content[c].b_inodo=posInodo;
+                                                strcpy(carpeta.b_content[c].b_name, rutaDividida[carpetaActual].c_str());
+                                                fseek(this->file, puntero_3.b_pointers[p3], SEEK_SET);
+                                                fwrite(&carpeta, sizeof(BloqueCarpeta), 1, this->file);
+                                                return posInodo;
+                                            }else{
+                                                cout << "NO SE PUEDE CREAR LA CARPETA " << rutaDividida[carpetaActual] << endl;
+                                                return -1;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    cout << "IMPOSIBLE CREAR CARPETA " << rutaDividida[carpetaActual] << "" << endl;
+    return -1;
+}
+
+bool AdminArchivosCarpetas::verificarPermisoInodo_Escritura(int direccionInodo) {
+    TablaInodo tablaInodo;
+    fseek(this->file, direccionInodo, SEEK_SET);
+    fread(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+    string permisos= to_string(tablaInodo.i_perm);
+
+    if (permisos.length() == 2){
+        permisos= "0" + permisos;
+    }else if (permisos.length() == 1){
+        permisos= "00" + permisos;
+    }
+
+    // si es admin
+    if (this->usuario->idU==1 && this->usuario->idG==1){
+        return true;
+    }
+    // permisos de grupos
+    else if (tablaInodo.i_gid == usuario->idG){
+        if ((permisos[1] == '2') || (permisos[1] == '3') || (permisos[1] == '6') || (permisos[1] == '7')){
+            return true;
+        }
+    }
+    // permisos de propietario
+    else if ((tablaInodo.i_uid == usuario->idU) && (tablaInodo.i_gid == usuario->idG)){
+        if ((permisos[0] == '2') || (permisos[0] == '3') || (permisos[0] == '6') || (permisos[0] == '7')){
+            return true;
+        }
+    }
+    // permisos de otros
+    else{
+        if ((permisos[2] == '2') || (permisos[2] == '3') || (permisos[2] == '6') || (permisos[2] == '7')){
+            return true;
+        }
+    }
+
+    return false;
+}
+/**
+ * Este método también actualiza el Bit Map de Inodos.
+ * @return
+ */
+int AdminArchivosCarpetas::getPosicionInodoNuevo() {
+
+    int direccionInodos_Start = this->sb.s_bm_inode_start;
+    int direccionInodos_End = direccionInodos_Start + this->sb.s_inodes_count;
+    char uno = '1';
+    int contador_PosicionBitMapInodos = 0;
+    char bit;
+    // Primero Leer el bitmap de inodos ( PUEDE MEJORARSE EL MÉTODO SOLO LEYENDO EL PRIMER BIT LIBRE)
+    for (int j = direccionInodos_Start; j < direccionInodos_End; j++) {
+        fseek(this->file, j, SEEK_SET);
+        fread(&bit, sizeof(char), 1, this->file);
+        if (bit == '0') { // primer espacio disponible
+            fseek(this->file, j, SEEK_SET);
+            fwrite(&uno, sizeof(char), 1, this->file);
+            break;
+        }
+        contador_PosicionBitMapInodos++;
+    }
+    this->sb.s_free_inodes_count-=1; // actualizar el cambio en los inodos
+    int direccionInodo= this->sb.s_inode_start + (sizeof(TablaInodo) * contador_PosicionBitMapInodos);
+
+    // Actualizar el último Inodo Disponible en el sistema
+    this->actualizarUltimoInodoDisponible();
+
+    return direccionInodo;
+}
+int AdminArchivosCarpetas::actualizarUltimoInodoDisponible() {
+    int direccionInodos_Start = this->sb.s_bm_inode_start;
+    int contador_BitMapInodo = 0;
+    int direccionInodos_End = direccionInodos_Start + this->sb.s_inodes_count;
+    char bit;
+    for (int j = direccionInodos_Start; j < direccionInodos_End; j++) {
+        fseek(this->file, j, SEEK_SET);
+        fread(&bit, sizeof(char), 1, this->file);
+        if (bit == '0') { // Primer Inodo Libre
+            contador_BitMapInodo++;
+            break;
+        }
+        contador_BitMapInodo++;
+    }
+    this->sb.s_firts_ino = contador_BitMapInodo;
+}
+
+int AdminArchivosCarpetas::crearBloqueCarpetaInicial(int posActual, int posPadre) {
+    int posBloque=this->buscarPosicionNewBLoque();
+
+    BloqueCarpeta newCarpeta;
+    strcpy(newCarpeta.b_content[0].b_name,".");
+    newCarpeta.b_content[0].b_inodo=posActual;
+    strcpy(newCarpeta.b_content[1].b_name, "..");
+    newCarpeta.b_content[1].b_inodo = posPadre;
+    strcpy(newCarpeta.b_content[2].b_name, "");
+    newCarpeta.b_content[2].b_inodo = -1;
+    strcpy(newCarpeta.b_content[3].b_name, "");
+    newCarpeta.b_content[3].b_inodo = -1;
+
+    fseek(this->file,posBloque,SEEK_SET);
+    fwrite(&newCarpeta, sizeof(BloqueCarpeta),1,this->file);
+
+    return posBloque;
+}
+
 
