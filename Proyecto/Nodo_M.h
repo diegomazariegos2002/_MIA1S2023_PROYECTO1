@@ -1,5 +1,5 @@
-#ifndef CODIGO_FUENTE_NODO_M_H
-#define CODIGO_FUENTE_NODO_M_H
+#ifndef PROYECTO_NODO_M_H
+#define PROYECTO_NODO_M_H
 
 #include <string>
 
@@ -20,4 +20,4 @@ class Nodo_M {
 };
 
 
-#endif //CODIGO_FUENTE_NODO_M_H
+#endif //PROYECTO_NODO_M_H

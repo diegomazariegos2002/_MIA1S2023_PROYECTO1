@@ -26,6 +26,7 @@ Analizador::Analizador(string entrada, MountList *mountList, Usuario *usuario) {
     this->rep=new Rep();
     this->usuario=usuario;
     this->adminU=new AdminUsuarios();
+    this->adminArcCarpt= new AdminArchivosCarpetas();
 }
 
 string Analizador::removeSpace(string entrada) {
@@ -1230,6 +1231,69 @@ void Analizador::analizarEntrada() {
 
         }
         //MKFILE
+        
+        //CAT
+        else if (strncmp(entradaMinus.c_str(), "cat", 3) == 0) {
+            int i = 3;
+            while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                i++;
+            }
+
+            entradaMinus = entradaMinus.erase(0, i);
+            entrada = entrada.erase(0, i);
+            this->adminArcCarpt->rutasCat = new vector<string>;
+
+            while (entrada.length() > 0) {
+                if (strncmp(entradaMinus.c_str(), ">file", 5) == 0){
+                    i = entradaMinus.find("=") + 1;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    this->entrada = this->entrada.erase(0, i);
+                    entradaMinus = entradaMinus.erase(0, i);
+
+
+                    if (entradaMinus[0] == '\"') {
+                        entradaMinus = entradaMinus.erase(0, 1);
+                        this->entrada = this->entrada.erase(0, 1);
+                        i = entradaMinus.find("\"");
+                        string r = this->entrada.substr(0, i);
+                        i += 2;
+
+                        this->adminArcCarpt->rutasCat->push_back(r);
+
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    } else {
+                        i = entradaMinus.find(" ");
+                        string r = this->entrada.substr(0, i);
+                        this->adminArcCarpt->rutasCat->push_back(r);
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    }
+                    adminArcCarpt->mountList= this->mountList;
+                    adminArcCarpt->usuario=this->usuario;
+                    adminArcCarpt->cat();
+                    this->mountList=adminArcCarpt->mountList;
+                    this->usuario=adminArcCarpt->usuario;
+
+
+                }else if (strncmp(entradaMinus.c_str(), "#", 1) == 0) {
+                    //No se opera, ya que entro un comentario
+                    break;
+                }else {
+                    cout << "ERROR EL COMANDO TIENE ALGO MALO: " << entradaMinus << endl;
+                    return;
+                }
+            }
+
+        }
 
         //EXECUTE
         else if(strncmp(entradaMinus.c_str(), "execute", 7) == 0){

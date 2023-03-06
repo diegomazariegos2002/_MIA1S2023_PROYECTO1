@@ -1,5 +1,5 @@
-#ifndef CODIGO_FUENTE_STRUCTS_H
-#define CODIGO_FUENTE_STRUCTS_H
+#ifndef PROYECTO_STRUCTS_H
+#define PROYECTO_STRUCTS_H
 
 #include <time.h>
 
@@ -90,4 +90,4 @@ typedef struct {
 } Journal;
 
 
-#endif //CODIGO_FUENTE_STRUCTS_H
+#endif //PROYECTO_STRUCTS_H

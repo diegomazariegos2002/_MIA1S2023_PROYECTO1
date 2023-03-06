@@ -1,5 +1,5 @@
-#ifndef CODIGO_FUENTE_REP_H
-#define CODIGO_FUENTE_REP_H
+#ifndef PROYECTO_REP_H
+#define PROYECTO_REP_H
 
 #include <string>
 #include <vector>
@@ -49,4 +49,4 @@ class Rep {
         string getPermiso(int permiso);
         string conexiones(int inicio,int final);
 };
-#endif //CODIGO_FUENTE_REP_H
+#endif //PROYECTO_REP_H

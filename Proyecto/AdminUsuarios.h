@@ -1,5 +1,5 @@
-#ifndef CODIGO_FUENTE_ADMINUSUARIOS_H
-#define CODIGO_FUENTE_ADMINUSUARIOS_H
+#ifndef PROYECTO_ADMINUSUARIOS_H
+#define PROYECTO_ADMINUSUARIOS_H
 
 #include <string>
 #include <vector>
@@ -44,4 +44,4 @@ class AdminUsuarios {
 };
 
 
-#endif //CODIGO_FUENTE_ADMINUSUARIOS_H
+#endif //PROYECTO_ADMINUSUARIOS_H

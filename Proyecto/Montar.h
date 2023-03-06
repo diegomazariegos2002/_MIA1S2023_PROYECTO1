@@ -1,5 +1,5 @@
-#ifndef CODIGO_FUENTE_MONTAR_H
-#define CODIGO_FUENTE_MONTAR_H
+#ifndef PROYECTO_MONTAR_H
+#define PROYECTO_MONTAR_H
 
 #include <string>
 #include "MountList.h"
@@ -21,4 +21,4 @@ class Montar {
 };
 
 
-#endif //CODIGO_FUENTE_MONTAR_H
+#endif //PROYECTO_MONTAR_H

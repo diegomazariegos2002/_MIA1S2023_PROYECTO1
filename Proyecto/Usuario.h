@@ -1,5 +1,5 @@
-#ifndef CODIGO_FUENTE_USUARIO_H
-#define CODIGO_FUENTE_USUARIO_H
+#ifndef PROYECTO_USUARIO_H
+#define PROYECTO_USUARIO_H
 
 #include <string>
 
@@ -17,4 +17,4 @@ class Usuario {
 };
 
 
-#endif //CODIGO_FUENTE_USUARIO_H
+#endif //PROYECTO_USUARIO_H

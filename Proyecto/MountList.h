@@ -1,5 +1,5 @@
-#ifndef CODIGO_FUENTE_MOUNTLIST_H
-#define CODIGO_FUENTE_MOUNTLIST_H
+#ifndef PROYECTO_MOUNTLIST_H
+#define PROYECTO_MOUNTLIST_H
 
 #include <string>
 #include "Nodo_M.h"
@@ -19,4 +19,4 @@ class MountList {
 };
 
 
-#endif //CODIGO_FUENTE_MOUNTLIST_H
+#endif //PROYECTO_MOUNTLIST_H

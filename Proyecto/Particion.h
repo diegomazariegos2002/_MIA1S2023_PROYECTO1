@@ -1,5 +1,5 @@
-#ifndef CODIGO_FUENTE_PARTICION_H
-#define CODIGO_FUENTE_PARTICION_H
+#ifndef PROYECTO_PARTICION_H
+#define PROYECTO_PARTICION_H
 
 #include <string>
 
@@ -28,4 +28,4 @@ class Particion {
 };
 
 
-#endif //CODIGO_FUENTE_PARTICION_H
+#endif //PROYECTO_PARTICION_H

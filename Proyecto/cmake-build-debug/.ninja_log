@@ -1,12 +1,13 @@
 # ninja log v5
-4	1184	1675961692579733412	CMakeFiles/Proyecto.dir/MountList.cpp.o	40d1e60c947ba8ba
-1	775	1677976908601381966	CMakeFiles/Proyecto.dir/AdminUsuarios.cpp.o	4d5bdb1677b1681f
-3	1443	1675961692839735446	CMakeFiles/Proyecto.dir/Particion.cpp.o	d157a5f4cff77be6
-3	1345	1677775567174581427	CMakeFiles/Proyecto.dir/Rep.cpp.o	b00454dfd5d7ced
-1	643	1677976908469388130	CMakeFiles/Proyecto.dir/Analizador.cpp.o	a70dfaeb7318f3e2
-0	1161	1675961692555733224	CMakeFiles/Proyecto.dir/Disco.cpp.o	ced9ed1a3af8b005
-1	567	1677540388879456540	CMakeFiles/Proyecto.dir/Usuario.cpp.o	c00a68808e82c8dc
+1	639	1677987700669624570	CMakeFiles/Proyecto.dir/MountList.cpp.o	40d1e60c947ba8ba
+750	1969	1677987702005587919	CMakeFiles/Proyecto.dir/AdminUsuarios.cpp.o	4d5bdb1677b1681f
+1	27	1678065460667347473	build.ninja	93cfdb4993b5261c
+1	1267	1677987701301607227	CMakeFiles/Proyecto.dir/Particion.cpp.o	d157a5f4cff77be6
+640	2160	1677987702193582768	CMakeFiles/Proyecto.dir/Rep.cpp.o	b00454dfd5d7ced
+1	1159	1677987701189610298	CMakeFiles/Proyecto.dir/Analizador.cpp.o	a70dfaeb7318f3e2
+1	859	1677987700893618420	CMakeFiles/Proyecto.dir/Disco.cpp.o	ced9ed1a3af8b005
+860	1332	1677987701369605362	CMakeFiles/Proyecto.dir/Usuario.cpp.o	c00a68808e82c8dc
 775	876	1677976908701377295	Proyecto	804cb863c5bf0993
-3	1126	1675961692519732943	CMakeFiles/Proyecto.dir/Nodo_M.cpp.o	8fca8a09633e76be
-1	515	1677178104081999595	CMakeFiles/Proyecto.dir/Montar.cpp.o	ffc6a59f49985eda
-1	434	1677976908261397846	CMakeFiles/Proyecto.dir/main.cpp.o	8edbf31a7915619e
+1	560	1677987700589626766	CMakeFiles/Proyecto.dir/Nodo_M.cpp.o	8fca8a09633e76be
+560	1551	1677987701585599438	CMakeFiles/Proyecto.dir/Montar.cpp.o	ffc6a59f49985eda
+1	750	1677987700785621385	CMakeFiles/Proyecto.dir/main.cpp.o	8edbf31a7915619e

@@ -109,8 +109,8 @@ build CMakeFiles/Proyecto.dir/Usuario.cpp.o: CXX_COMPILER__Proyecto_Debug /home/
   OBJECT_DIR = CMakeFiles/Proyecto.dir
   OBJECT_FILE_DIR = CMakeFiles/Proyecto.dir
 
-build CMakeFiles/Proyecto.dir/SistemaArchivos.cpp.o: CXX_COMPILER__Proyecto_Debug /home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Proyecto/SistemaArchivos.cpp || cmake_object_order_depends_target_Proyecto
-  DEP_FILE = CMakeFiles/Proyecto.dir/SistemaArchivos.cpp.o.d
+build CMakeFiles/Proyecto.dir/AdminArchivosCarpetas.cpp.o: CXX_COMPILER__Proyecto_Debug /home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Proyecto/AdminArchivosCarpetas.cpp || cmake_object_order_depends_target_Proyecto
+  DEP_FILE = CMakeFiles/Proyecto.dir/AdminArchivosCarpetas.cpp.o.d
   FLAGS = -g -fdiagnostics-color=always -std=gnu++17
   OBJECT_DIR = CMakeFiles/Proyecto.dir
   OBJECT_FILE_DIR = CMakeFiles/Proyecto.dir
@@ -123,7 +123,7 @@ build CMakeFiles/Proyecto.dir/SistemaArchivos.cpp.o: CXX_COMPILER__Proyecto_Debu
 #############################################
 # Link the executable Proyecto
 
-build Proyecto: CXX_EXECUTABLE_LINKER__Proyecto_Debug CMakeFiles/Proyecto.dir/main.cpp.o CMakeFiles/Proyecto.dir/Disco.cpp.o CMakeFiles/Proyecto.dir/Analizador.cpp.o CMakeFiles/Proyecto.dir/Particion.cpp.o CMakeFiles/Proyecto.dir/Nodo_M.cpp.o CMakeFiles/Proyecto.dir/MountList.cpp.o CMakeFiles/Proyecto.dir/Montar.cpp.o CMakeFiles/Proyecto.dir/Rep.cpp.o CMakeFiles/Proyecto.dir/AdminUsuarios.cpp.o CMakeFiles/Proyecto.dir/Usuario.cpp.o CMakeFiles/Proyecto.dir/SistemaArchivos.cpp.o
+build Proyecto: CXX_EXECUTABLE_LINKER__Proyecto_Debug CMakeFiles/Proyecto.dir/main.cpp.o CMakeFiles/Proyecto.dir/Disco.cpp.o CMakeFiles/Proyecto.dir/Analizador.cpp.o CMakeFiles/Proyecto.dir/Particion.cpp.o CMakeFiles/Proyecto.dir/Nodo_M.cpp.o CMakeFiles/Proyecto.dir/MountList.cpp.o CMakeFiles/Proyecto.dir/Montar.cpp.o CMakeFiles/Proyecto.dir/Rep.cpp.o CMakeFiles/Proyecto.dir/AdminUsuarios.cpp.o CMakeFiles/Proyecto.dir/Usuario.cpp.o CMakeFiles/Proyecto.dir/AdminArchivosCarpetas.cpp.o
   FLAGS = -g
   OBJECT_DIR = CMakeFiles/Proyecto.dir
   POST_BUILD = :

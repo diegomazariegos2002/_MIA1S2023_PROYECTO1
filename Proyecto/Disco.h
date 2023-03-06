@@ -1,5 +1,5 @@
-#ifndef CODIGO_FUENTE_ADMINDISK_H
-#define CODIGO_FUENTE_ADMINDISK_H
+#ifndef PROYECTO_ADMINDISK_H
+#define PROYECTO_ADMINDISK_H
 #include <string>
 
 using namespace std;
@@ -19,4 +19,4 @@ class Disco {
 };
 
 
-#endif //CODIGO_FUENTE_ADMINDISK_H
+#endif //PROYECTO_ADMINDISK_H
