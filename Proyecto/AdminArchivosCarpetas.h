@@ -20,6 +20,7 @@ public:
     bool r;
     string cont;
     int size;
+    bool flagGlobal;
     AdminArchivosCarpetas();
     void cat();
     void mkdir();
@@ -41,6 +42,17 @@ public:
     int insertBlckCarpetaExtra(int direccionInodoHijo, string nombreCarpeta);
     int insertBlckApuntador(int direccionInodoHijo);
 
+    string leerArchivoComputadora();
+
+    string getCadenaSize();
+
+    vector<string> getArrayBlks(string cadena);
+
+    void crearInodoArchivo(int direccionInodo);
+
+    int enlazarArchivoCarpeta(int direccionArchivo, int direccionCarpeta, string nombreArchivo);
+
+    TablaInodo addFile(int blckActual, int noBlckBitMap, std::string cadena, TablaInodo inodo);
 };
 
 
