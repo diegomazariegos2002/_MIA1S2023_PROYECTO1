@@ -414,6 +414,7 @@ void AdminArchivosCarpetas::registrarJournal(string tipo_Op, char tipo, string n
 }
 
 void AdminArchivosCarpetas::mkdir() {
+    // VALIDACIONES GENERALES
     Nodo_M *nodo=this->mountList->buscar(usuario->idMount);
     if (nodo==NULL){
         cout <<"NO EXISTE MONTURA CON EL ID: "<< this->usuario->idMount<< "EN EL SISTEMA, FAVOR REVISAR"<<endl;
@@ -478,11 +479,12 @@ void AdminArchivosCarpetas::mkdir() {
                 }
                 if(!existeCarpeta){
                     if (this->r){
-                        direccionInodoActual=this->crearCarpeta(rutaDividida, i, direccionInodoActual);
-                        if (nodo->type=='p'){
-                            fseek(this->file,nodo->start,SEEK_SET);
-                        }else if (nodo->type=='l'){
+                        direccionInodoActual= this->insertCarpeta(rutaDividida, i, direccionInodoActual);
+                        if (nodo->type=='l'){
                             fseek(file,nodo->start+ sizeof(EBR),SEEK_SET);
+                        }
+                        else if (nodo->type=='p'){
+                            fseek(this->file,nodo->start,SEEK_SET);
                         }
                         fwrite(&this->sb, sizeof(SuperBloque),1,file);
                         if (direccionInodoActual == -1){
@@ -501,18 +503,20 @@ void AdminArchivosCarpetas::mkdir() {
             return;
         }
         // Si la ruta es en '/' (carpeta raiz)
-        this->crearCarpeta(rutaDividida, rutaDividida.size() - 1, direccionInodoActual);
-        if (nodo->type=='p'){
-            fseek(this->file,nodo->start,SEEK_SET);
-        }else if (nodo->type=='l'){
+        this->insertCarpeta(rutaDividida, rutaDividida.size() - 1, direccionInodoActual);
+        if (nodo->type=='l'){
             fseek(this->file,nodo->start+ sizeof(EBR),SEEK_SET);
         }
+        else if (nodo->type=='p'){
+            fseek(this->file,nodo->start,SEEK_SET);
+        }
         fwrite(&this->sb, sizeof(SuperBloque),1,this->file);
+
         if (this->sb.s_filesystem_type==3){
-            this->escribirJorunal("mkdir",'1',this->path,"",nodo);
+            this->registrarJournal("mkdir",'1',this->path,"",nodo);
         }
         fclose(this->file);
-        cout<<"SE CREO LA CARPETA "<<this->path<<endl;
+        cout<<"COMANDO EJECUTADO CON EXITO, CARPETA "<<this->path<< " CREADA" <<endl;
         return;
     }else{
         cout <<"EL DISCO SE CAMBIO DE LUGAR O NO SE ENCUENTRA"<<endl;
@@ -620,11 +624,11 @@ int AdminArchivosCarpetas::existeCarpeta(vector<std::string> rutaDivida, int car
  *          - Crear bloque carpeta en el Inodo Anteriro ( modificar bitmap de bloques, actualizar sb.s_firsts_blck)
  * @param rutaDividida
  * @param carpetaActual
- * @param direccionInodo
+ * @param direccionInodoPadre
  * @return
  */
-int AdminArchivosCarpetas::crearCarpeta(vector<std::string> rutaDividida, int carpetaActual, int direccionInodo) {
-    if (!this->verificarPermisoInodo_Escritura(direccionInodo)){
+int AdminArchivosCarpetas::insertCarpeta(vector<std::string> rutaDividida, int carpetaActual, int direccionInodoPadre) {
+    if (!this->verificarPermisoInodo_Escritura(direccionInodoPadre)){
         cout << "IMPOSIBLE DE CREAR CARPETA POR FALTA DE PERMISOS EN LA CARPETA: " << rutaDividida[carpetaActual] << endl;
         return -1;
     }
@@ -635,7 +639,7 @@ int AdminArchivosCarpetas::crearCarpeta(vector<std::string> rutaDividida, int ca
 
     int direccionCarpetaNueva=0;
 
-    fseek(this->file, direccionInodo, SEEK_SET);
+    fseek(this->file, direccionInodoPadre, SEEK_SET);
     fread(&tablaInodo, sizeof(TablaInodo), 1, this->file);
 
     if (tablaInodo.i_type == '1'){
@@ -645,284 +649,349 @@ int AdminArchivosCarpetas::crearCarpeta(vector<std::string> rutaDividida, int ca
     // Recorrido de los punteros en el inodo
     for (int i = 0; i < 15; ++i) {
         // Recordar que el -1 hace referencia a que si el puntero esta sin utilizar.
+
         // Punteros directos
+        // OCUPADO
         if (tablaInodo.i_block[i] != -1 && i < 12){ // si esta ocupado el puntero por un bloque carpeta
             fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
             fread(&carpeta, sizeof(BloqueCarpeta), 1, this->file);
             for (int j = 0; j < 4; ++j) { // Recorrer el bloque carpeta para ver si tiene espacio para guardar algo más.
                 if (carpeta.b_content[j].b_inodo == -1) { // si, tiene espacio
-                    if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>0) {
-                        int posInodo= this->getPosicionInodoNuevo();
-                        int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
-                        this->crearInodoCarpeta(posInodo,posCarpetaI);
-                        carpeta.b_content[j].b_inodo=posInodo;
+                    if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>0) { // validar bloques e inodos libres
+                        // Buscar donde se va a posicionar
+                        int direccionInodoNuevo= this->getDireccionInodoNuevo();
+                        // Posicionar el bloque de carpeta inicial para el inodo
+                        int direccionBlckCarpeta= this->insertBlckCarpetaInicial(direccionInodoNuevo,
+                                                                                 direccionInodoPadre);
+                        // Posicionar el Inodo enlazado a su respectiva carpeta inicial
+                        this->insertInodoCarpeta(direccionInodoNuevo, direccionBlckCarpeta);
+                        // Enlazar la carpeta padre (ya existente) al inodo nuevo ( hijo ).
+                        carpeta.b_content[j].b_inodo=direccionInodoNuevo;
+                        // Pasando el nombre de la carpeta al padre.
                         strcpy(carpeta.b_content[j].b_name, rutaDividida[carpetaActual].c_str());
+                        // Escribir el bloque de carpeta actualizado
                         fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
                         fwrite(&carpeta, sizeof(BloqueCarpeta), 1, this->file);
-                        return posInodo;
+                        return direccionInodoNuevo;
                     }else{
-                        cout << "IMPOSBILE CREAR LA CARPETA " << rutaDividida[carpetaActual] << " DEBIDO A QUE YA NO HAY ESPACIO EN EL SISTEMA" << endl;
+                        cout << "IMPOSIBLE CREAR LA CARPETA " << rutaDividida[carpetaActual] << " DEBIDO A QUE YA NO HAY ESPACIO EN EL SISTEMA" << endl;
                         return -1;
                     }
                 }
             }
         }
-        else if (tablaInodo.i_block[i] == -1 && i < 12){
+        // LIBRE
+        else if (tablaInodo.i_block[i] == -1 && i < 12){ // puntero sin apuntar a BLOQUE CARPETA (CREAR BLOQUE CARPETA EXTRA)
             if (this->sb.s_free_blocks_count > 1 && this->sb.s_free_inodes_count>0) {
-                int posInodo= this->getPosicionInodoNuevo();
-                int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
-                this->crearInodoCarpeta(posInodo,posCarpetaI);
-                int posCarpetaO=this->crearBloqueCarpetaOtra(posInodo, rutaDividida[carpetaActual]);
-                tablaInodo.i_block[i]=posCarpetaO;
-                fseek(this->file, direccionInodo, SEEK_SET);
+                // desde
+                int direccionInodoNuevo= this->getDireccionInodoNuevo();
+                int direccionBlckCarpetaInicial= this->insertBlckCarpetaInicial(direccionInodoNuevo,
+                                                                                direccionInodoPadre);
+                this->insertInodoCarpeta(direccionInodoNuevo, direccionBlckCarpetaInicial);
+                // hasta es lo mismo de arriba.
+                // la diferencia radica en, crear un nuevo carpeta en el inodo padre para contener al inodo hijo.
+                // INODO PADRE ( nuevo blck carp ) -> INODO HIJO
+                int direccionBlckCarpetaExtra = this->insertBlckCarpetaExtra(direccionInodoNuevo, rutaDividida[carpetaActual]);
+                tablaInodo.i_block[i] = direccionBlckCarpetaExtra;
+                // Escribir el inodo actualizado
+                fseek(this->file, direccionInodoPadre, SEEK_SET);
                 fwrite(&tablaInodo, sizeof(TablaInodo), 1, this->file);
-                return posInodo;
+                return direccionInodoNuevo;
             }else{
-                cout << "NO HAY SUFICIENTES BLOQUES" << endl;
+                cout << "IMPOSIBLE CREAR LA CARPETA " << rutaDividida[carpetaActual] << " DEBIDO A QUE YA NO HAY ESPACIO EN EL SISTEMA" << endl;
                 return -1;
             }
         }
-        // Puntero simple
-        else if (i == 12 && tablaInodo.i_block[i] == -1) {
-            if (this->sb.s_free_blocks_count > 2 && this->sb.s_free_inodes_count>0) {
-                int posInodo= this->getPosicionInodoNuevo();
-                int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
-                this->crearInodoCarpeta(posInodo,posCarpetaI);
-                int posCarpetaO=this->crearBloqueCarpetaOtra(posInodo, rutaDividida[carpetaActual]);
-                int posApuntador=this->crearBloqueApuntador(posCarpetaO);
-                tablaInodo.i_block[i]=posApuntador;
-                fseek(this->file, direccionInodo, SEEK_SET);
-                fwrite(&tablaInodo, sizeof(TablaInodo), 1, this->file);
-                return posInodo;
-            }else{
-                cout << "NO HAY SUFICIENTES BLOQUES" << endl;
-                return -1;
-            }
-        }
+
+        // Puntero simples
+        // OCUPADO
         else if (i == 12 && tablaInodo.i_block[i] != -1) {
+            // Ya existe un bloque apuntador, o sea solo se lee
             fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
             fread(&puntero_1, sizeof(BloqueApuntador), 1, this->file);
-            for (int p1 = 0; p1 < 16; p1++) {
-                if (puntero_1.b_pointers[p1] == -1) {
-                    if (this->sb.s_free_blocks_count > 1 && this->sb.s_free_inodes_count>0) {
-                        int posInodo= this->getPosicionInodoNuevo();
-                        int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
-                        this->crearInodoCarpeta(posInodo,posCarpetaI);
-                        int posCarpetaO=this->crearBloqueCarpetaOtra(posInodo, rutaDividida[carpetaActual]);
-                        puntero_1.b_pointers[p1]=posCarpetaO;
-                        fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
-                        fwrite(&puntero_1, sizeof(BloqueApuntador), 1, this->file);
-                        return posInodo;
-                    }else{
-                        cout << "NO HAY SUFICIENTES BLOQUES" << endl;
-                        return -1;
-                    }
-                } else if ((puntero_1.b_pointers[p1] != -1)){
-                    fseek(this->file, puntero_1.b_pointers[p1], SEEK_SET);
+            for (int j = 0; j < 16; j++) { // RECORRER PUNTEROS DIRECTOS
+                // OCUPADO
+                if ((puntero_1.b_pointers[j] != -1)){
+                    fseek(this->file, puntero_1.b_pointers[j], SEEK_SET);
                     fread(&carpeta, sizeof(BloqueCarpeta), 1, this->file);
-                    for (int c = 0; c < 4; ++c) {
-                        if (carpeta.b_content[c].b_inodo == -1) {
+                    for (int k = 0; k < 4; ++k) {
+                        if (carpeta.b_content[k].b_inodo == -1) {
                             if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>0) {
-                                int posInodo= this->getPosicionInodoNuevo();
-                                int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
-                                this->crearInodoCarpeta(posInodo,posCarpetaI);
-                                carpeta.b_content[c].b_inodo=posInodo;
-                                strcpy(carpeta.b_content[c].b_name, rutaDividida[carpetaActual].c_str());
-                                fseek(this->file, puntero_1.b_pointers[p1], SEEK_SET);
+                                int direccionInodoNuevo= this->getDireccionInodoNuevo();
+                                int direccionBlckCarpetaInicial= this->insertBlckCarpetaInicial(direccionInodoNuevo,
+                                                                                                direccionInodoPadre);
+                                this->insertInodoCarpeta(direccionInodoNuevo, direccionBlckCarpetaInicial);
+                                carpeta.b_content[k].b_inodo=direccionInodoNuevo;
+                                strcpy(carpeta.b_content[k].b_name, rutaDividida[carpetaActual].c_str());
+                                fseek(this->file, puntero_1.b_pointers[j], SEEK_SET);
                                 fwrite(&carpeta, sizeof(BloqueCarpeta), 1, this->file);
-                                return posInodo;
+                                return direccionInodoNuevo;
                             }else{
-                                cout << "NO SE PUEDE CREAR LA CARPETA " << rutaDividida[carpetaActual] << endl;
+                                cout << "IMPOSIBLE CREAR LA CARPETA " << rutaDividida[carpetaActual] << " DEBIDO A QUE YA NO HAY ESPACIO EN EL SISTEMA" << endl;
                                 return -1;
                             }
                         }
                     }
                 }
+                // LIBRE
+                else if (puntero_1.b_pointers[j] == -1) {
+                    if (this->sb.s_free_blocks_count > 1 && this->sb.s_free_inodes_count>0) {
+                        int direccionInodoNuevo= this->getDireccionInodoNuevo();
+                        int direccionBlckCarpetaInicial= this->insertBlckCarpetaInicial(direccionInodoNuevo,
+                                                                                        direccionInodoPadre);
+                        this->insertInodoCarpeta(direccionInodoNuevo, direccionBlckCarpetaInicial);
+                        int direccionBlckCarpetaExtra = this->insertBlckCarpetaExtra(direccionInodoNuevo,
+                                                                                     rutaDividida[carpetaActual]);
+                        // Se actualiza y escribe el BLOQUE APUNTADOR de punteros directos
+                        puntero_1.b_pointers[j]=direccionBlckCarpetaExtra;
+                        fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
+                        fwrite(&puntero_1, sizeof(BloqueApuntador), 1, this->file);
+                        return direccionInodoNuevo;
+                    }else{
+                        cout << "IMPOSIBLE CREAR LA CARPETA " << rutaDividida[carpetaActual] << " DEBIDO A QUE YA NO HAY ESPACIO EN EL SISTEMA" << endl;
+                        return -1;
+                    }
+                }
             }
         }
-        // Puntero doble
-        else if (i == 13 && tablaInodo.i_block[i] == -1) {
-            if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>3) {
-                int posInodo= this->getPosicionInodoNuevo();
-                int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
-                this->crearInodoCarpeta(posInodo,posCarpetaI);
-                int posCarpetaO=this->crearBloqueCarpetaOtra(posInodo, rutaDividida[carpetaActual]);
-                int point1=this->crearBloqueApuntador(posCarpetaO);
-                int point2=this->crearBloqueApuntador(point1);
-                tablaInodo.i_block[i]=point2;
-                fseek(this->file, direccionInodo, SEEK_SET);
+        // LIBRE
+        else if (i == 12 && tablaInodo.i_block[i] == -1) {
+            // No existe un bloque apuntador, o sea, hay que crearlo y asignarlo.
+            if (this->sb.s_free_blocks_count > 2 && this->sb.s_free_inodes_count>0) {
+                // desde
+                int direccionInodoNuevo= this->getDireccionInodoNuevo();
+                int direccionBlckCarpetaInicial= this->insertBlckCarpetaInicial(direccionInodoNuevo, direccionInodoPadre);
+                this->insertInodoCarpeta(direccionInodoNuevo, direccionBlckCarpetaInicial);
+                int direccionBlckCarpetaExtra= this->insertBlckCarpetaExtra(direccionInodoNuevo, rutaDividida[carpetaActual]);
+                // hasta -> igual lo que cambia es la asignacion de bloque apuntador
+
+                int posBlckApuntador1= this->insertBlckApuntador(direccionBlckCarpetaExtra);
+                tablaInodo.i_block[i]=posBlckApuntador1;
+                fseek(this->file, direccionInodoPadre, SEEK_SET);
                 fwrite(&tablaInodo, sizeof(TablaInodo), 1, this->file);
-                return posInodo;
+                return direccionInodoNuevo;
             }else{
-                cout << "NO SE PUEDE CREAR LA CARPETA " << rutaDividida[carpetaActual] << endl;
+                cout << "IMPOSIBLE CREAR LA CARPETA " << rutaDividida[carpetaActual] << " DEBIDO A QUE YA NO HAY ESPACIO EN EL SISTEMA" << endl;
                 return -1;
             }
         }
+
+        // Puntero dobles
+        // OCUPADO
         else if (i == 13 && tablaInodo.i_block[i] != -1) {
             fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
             fread(&puntero_1, sizeof(BloqueApuntador), 1, this->file);
-            for (int p1 = 0; p1 < 16; ++p1) {
-                if (puntero_1.b_pointers[p1] == -1){
-                    if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>2) {
-                        int posInodo= this->getPosicionInodoNuevo();
-                        int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
-                        this->crearInodoCarpeta(posInodo,posCarpetaI);
-                        int posCarpetaO=this->crearBloqueCarpetaOtra(posInodo, rutaDividida[carpetaActual]);
-                        int point1=this->crearBloqueApuntador(posCarpetaO);
-                        puntero_1.b_pointers[p1]=point1;
-                        fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
-                        fwrite(&puntero_1, sizeof(TablaInodo), 1, this->file);
-                        return posInodo;
-                    }else{
-                        cout << "NO SE PUEDE CREAR LA CARPETA " << rutaDividida[carpetaActual] << endl;
-                        return -1;
-                    }
-                }else if(puntero_1.b_pointers[p1] != -1){
-                    fseek(this->file, puntero_1.b_pointers[p1], SEEK_SET);
+            for (int j = 0; j < 16; ++j) { // RECORRER PUNTEROS SIMPLES
+                // OCUPADO
+                if(puntero_1.b_pointers[j] != -1){
+                    fseek(this->file, puntero_1.b_pointers[j], SEEK_SET);
                     fread(&puntero_2, sizeof(BloqueApuntador), 1, this->file);
-                    for (int p2 = 0; p2 < 16; ++p2) {
-                        if (puntero_2.b_pointers[p2] == -1){
-                            if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>1) {
-                                int posInodo= this->getPosicionInodoNuevo();
-                                int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
-                                this->crearInodoCarpeta(posInodo,posCarpetaI);
-                                int posCarpetaO=this->crearBloqueCarpetaOtra(posInodo, rutaDividida[carpetaActual]);
-                                puntero_2.b_pointers[p2]=posCarpetaO;
-                                fseek(this->file, puntero_1.b_pointers[p1], SEEK_SET);
-                                fwrite(&puntero_2, sizeof(TablaInodo), 1, this->file);
-                                return posInodo;
-                            }else{
-                                cout << "NO SE PUEDE CREAR LA CARPETA " << rutaDividida[carpetaActual] << endl;
-                                return -1;
-                            }
-                        }else if (puntero_2.b_pointers[p2] != -1){
-                            fseek(this->file, puntero_2.b_pointers[p2], SEEK_SET);
+                    for (int k = 0; k < 16; ++k) { // RECORRER PUNTEROS DIRECTOS
+                        // OCUPADO
+                        if (puntero_2.b_pointers[k] != -1){
+                            fseek(this->file, puntero_2.b_pointers[k], SEEK_SET);
                             fread(&carpeta, sizeof(BloqueCarpeta), 1, this->file);
-                            for (int c = 0; c < 4; ++c) {
-                                if (carpeta.b_content[c].b_inodo == -1) {
+                            for (int z = 0; z < 4; ++z) {
+                                if (carpeta.b_content[z].b_inodo == -1) {
                                     if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>0) {
-                                        int posInodo= this->getPosicionInodoNuevo();
-                                        int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
-                                        this->crearInodoCarpeta(posInodo,posCarpetaI);
-                                        carpeta.b_content[c].b_inodo=posInodo;
-                                        strcpy(carpeta.b_content[c].b_name, rutaDividida[carpetaActual].c_str());
-                                        fseek(this->file, puntero_2.b_pointers[p2], SEEK_SET);
+                                        int direccionInodoNuevo= this->getDireccionInodoNuevo();
+                                        int direccionBlckCarpetaInicial= this->insertBlckCarpetaInicial(direccionInodoNuevo,
+                                                                                                        direccionInodoPadre);
+                                        this->insertInodoCarpeta(direccionInodoNuevo, direccionBlckCarpetaInicial);
+                                        carpeta.b_content[z].b_inodo=direccionInodoNuevo;
+                                        strcpy(carpeta.b_content[z].b_name, rutaDividida[carpetaActual].c_str());
+                                        fseek(this->file, puntero_2.b_pointers[k], SEEK_SET);
                                         fwrite(&carpeta, sizeof(BloqueCarpeta), 1, this->file);
-                                        return posInodo;
+                                        return direccionInodoNuevo;
                                     }else{
-                                        cout << "NO SE PUEDE CREAR LA CARPETA " << rutaDividida[carpetaActual] << endl;
+                                        cout << "IMPOSIBLE CREAR LA CARPETA " << rutaDividida[carpetaActual] << " DEBIDO A QUE YA NO HAY ESPACIO EN EL SISTEMA" << endl;
                                         return -1;
                                     }
                                 }
                             }
                         }
+                        // LIBRE
+                        else if (puntero_2.b_pointers[k] == -1){
+                            if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>1) {
+                                int direccionInodoNuevo= this->getDireccionInodoNuevo();
+                                int direccionBlckCarpetaInicial= this->insertBlckCarpetaInicial(direccionInodoNuevo,
+                                                                                                direccionInodoPadre);
+                                this->insertInodoCarpeta(direccionInodoNuevo, direccionBlckCarpetaInicial);
+                                int direccionBlckCarpetaExtra= this->insertBlckCarpetaExtra(direccionInodoNuevo,
+                                                                                            rutaDividida[carpetaActual]);
+                                puntero_2.b_pointers[k]=direccionBlckCarpetaExtra;
+                                fseek(this->file, puntero_1.b_pointers[j], SEEK_SET);
+                                fwrite(&puntero_2, sizeof(TablaInodo), 1, this->file);
+                                return direccionInodoNuevo;
+                            }else{
+                                cout << "IMPOSIBLE CREAR LA CARPETA " << rutaDividida[carpetaActual] << " DEBIDO A QUE YA NO HAY ESPACIO EN EL SISTEMA" << endl;
+                                return -1;
+                            }
+                        }
+                    }
+                }
+                // LIBRE
+                else if (puntero_1.b_pointers[j] == -1){
+                    if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>2) {
+                        int direccionInodoNuevo= this->getDireccionInodoNuevo();
+                        int direccionBlckCarpetaInicial= this->insertBlckCarpetaInicial(direccionInodoNuevo,
+                                                                                        direccionInodoPadre);
+                        this->insertInodoCarpeta(direccionInodoNuevo, direccionBlckCarpetaInicial);
+                        int direccionBlckCarpetaExtra= this->insertBlckCarpetaExtra(direccionInodoNuevo,
+                                                                                    rutaDividida[carpetaActual]);
+                        int direccionPunteroSimpleNuevo= this->insertBlckApuntador(direccionBlckCarpetaExtra);
+                        puntero_1.b_pointers[j]=direccionPunteroSimpleNuevo;
+                        fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
+                        fwrite(&puntero_1, sizeof(TablaInodo), 1, this->file);
+                        return direccionInodoNuevo;
+                    }else{
+                        cout << "IMPOSIBLE CREAR LA CARPETA " << rutaDividida[carpetaActual] << " DEBIDO A QUE YA NO HAY ESPACIO EN EL SISTEMA" << endl;
+                        return -1;
                     }
                 }
             }
         }
-        // Puntero triple
-        else if ((i == 14) && (tablaInodo.i_block[i] == -1)) {
-            if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>4) {
-                int posInodo= this->getPosicionInodoNuevo();
-                int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
-                this->crearInodoCarpeta(posInodo,posCarpetaI);
-                int posCarpetaO=this->crearBloqueCarpetaOtra(posInodo, rutaDividida[carpetaActual]);
-                int point1=this->crearBloqueApuntador(posCarpetaO);
-                int point2=this->crearBloqueApuntador(point1);
-                int point3=this->crearBloqueApuntador(point2);
-                tablaInodo.i_block[i]=point3;
-                fseek(this->file, direccionInodo, SEEK_SET);
+        // LIBRE
+        else if (i == 13 && tablaInodo.i_block[i] == -1) {
+            if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>3) {
+                int direccionInodoNuevo= this->getDireccionInodoNuevo();
+                int direccionBlckCarpetaInicial= this->insertBlckCarpetaInicial(direccionInodoNuevo, direccionInodoPadre);
+                this->insertInodoCarpeta(direccionInodoNuevo, direccionBlckCarpetaInicial);
+                int direccionBlckCarpetaExtra= this->insertBlckCarpetaExtra(direccionInodoNuevo, rutaDividida[carpetaActual]);
+                int direccionBlckApuntador_1= this->insertBlckApuntador(direccionBlckCarpetaExtra);
+                int direccionBlckApuntador_2= this->insertBlckApuntador(direccionBlckApuntador_1);
+                tablaInodo.i_block[i]=direccionBlckApuntador_2;
+                fseek(this->file, direccionInodoPadre, SEEK_SET);
                 fwrite(&tablaInodo, sizeof(TablaInodo), 1, this->file);
-                return posInodo;
+                return direccionInodoNuevo;
             }else{
-                cout << "NO SE PUEDE CREAR LA CARPETA " << rutaDividida[carpetaActual] << endl;
+                cout << "IMPOSIBLE CREAR LA CARPETA " << rutaDividida[carpetaActual] << " DEBIDO A QUE YA NO HAY ESPACIO EN EL SISTEMA" << endl;
                 return -1;
             }
         }
+
+        // Puntero triples
+        // OCUPADO
         else if ((i == 14) && (tablaInodo.i_block[i] != -1)) {
             fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
             fread(&puntero_1, sizeof(BloqueApuntador), 1, this->file);
-            for (int p1 = 0; p1 < 16; ++p1) {
-                if (puntero_1.b_pointers[p1] == -1){
-                    if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>3) {
-                        int posInodo= this->getPosicionInodoNuevo();
-                        int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
-                        this->crearInodoCarpeta(posInodo,posCarpetaI);
-                        int posCarpetaO=this->crearBloqueCarpetaOtra(posInodo, rutaDividida[carpetaActual]);
-                        int point1=this->crearBloqueApuntador(posCarpetaO);
-                        int point2=this->crearBloqueApuntador(point1);
-                        puntero_1.b_pointers[p1]=point2;
-                        fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
-                        fwrite(&puntero_1, sizeof(TablaInodo), 1, this->file);
-                        return posInodo;
-                    }else{
-                        cout << "NO SE PUEDE CREAR LA CARPETA " << rutaDividida[carpetaActual] << endl;
-                        return -1;
-                    }
-                }else if (puntero_1.b_pointers[p1] != -1){
-                    fseek(this->file, puntero_1.b_pointers[p1], SEEK_SET);
+            for (int j = 0; j < 16; ++j) { // RECORRER PUNTEROS DOBLES
+                // OCUPADO
+                if (puntero_1.b_pointers[j] != -1){
+                    fseek(this->file, puntero_1.b_pointers[j], SEEK_SET);
                     fread(&puntero_2, sizeof(BloqueApuntador), 1, this->file);
-                    for (int p2 = 0; p2 < 16; ++p2) {
-                        if (puntero_2.b_pointers[p2] == -1){
-                            if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>2) {
-                                int posInodo= this->getPosicionInodoNuevo();
-                                int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
-                                this->crearInodoCarpeta(posInodo,posCarpetaI);
-                                int posCarpetaO=this->crearBloqueCarpetaOtra(posInodo, rutaDividida[carpetaActual]);
-                                int point1=this->crearBloqueApuntador(posCarpetaO);
-                                puntero_2.b_pointers[p2]=point1;
-                                fseek(this->file, puntero_1.b_pointers[p1], SEEK_SET);
-                                fwrite(&puntero_2, sizeof(TablaInodo), 1, this->file);
-                                return posInodo;
-                            }else{
-                                cout << "NO SE PUEDE CREAR LA CARPETA " << rutaDividida[carpetaActual] << endl;
-                                return -1;
-                            }
-                        }else if (puntero_2.b_pointers[p2] != -1){
-                            fseek(this->file, puntero_2.b_pointers[p2], SEEK_SET);
+                    for (int k = 0; k < 16; ++k) { // RECORRER PUNTEROS SIMPLES
+                        // OCUPADO
+                        if (puntero_2.b_pointers[k] != -1){
+                            fseek(this->file, puntero_2.b_pointers[k], SEEK_SET);
                             fread(&puntero_3, sizeof(BloqueApuntador), 1, this->file);
-                            for (int p3 = 0; p3 < 16; ++p3) {
-                                if (puntero_3.b_pointers[p3] == -1){
-                                    if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>1) {
-                                        int posInodo= this->getPosicionInodoNuevo();
-                                        int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
-                                        this->crearInodoCarpeta(posInodo,posCarpetaI);
-                                        int posCarpetaO=this->crearBloqueCarpetaOtra(posInodo, rutaDividida[carpetaActual]);
-                                        puntero_3.b_pointers[p3]=posCarpetaO;
-                                        fseek(this->file, puntero_2.b_pointers[p2], SEEK_SET);
-                                        fwrite(&puntero_3, sizeof(TablaInodo), 1, this->file);
-                                        return posInodo;
-                                    }else{
-                                        cout << "NO SE PUEDE CREAR LA CARPETA " << rutaDividida[carpetaActual] << endl;
-                                        return -1;
-                                    }
-                                }else if (puntero_3.b_pointers[p3] != -1){
-                                    fseek(this->file, puntero_3.b_pointers[p3], SEEK_SET);
+                            for (int z = 0; z < 16; ++z) { // RECORRER PUNTEROS DIRECTOS
+                                // OCUPADO
+                                if (puntero_3.b_pointers[z] != -1){
+                                    fseek(this->file, puntero_3.b_pointers[z], SEEK_SET);
                                     fread(&carpeta, sizeof(BloqueCarpeta), 1, this->file);
-                                    for (int c = 0; c < 4; ++c) {
-                                        if (carpeta.b_content[c].b_inodo == -1) {
+                                    for (int x = 0; x < 4; ++x) { // RECORRER BLOQUE CARPETA
+                                        if (carpeta.b_content[x].b_inodo == -1) {
                                             if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>0) {
-                                                int posInodo= this->getPosicionInodoNuevo();
-                                                int posCarpetaI=this->crearBloqueCarpetaInicial(posInodo, direccionInodo);
-                                                this->crearInodoCarpeta(posInodo,posCarpetaI);
-                                                carpeta.b_content[c].b_inodo=posInodo;
-                                                strcpy(carpeta.b_content[c].b_name, rutaDividida[carpetaActual].c_str());
-                                                fseek(this->file, puntero_3.b_pointers[p3], SEEK_SET);
+                                                int direccionInodoNuevo= this->getDireccionInodoNuevo();
+                                                int direccionBlckCarpetaInicial= this->insertBlckCarpetaInicial(
+                                                        direccionInodoNuevo, direccionInodoPadre);
+                                                this->insertInodoCarpeta(direccionInodoNuevo, direccionBlckCarpetaInicial);
+                                                carpeta.b_content[x].b_inodo=direccionInodoNuevo;
+                                                strcpy(carpeta.b_content[x].b_name, rutaDividida[carpetaActual].c_str());
+                                                fseek(this->file, puntero_3.b_pointers[z], SEEK_SET);
                                                 fwrite(&carpeta, sizeof(BloqueCarpeta), 1, this->file);
-                                                return posInodo;
+                                                return direccionInodoNuevo;
                                             }else{
-                                                cout << "NO SE PUEDE CREAR LA CARPETA " << rutaDividida[carpetaActual] << endl;
+                                                cout << "IMPOSIBLE CREAR LA CARPETA " << rutaDividida[carpetaActual] << " DEBIDO A QUE YA NO HAY ESPACIO EN EL SISTEMA" << endl;
                                                 return -1;
                                             }
                                         }
                                     }
                                 }
+                                // LIBRE
+                                else if (puntero_3.b_pointers[z] == -1){
+                                    if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>1) {
+                                        int direccionInodoNuevo= this->getDireccionInodoNuevo();
+                                        int direccionBlckCarpetaInicial= this->insertBlckCarpetaInicial(direccionInodoNuevo,
+                                                                                                        direccionInodoPadre);
+                                        this->insertInodoCarpeta(direccionInodoNuevo, direccionBlckCarpetaInicial);
+                                        int direccionBlckCarpetaExtra= this->insertBlckCarpetaExtra(direccionInodoNuevo,
+                                                                                                    rutaDividida[carpetaActual]);
+                                        puntero_3.b_pointers[z]=direccionBlckCarpetaExtra;
+                                        fseek(this->file, puntero_2.b_pointers[k], SEEK_SET);
+                                        fwrite(&puntero_3, sizeof(TablaInodo), 1, this->file);
+                                        return direccionInodoNuevo;
+                                    }else{
+                                        cout << "IMPOSIBLE CREAR LA CARPETA " << rutaDividida[carpetaActual] << " DEBIDO A QUE YA NO HAY ESPACIO EN EL SISTEMA" << endl;
+                                        return -1;
+                                    }
+                                }
+                            }
+                        }
+                        // LIBRE
+                        else if (puntero_2.b_pointers[k] == -1){
+                            if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>2) {
+                                int direccionInodoNuevo= this->getDireccionInodoNuevo();
+                                int direccionBlckCarpetaInicial= this->insertBlckCarpetaInicial(direccionInodoNuevo,
+                                                                                                direccionInodoPadre);
+                                this->insertInodoCarpeta(direccionInodoNuevo, direccionBlckCarpetaInicial);
+                                int direccionBlckCarpetaExtra= this->insertBlckCarpetaExtra(direccionInodoNuevo,
+                                                                                            rutaDividida[carpetaActual]);
+                                int direccionBlckApuntador_1= this->insertBlckApuntador(direccionBlckCarpetaExtra);
+                                puntero_2.b_pointers[k]=direccionBlckApuntador_1;
+                                fseek(this->file, puntero_1.b_pointers[j], SEEK_SET);
+                                fwrite(&puntero_2, sizeof(TablaInodo), 1, this->file);
+                                return direccionInodoNuevo;
+                            }else{
+                                cout << "IMPOSIBLE CREAR LA CARPETA " << rutaDividida[carpetaActual] << " DEBIDO A QUE YA NO HAY ESPACIO EN EL SISTEMA" << endl;
+                                return -1;
                             }
                         }
                     }
                 }
+                // LIBRE
+                else if (puntero_1.b_pointers[j] == -1){
+                    if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>3) {
+                        int direccionInodoNuevo= this->getDireccionInodoNuevo();
+                        int direccionBlckCarpetaInicial= this->insertBlckCarpetaInicial(direccionInodoNuevo,
+                                                                                        direccionInodoPadre);
+                        this->insertInodoCarpeta(direccionInodoNuevo, direccionBlckCarpetaInicial);
+                        int direccionBlckCarpetaExtra= this->insertBlckCarpetaExtra(direccionInodoNuevo,
+                                                                                    rutaDividida[carpetaActual]);
+                        int direccionBlckApuntador_1= this->insertBlckApuntador(direccionBlckCarpetaExtra);
+                        int direccionBlckApuntador_2= this->insertBlckApuntador(direccionBlckApuntador_1);
+                        puntero_1.b_pointers[j]=direccionBlckApuntador_2;
+                        fseek(this->file, tablaInodo.i_block[i], SEEK_SET);
+                        fwrite(&puntero_1, sizeof(TablaInodo), 1, this->file);
+                        return direccionInodoNuevo;
+                    }else{
+                        cout << "IMPOSIBLE CREAR LA CARPETA " << rutaDividida[carpetaActual] << " DEBIDO A QUE YA NO HAY ESPACIO EN EL SISTEMA" << endl;
+                        return -1;
+                    }
+                }
             }
         }
+        // LIBRE
+        else if ((i == 14) && (tablaInodo.i_block[i] == -1)) {
+            if (this->sb.s_free_inodes_count > 0 && this->sb.s_free_blocks_count>4) {
+                int direccionInodoNuevo= this->getDireccionInodoNuevo();
+                int direccionBlckCarpetaInicial= this->insertBlckCarpetaInicial(direccionInodoNuevo, direccionInodoPadre);
+                this->insertInodoCarpeta(direccionInodoNuevo, direccionBlckCarpetaInicial);
+                int direccionBlckCarpetaExtra= this->insertBlckCarpetaExtra(direccionInodoNuevo, rutaDividida[carpetaActual]);
+                int direccionBlckApuntador_1 = this->insertBlckApuntador(direccionBlckCarpetaExtra);
+                int direccionBlckApuntador_2 = this->insertBlckApuntador(direccionBlckApuntador_1);
+                int direccionBlckApuntador_3 = this->insertBlckApuntador(direccionBlckApuntador_2);
+                tablaInodo.i_block[i]=direccionBlckApuntador_3;
+                fseek(this->file, direccionInodoPadre, SEEK_SET);
+                fwrite(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+                return direccionInodoNuevo;
+            }else{
+                cout << "IMPOSIBLE CREAR LA CARPETA " << rutaDividida[carpetaActual] << " DEBIDO A QUE YA NO HAY ESPACIO EN EL SISTEMA" << endl;
+                return -1;
+            }
+        }
+
     }
     cout << "IMPOSIBLE CREAR CARPETA " << rutaDividida[carpetaActual] << "" << endl;
     return -1;
@@ -969,7 +1038,7 @@ bool AdminArchivosCarpetas::verificarPermisoInodo_Escritura(int direccionInodo) 
  * Este método también actualiza el Bit Map de Inodos.
  * @return
  */
-int AdminArchivosCarpetas::getPosicionInodoNuevo() {
+int AdminArchivosCarpetas::getDireccionInodoNuevo() {
 
     int direccionInodos_Start = this->sb.s_bm_inode_start;
     int direccionInodos_End = direccionInodos_Start + this->sb.s_inodes_count;
@@ -1011,24 +1080,140 @@ int AdminArchivosCarpetas::actualizarUltimoInodoDisponible() {
     }
     this->sb.s_firts_ino = contador_BitMapInodo;
 }
+/**
+ * Creacion del bloque carpeta ( tengo dudas con el . y el .. porque según yo hacen referencia al inodo padre y actual )
+ * @param direccionActual
+ * @param direccionPadre
+ * @return DireccionBlckCarpetaInicial
+ */
+int AdminArchivosCarpetas::insertBlckCarpetaInicial(int direccionActual, int direccionPadre) {
+    BloqueCarpeta blckCarpeta_Nuevo;
 
-int AdminArchivosCarpetas::crearBloqueCarpetaInicial(int posActual, int posPadre) {
-    int posBloque=this->buscarPosicionNewBLoque();
+    int direccionBloqueNuevo= this->getDireccionBloqueNuevo();
 
-    BloqueCarpeta newCarpeta;
-    strcpy(newCarpeta.b_content[0].b_name,".");
-    newCarpeta.b_content[0].b_inodo=posActual;
-    strcpy(newCarpeta.b_content[1].b_name, "..");
-    newCarpeta.b_content[1].b_inodo = posPadre;
-    strcpy(newCarpeta.b_content[2].b_name, "");
-    newCarpeta.b_content[2].b_inodo = -1;
-    strcpy(newCarpeta.b_content[3].b_name, "");
-    newCarpeta.b_content[3].b_inodo = -1;
+    strcpy(blckCarpeta_Nuevo.b_content[0].b_name, ".");
+    blckCarpeta_Nuevo.b_content[0].b_inodo=direccionActual;
+    strcpy(blckCarpeta_Nuevo.b_content[1].b_name, "..");
+    blckCarpeta_Nuevo.b_content[1].b_inodo = direccionPadre;
+    strcpy(blckCarpeta_Nuevo.b_content[2].b_name, "");
+    blckCarpeta_Nuevo.b_content[2].b_inodo = -1;
+    strcpy(blckCarpeta_Nuevo.b_content[3].b_name, "");
+    blckCarpeta_Nuevo.b_content[3].b_inodo = -1;
 
-    fseek(this->file,posBloque,SEEK_SET);
-    fwrite(&newCarpeta, sizeof(BloqueCarpeta),1,this->file);
+    fseek(this->file, direccionBloqueNuevo, SEEK_SET);
+    fwrite(&blckCarpeta_Nuevo, sizeof(BloqueCarpeta), 1, this->file);
 
-    return posBloque;
+    return direccionBloqueNuevo;
 }
 
+int AdminArchivosCarpetas::getDireccionBloqueNuevo() {
+
+    char bit;
+    int direccionInodos_Start = this->sb.s_bm_block_start;
+    int direccionInodos_End = direccionInodos_Start + this->sb.s_blocks_count;
+    int contador_BitMap = 0;
+    char uno = '1';
+    int direccionBloqueLibre;
+    for (int i = direccionInodos_Start; i < direccionInodos_End; i++) {
+        fseek(this->file, i, SEEK_SET);
+        fread(&bit, sizeof(char), 1, this->file);
+        if (bit == '0') {
+            fseek(this->file, i, SEEK_SET);
+            fwrite(&uno, sizeof(char), 1, this->file);
+            break;
+        }
+        contador_BitMap++;
+    }
+    this->sb.s_free_blocks_count-=1;
+
+    direccionBloqueLibre = this->sb.s_block_start + (contador_BitMap * sizeof(BloqueApuntador));
+
+    this->actualizarUltimoBloqueDisponible();
+
+    return direccionBloqueLibre;
+}
+
+int AdminArchivosCarpetas::actualizarUltimoBloqueDisponible() {
+
+
+
+    int direccionBloques_Start = this->sb.s_bm_block_start;
+    char bit;
+    int direccionBloques_End = direccionBloques_Start + this->sb.s_blocks_count;
+    int contador_posicionBitMap = 0;
+
+    contador_posicionBitMap=0;
+    for (int j = direccionBloques_Start; j < direccionBloques_End; j++) {
+        fseek(this->file, j, SEEK_SET);
+        fread(&bit, sizeof(char), 1, this->file);
+        if (bit == '0') {
+            contador_posicionBitMap++;
+            break;
+        }
+        contador_posicionBitMap++;
+    }
+    this->sb.s_first_blo = contador_posicionBitMap;
+}
+
+void AdminArchivosCarpetas::insertInodoCarpeta(int direccionInodo, int direccionBloqueCarpetaInicial) {
+    TablaInodo tablaInodo;
+    tablaInodo.i_uid = this->usuario->idU;
+    tablaInodo.i_gid = this->usuario->idG;
+    tablaInodo.i_s = 0;
+    tablaInodo.i_atime = time(nullptr);
+    tablaInodo.i_ctime = time(nullptr);
+    tablaInodo.i_mtime = time(nullptr);
+    tablaInodo.i_type='0';
+    tablaInodo.i_perm=664;
+    tablaInodo.i_block[0]=direccionBloqueCarpetaInicial;
+    for (int j = 1; j < 15; ++j) {
+        tablaInodo.i_block[j]=-1;
+    }
+
+    fseek(this->file, direccionInodo, SEEK_SET);
+    fwrite(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+}
+
+/**
+ * Crear bloque de carpeta, pero obviamente no el bloque de carpeta inicial de los inodos.
+ * Pues el bloque carpeta inicial si necesita apuntar a "." y ".."
+ * @param direccionInodoHijo
+ * @param nombreCarpeta
+ * @return DireccionBlckCarpetaExtra
+ */
+int AdminArchivosCarpetas::insertBlckCarpetaExtra(int direccionInodoHijo, string nombreCarpeta) {
+    BloqueCarpeta blckCarpetaNuevo;
+    int direccionBlckCarpeta=this->getDireccionBloqueNuevo();
+
+    
+    strcpy(blckCarpetaNuevo.b_content[0].b_name, nombreCarpeta.c_str());
+    blckCarpetaNuevo.b_content[0].b_inodo=direccionInodoHijo;
+    for (int i = 1; i < 4; ++i) {
+        strcpy(blckCarpetaNuevo.b_content[i].b_name, "");
+        blckCarpetaNuevo.b_content[i].b_inodo =-1;
+    }
+
+    fseek(this->file, direccionBlckCarpeta, SEEK_SET);
+    fwrite(&blckCarpetaNuevo, sizeof(BloqueCarpeta), 1, this->file);
+
+    return direccionBlckCarpeta;
+}
+/**
+ * Crear un bloque apuntador nuevo
+ * @param direccionInodoHijo 
+ * @return dirección del bloque apuntador nuevo
+ */
+int AdminArchivosCarpetas::insertBlckApuntador(int direccionInodoHijo) {
+    BloqueApuntador blckApuntadorNuevo;
+    blckApuntadorNuevo.b_pointers[0]=direccionInodoHijo;
+    int direccionBlckNuevo=this->getDireccionBloqueNuevo();
+
+    
+    for (int i =1; i < 16; ++i) {
+        blckApuntadorNuevo.b_pointers[i]=-1;
+    }
+    fseek(this->file, direccionBlckNuevo, SEEK_SET);
+    fwrite(&blckApuntadorNuevo, sizeof(BloqueApuntador), 1, this->file);
+    return direccionBlckNuevo;
+}
 

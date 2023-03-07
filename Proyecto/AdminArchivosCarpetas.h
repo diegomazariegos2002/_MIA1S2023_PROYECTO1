@@ -28,15 +28,20 @@ public:
     void registrarJournal(string tipo_Op, char tipo, string nombre, string contenido, Nodo_M *nodo);
 
     int existeCarpeta(vector<string> rutaDivida, int carpetaActual, int direccionInodo);
-    int crearCarpeta(vector<string> rutaDividida, int carpetaActual, int direccionInodo);
-
+    int insertCarpeta(vector<string> rutaDividida, int carpetaActual, int direccionInodoPadre);
     bool verificarPermisoInodo_Escritura(int direccionInodo);
-
-    int getPosicionInodoNuevo();
-
+    int getDireccionInodoNuevo();
     int actualizarUltimoInodoDisponible();
+    int insertBlckCarpetaInicial(int direccionActual, int direccionPadre);
+    int getDireccionBloqueNuevo();
 
-    int crearBloqueCarpetaInicial(int posActual, int posPadre);
+    int actualizarUltimoBloqueDisponible();
+
+    void insertInodoCarpeta(int direccionInodo, int direccionBloqueCarpetaInicial);
+
+    int insertBlckCarpetaExtra(int direccionInodoHijo, string nombreCarpeta);
+
+    int insertBlckApuntador(int direccionInodoHijo);
 };
 
 

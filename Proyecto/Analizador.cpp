@@ -1230,8 +1230,6 @@ void Analizador::analizarEntrada() {
             this->mountList=adminU->mountList;
 
         }
-        //MKFILE
-        
         //CAT
         else if (strncmp(entradaMinus.c_str(), "cat", 3) == 0) {
             int i = 3;
@@ -1277,21 +1275,93 @@ void Analizador::analizarEntrada() {
                         entradaMinus = entradaMinus.erase(0, i);
                         this->entrada = this->entrada.erase(0, i);
                     }
-                    adminArcCarpt->mountList= this->mountList;
-                    adminArcCarpt->usuario=this->usuario;
-                    adminArcCarpt->cat();
-                    this->mountList=adminArcCarpt->mountList;
-                    this->usuario=adminArcCarpt->usuario;
 
 
-                }else if (strncmp(entradaMinus.c_str(), "#", 1) == 0) {
+
+                }
+                else if (strncmp(entradaMinus.c_str(), "#", 1) == 0) {
                     //No se opera, ya que entro un comentario
                     break;
-                }else {
+                }
+                else {
                     cout << "ERROR EL COMANDO TIENE ALGO MALO: " << entradaMinus << endl;
                     return;
                 }
             }
+            adminArcCarpt->mountList= this->mountList;
+            adminArcCarpt->usuario=this->usuario;
+            adminArcCarpt->cat();
+            this->mountList=adminArcCarpt->mountList;
+            this->usuario=adminArcCarpt->usuario;
+        }
+        //MKDIR
+        else if (strncmp(entradaMinus.c_str(), "mkdir", 5) == 0) {
+            int i = 5;
+            while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                i++;
+            }
+
+            entradaMinus = entradaMinus.erase(0, i);
+            entrada = entrada.erase(0, i);
+
+            while (entrada.length() > 0) {
+                if (strncmp(entradaMinus.c_str(), ">path", 5) == 0){
+                    i = entradaMinus.find("=") + 1;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    if (entradaMinus[0] == '\"') {
+                        entradaMinus = entradaMinus.erase(0, 1);
+                        this->entrada = this->entrada.erase(0, 1);
+                        i = entradaMinus.find("\"");
+                        string r = this->entrada.substr(0, i);
+                        i += 2;
+                        this->adminArcCarpt->path = r;
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    } else {
+                        i = entradaMinus.find(" ");
+                        string r = this->entrada.substr(0, i);
+                        this->adminArcCarpt->path = r;
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    }
+
+                }
+                else if (strncmp(entradaMinus.c_str(), ">r", 2) == 0){
+                    i = 2;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    this->adminArcCarpt->r = true;
+
+                }
+                else if (strncmp(entradaMinus.c_str(), "#", 1) == 0) {
+                    //No se opera, ya que entro un comentario
+                    break;
+                }else {
+                    cout << "ERROR REVISAR ENTRADA " << entradaMinus << endl;
+                    return;
+                }
+            }
+            adminArcCarpt->usuario=this->usuario;
+            adminArcCarpt->mountList= this->mountList;
+            adminArcCarpt->mkdir();
+            this->mountList=adminArcCarpt->mountList;
+            this->usuario=adminArcCarpt->usuario;
+
 
         }
 
