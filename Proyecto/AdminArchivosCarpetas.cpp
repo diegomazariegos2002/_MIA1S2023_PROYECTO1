@@ -1217,3 +1217,7 @@ int AdminArchivosCarpetas::insertBlckApuntador(int direccionInodoHijo) {
     return direccionBlckNuevo;
 }
 
+void AdminArchivosCarpetas::mkfile() {
+
+}
+

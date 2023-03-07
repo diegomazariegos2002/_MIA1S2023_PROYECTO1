@@ -18,15 +18,17 @@ public:
     FILE *file;
     SuperBloque sb;
     bool r;
+    string cont;
+    int size;
     AdminArchivosCarpetas();
     void cat();
     void mkdir();
+    void mkfile();
     vector<string> getRutaDividida(string cadena);
     int getDireccionInodo(vector<string> rutaDividida, int direccionActual, int numCarpetas, int rutaActual, FILE *discoActual);
     bool verificarPermisoInodo_Lectura(int direccionInodo);
     string getStringAlmacenadoInodo(int startInodo);
     void registrarJournal(string tipo_Op, char tipo, string nombre, string contenido, Nodo_M *nodo);
-
     int existeCarpeta(vector<string> rutaDivida, int carpetaActual, int direccionInodo);
     int insertCarpeta(vector<string> rutaDividida, int carpetaActual, int direccionInodoPadre);
     bool verificarPermisoInodo_Escritura(int direccionInodo);
@@ -34,14 +36,11 @@ public:
     int actualizarUltimoInodoDisponible();
     int insertBlckCarpetaInicial(int direccionActual, int direccionPadre);
     int getDireccionBloqueNuevo();
-
     int actualizarUltimoBloqueDisponible();
-
     void insertInodoCarpeta(int direccionInodo, int direccionBloqueCarpetaInicial);
-
     int insertBlckCarpetaExtra(int direccionInodoHijo, string nombreCarpeta);
-
     int insertBlckApuntador(int direccionInodoHijo);
+
 };
 
 
