@@ -2310,3 +2310,7 @@ TablaInodo AdminArchivosCarpetas::addFile(int blckActual, int noBlckBitMap, std:
     }
     return tablaInodo;
 }
+
+void AdminArchivosCarpetas::rename() {
+
+}

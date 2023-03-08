@@ -25,6 +25,7 @@ public:
     void cat();
     void mkdir();
     void mkfile();
+    void rename();
     vector<string> getRutaDividida(string cadena);
     int getDireccionInodo(vector<string> rutaDividida, int direccionActual, int numCarpetas, int rutaActual, FILE *discoActual);
     bool verificarPermisoInodo_Lectura(int direccionInodo);

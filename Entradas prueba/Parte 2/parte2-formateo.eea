@@ -243,7 +243,11 @@ mkfile >path="/home/indirecto_1.txt" >size=10000
 #Debe dar error porque no tengo una archivo así en mi compu
 mkfile >path="/home/entrada.txt" >cont="/home/error.txt"
 
+#si tengo el archivo en mi compu
+mkfile >path="/home/entrada.txt" >cont="/home/pruebas/no_error.txt"
 
+#Archivo 
+mkfile >path="/home/entrada.txt" >cont="/home/pruebas/no_error2.txt"
 
 # REPORTES
 execute >path="/home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Entradas prueba/Parte 2/parte2-reportes.eea"
