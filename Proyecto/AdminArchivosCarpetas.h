@@ -21,6 +21,7 @@ public:
     string cont;
     int size;
     bool flagGlobal;
+    string name;
     AdminArchivosCarpetas();
     void cat();
     void mkdir();
@@ -54,6 +55,8 @@ public:
     int enlazarArchivoCarpeta(int direccionArchivo, int direccionCarpeta, string nombreArchivo);
 
     TablaInodo addFile(int blckActual, int noBlckBitMap, std::string cadena, TablaInodo inodo);
+
+    void cambiarNombre(TablaInodo tablaInodoCarpeta, std::string nombreOriginal);
 };
 
 

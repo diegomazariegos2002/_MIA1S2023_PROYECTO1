@@ -695,9 +695,8 @@ void Analizador::analizarEntrada() {
                         entradaMinus = entradaMinus.erase(0, 1);
                         this->entrada = this->entrada.erase(0, 1);
                         i = entradaMinus.find("\"");
-                        string r = this->entrada.substr(0, i);
+                        this->rep->ruta = this->entrada.substr(0, i);
                         i += 2;
-                        this->rep->ruta = r;
                         while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                             i++;
                         }
@@ -705,8 +704,7 @@ void Analizador::analizarEntrada() {
                         this->entrada = this->entrada.erase(0, i);
                     } else {
                         i = entradaMinus.find(" ");
-                        string r = this->entrada.substr(0, i);
-                        this->rep->ruta = r;
+                        this->rep->ruta = this->entrada.substr(0, i);
                         while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                             i++;
                         }
@@ -1258,11 +1256,8 @@ void Analizador::analizarEntrada() {
                         entradaMinus = entradaMinus.erase(0, 1);
                         this->entrada = this->entrada.erase(0, 1);
                         i = entradaMinus.find("\"");
-                        string r = this->entrada.substr(0, i);
+                        this->adminArcCarpt->rutasCat.push_back(this->entrada.substr(0, i));
                         i += 2;
-
-                        this->adminArcCarpt->rutasCat.push_back(r);
-
                         while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                             i++;
                         }
@@ -1270,8 +1265,7 @@ void Analizador::analizarEntrada() {
                         this->entrada = this->entrada.erase(0, i);
                     } else {
                         i = entradaMinus.find(" ");
-                        string r = this->entrada.substr(0, i);
-                        this->adminArcCarpt->rutasCat.push_back(r);
+                        this->adminArcCarpt->rutasCat.push_back(this->entrada.substr(0, i));
                         while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                             i++;
                         }
@@ -1320,9 +1314,9 @@ void Analizador::analizarEntrada() {
                         entradaMinus = entradaMinus.erase(0, 1);
                         this->entrada = this->entrada.erase(0, 1);
                         i = entradaMinus.find("\"");
-                        string r = this->entrada.substr(0, i);
+
+                        this->adminArcCarpt->path = this->entrada.substr(0, i);
                         i += 2;
-                        this->adminArcCarpt->path = r;
                         while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                             i++;
                         }
@@ -1330,8 +1324,7 @@ void Analizador::analizarEntrada() {
                         this->entrada = this->entrada.erase(0, i);
                     } else {
                         i = entradaMinus.find(" ");
-                        string r = this->entrada.substr(0, i);
-                        this->adminArcCarpt->path = r;
+                        this->adminArcCarpt->path = this->entrada.substr(0, i);
                         while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                             i++;
                         }
@@ -1390,9 +1383,9 @@ void Analizador::analizarEntrada() {
                         entradaMinus = entradaMinus.erase(0, 1);
                         this->entrada = this->entrada.erase(0, 1);
                         i = entradaMinus.find("\"");
-                        string r = this->entrada.substr(0, i);
+
+                        this->adminArcCarpt->path = this->entrada.substr(0, i);
                         i += 2;
-                        this->adminArcCarpt->path = r;
                         while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                             i++;
                         }
@@ -1400,8 +1393,7 @@ void Analizador::analizarEntrada() {
                         this->entrada = this->entrada.erase(0, i);
                     } else {
                         i = entradaMinus.find(" ");
-                        string r = this->entrada.substr(0, i);
-                        this->adminArcCarpt->path = r;
+                        this->adminArcCarpt->path = this->entrada.substr(0, i);
                         while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                             i++;
                         }
@@ -1421,9 +1413,8 @@ void Analizador::analizarEntrada() {
                         entradaMinus = entradaMinus.erase(0, 1);
                         this->entrada = this->entrada.erase(0, 1);
                         i = entradaMinus.find("\"");
-                        string r = this->entrada.substr(0, i);
+                        this->adminArcCarpt->cont = this->entrada.substr(0, i);
                         i += 2;
-                        this->adminArcCarpt->cont = r;
                         while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                             i++;
                         }
@@ -1431,8 +1422,7 @@ void Analizador::analizarEntrada() {
                         this->entrada = this->entrada.erase(0, i);
                     } else {
                         i = entradaMinus.find(" ");
-                        string r = this->entrada.substr(0, i);
-                        this->adminArcCarpt->cont = r;
+                        this->adminArcCarpt->cont = this->entrada.substr(0, i);
                         while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                             i++;
                         }
@@ -1482,7 +1472,89 @@ void Analizador::analizarEntrada() {
             this->mountList=adminArcCarpt->mountList;
             this->usuario=adminArcCarpt->usuario;
         }
+        //RENAME
+        else if (strncmp(entradaMinus.c_str(), "rename", 6) == 0) {
+            int i = 6;
+            while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                i++;
+            }
+            entradaMinus = entradaMinus.erase(0, i);
+            entrada = entrada.erase(0, i);
 
+            while (entrada.length() > 0) {
+                if (strncmp(entradaMinus.c_str(), ">path", 5) == 0){
+                    i = entradaMinus.find("=") + 1;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    if (entradaMinus[0] == '\"') {
+                        entradaMinus = entradaMinus.erase(0, 1);
+                        this->entrada = this->entrada.erase(0, 1);
+                        i = entradaMinus.find("\"");
+                        this->adminArcCarpt->path = this->entrada.substr(0, i);
+                        i += 2;
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    } else {
+                        i = entradaMinus.find(" ");
+                        this->adminArcCarpt->path = this->entrada.substr(0, i);
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    }
+
+                }else if (strncmp(entradaMinus.c_str(), ">name", 5) == 0){
+                    i = entradaMinus.find("=") + 1;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    if (entradaMinus[0] == '\"') {
+                        entradaMinus = entradaMinus.erase(0, 1);
+                        this->entrada = this->entrada.erase(0, 1);
+                        i = entradaMinus.find("\"");
+
+                        this->adminArcCarpt->name = this->entrada.substr(0, i);
+                        i += 2;
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    } else {
+                        i = entradaMinus.find(" ");
+                        this->adminArcCarpt->name = this->entrada.substr(0, i);
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    }
+
+                }else if (strncmp(entradaMinus.c_str(), "#", 1) == 0) {
+                    //No se opera, ya que entro un comentario
+                    break;
+                }else {
+                    cout << "ERROR EN LA ENTRADA: " << entradaMinus << endl;
+                    return;
+                }
+            }
+            adminArcCarpt->usuario=this->usuario;
+            adminArcCarpt->mountList= this->mountList;
+            adminArcCarpt->rename();
+            this->mountList=adminArcCarpt->mountList;
+            this->usuario=adminArcCarpt->usuario;
+        }
         //EXECUTE
         else if(strncmp(entradaMinus.c_str(), "execute", 7) == 0){
             string path = "";
@@ -1507,8 +1579,7 @@ void Analizador::analizarEntrada() {
                         entradaMinus.erase(0, 1);
                         entrada.erase(0, 1);
                         i = entradaMinus.find("\"");
-                        string p = entrada.substr(0, i);
-                        path = p;
+                        path = entrada.substr(0, i);
                         i += 2;
                         while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                             i++;

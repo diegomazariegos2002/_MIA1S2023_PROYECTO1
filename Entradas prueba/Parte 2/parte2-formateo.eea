@@ -249,6 +249,23 @@ mkfile >path="/home/entrada.txt" >cont="/home/pruebas/no_error.txt"
 #Archivo 
 mkfile >path="/home/entrada.txt" >cont="/home/pruebas/no_error2.txt"
 
+#COMANDO RENAME
+# caso valido pues el usuario actual pertecene al grupo y carpeta con permisos 664
+rename >path=/home/carpeta3 >name=renombrado
+
+# caso valido pues el usuario actual es el propietario
+rename >path="/home/entrada.txt" >name=prueba.txt
+logout
+login >pass=123 >user=root >id=752DiscoParte2
+# caso valido por ser root y propietario
+rename >path=/home/renombrado >name=renombrado2
+logout
+login >pass=abc123 >user=user2 >id=752DiscoParte2
+# caso invalido por falta de permisos en otros.
+rename >path="/home/prueba.txt" >name=pruebaError.txt
+logout
+
+login >pass=123 >user=user1 >id=752DiscoParte2
 # REPORTES
 execute >path="/home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Entradas prueba/Parte 2/parte2-reportes.eea"
 

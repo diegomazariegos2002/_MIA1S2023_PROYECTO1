@@ -14,6 +14,7 @@ AdminArchivosCarpetas::AdminArchivosCarpetas() {
     this->cont = " ";
     this->size = 0;
     this->flagGlobal = false;
+    this->name=" ";
 }
 
 void AdminArchivosCarpetas::cat() {
@@ -1193,7 +1194,7 @@ int AdminArchivosCarpetas::insertBlckCarpetaExtra(int direccionInodoHijo, string
     BloqueCarpeta blckCarpetaNuevo;
     int direccionBlckCarpeta=this->getDireccionBloqueNuevo();
 
-    
+
     strcpy(blckCarpetaNuevo.b_content[0].b_name, nombreCarpeta.c_str());
     blckCarpetaNuevo.b_content[0].b_inodo=direccionInodoHijo;
     for (int i = 1; i < 4; ++i) {
@@ -1208,7 +1209,7 @@ int AdminArchivosCarpetas::insertBlckCarpetaExtra(int direccionInodoHijo, string
 }
 /**
  * Crear un bloque apuntador nuevo
- * @param direccionInodoHijo 
+ * @param direccionInodoHijo
  * @return dirección del bloque apuntador nuevo
  */
 int AdminArchivosCarpetas::insertBlckApuntador(int direccionInodoHijo) {
@@ -1216,7 +1217,7 @@ int AdminArchivosCarpetas::insertBlckApuntador(int direccionInodoHijo) {
     blckApuntadorNuevo.b_pointers[0]=direccionInodoHijo;
     int direccionBlckNuevo=this->getDireccionBloqueNuevo();
 
-    
+
     for (int i =1; i < 16; ++i) {
         blckApuntadorNuevo.b_pointers[i]=-1;
     }
@@ -2312,5 +2313,210 @@ TablaInodo AdminArchivosCarpetas::addFile(int blckActual, int noBlckBitMap, std:
 }
 
 void AdminArchivosCarpetas::rename() {
+    if (this->name==" "){
+        cout<<"PARAMETRO NAME ES OBLIGATORIO"<<endl;
+        return;
+    }
+    if (this->path==" "){
+        cout<<"PARAMETRO PATH ES OBLIGATORIO"<<endl;
+        return;
+    }
+    Nodo_M *nodo=this->mountList->buscar(usuario->idMount);
+    if (nodo==NULL){
+        cout <<"NO EXISTE MONTURA CON EL ID: "<< this->usuario->idMount<<" EN EL SISTEMA"<<endl;
+        return;
+    }
 
+    if ((this->file= fopen(nodo->path.c_str(),"rb+"))){
+        // validar ruta
+        vector<string> rutaDividida= this->getRutaDividida(this->path);
+        if (rutaDividida.empty()){
+            fclose(this->file);
+            cout<<"LA RUTA INGRESADA NO ES VALIDA"<<endl;
+            return;
+        }
+
+        // Leer el superbloque, como siempre
+        if (nodo->type=='l'){
+            EBR ebr;
+            fseek(file,nodo->start,SEEK_SET);
+            fread(&ebr, sizeof(EBR),1,file);
+            if (ebr.part_status != '2') {
+                fclose(file);
+                cout<<"NO SE HA FORMATEADO LA MONTURA DE LA PARTICION"<<nodo->name<<endl;
+                return;
+            }
+            fseek(file,nodo->start+ sizeof(EBR),SEEK_SET);
+        }
+        else if (nodo->type=='p'){
+            MBR mbr;
+            fseek(this->file,0,SEEK_SET);
+            fread(&mbr, sizeof(MBR),1,file);
+            if (mbr.mbr_partition[nodo->pos].part_status!='2'){
+                cout<<"NO SE HA FORMATEADO LA MONTURA DE LA PARTICION"<<nodo->name<<endl;
+                return;
+            }
+            fseek(this->file,nodo->start,SEEK_SET);
+        }
+
+        fread(&this->sb, sizeof(SuperBloque),1,file);
+
+        // Ubicar el Inodo
+        TablaInodo tablaInodo;
+        bool existeCarpeta=true;
+        int direccionInodoArchivo=this->sb.s_inode_start;
+        int direccionInodoCarpeta=direccionInodoArchivo;
+
+        // Recordar si no existe la carpeta tira error, de lo contrario sigue
+        for (int i = 0; i < rutaDividida.size(); ++i) {
+            if (existeCarpeta){
+                int aux=direccionInodoArchivo;
+                direccionInodoArchivo=this->existeCarpeta(rutaDividida, i, direccionInodoArchivo);
+                if (i!=(rutaDividida.size() - 1)){
+                    direccionInodoCarpeta=direccionInodoArchivo;
+                }
+                if (direccionInodoArchivo == aux){
+                    existeCarpeta= false;
+                }
+            }
+            if(!existeCarpeta){
+                cout<<"NO EXISTE "<< this->path<< " ESTA RUTA INDICADA" << endl;
+                return;
+            }
+        }
+
+        rutaDividida.push_back(this->name);
+        if (direccionInodoCarpeta != this->existeCarpeta(rutaDividida, rutaDividida.size() - 1, direccionInodoCarpeta)){
+            cout<<"IMPOSIBLE EJECUTAR, YA EXISTE UN ARCHIVO O CARPETA CON EL NOMBRE "<< this->name<<endl;
+            return;
+        }
+
+        fseek(this->file, direccionInodoCarpeta, SEEK_SET);
+        fread(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+
+        if (!this->verificarPermisoInodo_Escritura(direccionInodoArchivo)){
+            cout << "IMPOSIBLE EJECUTAR, PERMISOS INSUFICIENTES EN EL ARCHIVO O CARPETA " << rutaDividida[rutaDividida.size() - 2] << endl;
+            return;
+        }
+
+        this->cambiarNombre(tablaInodo, rutaDividida[rutaDividida.size() - 2]);
+        tablaInodo.i_mtime= time(nullptr);
+        fseek(this->file, direccionInodoCarpeta, SEEK_SET);
+        fwrite(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+
+        cout <<"COMANDO EJECUTADO CON EXITO, SE MODIFICO EL NOMBRE"<<endl;
+        if (this->sb.s_filesystem_type==3){
+            this->registrarJournal("rename",'1',this->path,this->name,nodo);
+        }
+        fclose(this->file);
+    }else{
+        cout <<"ERROR EL DISCO SE MOVIO DE LUGAR PORQUE NO SE ENCUENTRA"<<endl;
+    }
 }
+
+void AdminArchivosCarpetas::cambiarNombre(TablaInodo tablaInodoCarpeta, std::string nombreOriginal) {
+    BloqueApuntador blkApuntador_1, blkApuntador_2, blkApuntador_3;
+    BloqueCarpeta blkCarpeta;
+
+    for (int i = 0; i < 15; ++i) { // Recorrer todos los punteros del tablaInodoCarpeta carpeta
+        // PUNTEROS DIRECTOS
+        // OCUPADO
+        if (tablaInodoCarpeta.i_block[i] != -1){
+            if (i<12){
+                fseek(file, tablaInodoCarpeta.i_block[i], SEEK_SET);
+                fread(&blkCarpeta, sizeof(BloqueCarpeta), 1, file);
+                for (int j = 0; j < 4; ++j) { // Recorrer carpeta
+                    if (blkCarpeta.b_content[j].b_name == nombreOriginal){
+                        strcpy(blkCarpeta.b_content[j].b_name, name.c_str()); // cambiamos el nombre
+                        // escribimos la actualización
+                        fseek(this->file, tablaInodoCarpeta.i_block[i], SEEK_SET);
+                        fwrite(&blkCarpeta, sizeof(BloqueCarpeta), 1, this->file);
+                        return;
+
+                    }
+                }
+
+            }
+            // PUNTEROS SIMPLES
+            // OCUPADO
+            else if (i==12){
+                fseek(file, tablaInodoCarpeta.i_block[i], SEEK_SET);
+                fread(&blkApuntador_1, sizeof(BloqueApuntador), 1, file);
+                for (int j = 0; j < 16; ++j) { // Recorrer punteros directos
+                    if (blkApuntador_1.b_pointers[j] != -1){
+                        fseek(file, blkApuntador_1.b_pointers[j], SEEK_SET);
+                        fread(&blkCarpeta, sizeof(BloqueCarpeta), 1, file);
+                        for (int k = 0; k < 4; ++k) { // Recorrer carpeta
+                            if (blkCarpeta.b_content[k].b_name == nombreOriginal){
+                                strcpy(blkCarpeta.b_content[k].b_name, name.c_str());
+                                fseek(this->file, blkApuntador_1.b_pointers[j], SEEK_SET);
+                                fwrite(&blkCarpeta, sizeof(BloqueCarpeta), 1, this->file);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+            // PUNTEROS DOBLES
+            // OCUPADO
+            else if (i==13){
+                fseek(file, tablaInodoCarpeta.i_block[i], SEEK_SET);
+                fread(&blkApuntador_1, sizeof(BloqueApuntador), 1, file);
+                for (int j = 0; j < 16; ++j) { // Recorrer punteros simples
+                    if (blkApuntador_1.b_pointers[j] != -1){
+                        fseek(file, blkApuntador_1.b_pointers[j], SEEK_SET);
+                        fread(&blkApuntador_2, sizeof(BloqueApuntador), 1, file);
+                        for (int k = 0; k < 16; ++k) { // Recorrer punteros directos
+                            if (blkApuntador_2.b_pointers[k] != -1){
+                                fseek(file, blkApuntador_2.b_pointers[k], SEEK_SET);
+                                fread(&blkCarpeta, sizeof(BloqueCarpeta), 1, file);
+                                for (int z = 0; z < 4; ++z) { // Recorrer Carpeta
+                                    if (blkCarpeta.b_content[z].b_name == nombreOriginal){ // realizar acción
+                                        strcpy(blkCarpeta.b_content[z].b_name, name.c_str());
+                                        fseek(this->file, blkApuntador_2.b_pointers[k], SEEK_SET);
+                                        fwrite(&blkCarpeta, sizeof(BloqueCarpeta), 1, this->file);
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // PUNTEROS TRIPLES
+            // OCUPADO
+            else if (i==14){
+                fseek(file, tablaInodoCarpeta.i_block[i], SEEK_SET);
+                fread(&blkApuntador_1, sizeof(BloqueApuntador), 1, file);
+                for (int j = 0; j < 16; ++j) { // Recorrer puntero doble
+                    if (blkApuntador_1.b_pointers[j] != -1){
+                        fseek(file, blkApuntador_1.b_pointers[j], SEEK_SET);
+                        fread(&blkApuntador_2, sizeof(BloqueApuntador), 1, file);
+                        for (int k = 0; k < 16; ++k) { // Recorrer puntero simple
+                            if (blkApuntador_2.b_pointers[k] != -1){
+                                fseek(file, blkApuntador_2.b_pointers[k], SEEK_SET);
+                                fread(&blkApuntador_3, sizeof(BloqueApuntador), 1, file);
+                                for (int z = 0; z < 16; ++z) { // Recorrer punteros directos
+                                    if (blkApuntador_3.b_pointers[z] != -1) {
+                                        fseek(file, blkApuntador_3.b_pointers[z], SEEK_SET);
+                                        fread(&blkCarpeta, sizeof(BloqueCarpeta), 1, file);
+                                        for (int x = 0; x < 4; ++x) { // Recorrer carpeta
+                                            if (blkCarpeta.b_content[x].b_name == nombreOriginal){ // Realizar acción
+                                                strcpy(blkCarpeta.b_content[x].b_name, name.c_str());
+                                                fseek(this->file, blkApuntador_3.b_pointers[z], SEEK_SET);
+                                                fwrite(&blkCarpeta, sizeof(BloqueCarpeta), 1, this->file);
+                                                return;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
