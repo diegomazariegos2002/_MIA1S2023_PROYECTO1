@@ -6,7 +6,14 @@
 
 
 AdminArchivosCarpetas::AdminArchivosCarpetas() {
-
+    this->path = " ";
+    this->mountList = new MountList();
+    this->usuario = new Usuario();
+    this->rutasCat = *new vector<string>();
+    this->r = false;
+    this->cont = " ";
+    this->size = 0;
+    this->flagGlobal = false;
 }
 
 void AdminArchivosCarpetas::cat() {

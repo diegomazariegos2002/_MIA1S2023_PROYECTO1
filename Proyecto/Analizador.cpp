@@ -791,7 +791,7 @@ void Analizador::analizarEntrada() {
             entrada = entrada.erase(0, i);
 
             while (entrada.length() > 0) {
-                if (strncmp(entradaMinus.c_str(), ">usr", 4) == 0){
+                if (strncmp(entradaMinus.c_str(), ">user", 5) == 0){
                     i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
@@ -808,7 +808,8 @@ void Analizador::analizarEntrada() {
                     entradaMinus = entradaMinus.erase(0, i);
                     this->entrada = this->entrada.erase(0, i);
 
-                }else if (strncmp(entradaMinus.c_str(), ">pass", 5) == 0){
+                }
+                else if (strncmp(entradaMinus.c_str(), ">pass", 5) == 0){
                     i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
@@ -825,7 +826,8 @@ void Analizador::analizarEntrada() {
                     entradaMinus = entradaMinus.erase(0, i);
                     this->entrada = this->entrada.erase(0, i);
 
-                }else if (strncmp(entradaMinus.c_str(), ">id", 3) == 0){
+                }
+                else if (strncmp(entradaMinus.c_str(), ">id", 3) == 0){
                     i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
@@ -842,7 +844,8 @@ void Analizador::analizarEntrada() {
                     entradaMinus = entradaMinus.erase(0, i);
                     this->entrada = this->entrada.erase(0, i);
 
-                }else if (strncmp(entradaMinus.c_str(), "#", 1) == 0) {
+                }
+                else if (strncmp(entradaMinus.c_str(), "#", 1) == 0) {
                     //Comentario
                     break;
                 }else {

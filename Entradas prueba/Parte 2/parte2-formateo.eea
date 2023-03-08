@@ -40,11 +40,11 @@ rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_ls_1.pdf" >name=ls
 #INICIO DE SESION
 
 #Debe dar error porque no existe el usuario diego
-Login >pass=123 >usr=diego >id=751DiscoParte2
+Login >pass=123 >user=diego >id=751DiscoParte2
 #Debe dar error porque no existe nada activo
 logout
 
-Login >pass=123 >usr=root >id=751DiscoParte2
+Login >pass=123 >user=root >id=751DiscoParte2
 
 #PARTE GRUPOS
 #CREACION GRUPOS EXT2
@@ -61,7 +61,7 @@ rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_tree_1.pdf" >name=tree
 
 logout
 
-login >pass=123 >usr=root >id=752DiscoParte2
+login >pass=123 >user=root >id=752DiscoParte2
 #CREACION GRUPOS EXT3
 mkgrp >name="Archivos 1"
 mkgrp >naMe=Archivos2
@@ -219,6 +219,29 @@ mkdir >path="/home/carpeta2/b64"
 
 #APUNTADOR DOBLE
 mkdir >path="/home/carpeta2/c1"
+
+#COMANDO MKDIR
+#CREACION DE ARCHIVOS
+logout
+#Cambiamos de usuario para despues validar chown y chmod
+login >user=user1 >pass=123 >id=752DiscoParte2
+#Archivo 
+mkfile >path="/home/directo_1.txt" >size=75
+
+#Debe dar error ruta no existe
+mkfile >path="/home/Var/b1.txt" >size=75
+
+#Debe funcionar por el parametro r
+mkfile >path="/home/Var/b1.txt" >r >size=75
+
+#Debe dar error size negativo
+mkfile >path="/home/b1.txt" >size=-45
+
+#indirectos
+mkfile >path="/home/indirecto_1.txt" >size=10000
+
+#Debe dar error porque no tengo una archivo así en mi compu
+mkfile >path="/home/entrada.txt" >cont="/home/error.txt"
 
 
 
