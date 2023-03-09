@@ -866,7 +866,7 @@ TablaInodo AdminUsuarios::addFile(int blckActual, int noBlckBitMap, std::string 
                         char bit;
                         bool bandera = false;
                         char one = '1';
-                        //actualizacion sb
+                        //actualizacion ejecutarReporte_sb
                         for (int bmI = start; bmI < end; bmI++) {
                             fseek(this->file, bmI, SEEK_SET);
                             fread(&bit, sizeof(char), 1, this->file);
@@ -906,7 +906,7 @@ TablaInodo AdminUsuarios::addFile(int blckActual, int noBlckBitMap, std::string 
 
                         bit2 = 0;
                         bandera = false;
-                        //actualizacion sb
+                        //actualizacion ejecutarReporte_sb
                         for (int bmI = start; bmI < end; bmI++) {
                             fseek(this->file, bmI, SEEK_SET);
                             fread(&bit, sizeof(char), 1, this->file);

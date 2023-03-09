@@ -629,8 +629,8 @@ int AdminArchivosCarpetas::existeCarpeta(vector<std::string> rutaDivida, int car
  * Procesos:
  *          - Buscar Rutas recursivamente ( Obtener la direccion final )
  *          - Validar permisos de escritura en el inodo final
- *          - Crear Inodo para la carpeta ( modificar bitmap de inodos, actualizar sb.s_firts_ino )
- *          - Crear bloque carpeta en el Inodo Anteriro ( modificar bitmap de bloques, actualizar sb.s_firsts_blck)
+ *          - Crear Inodo para la carpeta ( modificar bitmap de inodos, actualizar ejecutarReporte_sb.s_firts_ino )
+ *          - Crear bloque carpeta en el Inodo Anteriro ( modificar bitmap de bloques, actualizar ejecutarReporte_sb.s_firsts_blck)
  * @param rutaDividida
  * @param carpetaActual
  * @param direccionInodoPadre
@@ -2038,7 +2038,7 @@ TablaInodo AdminArchivosCarpetas::addFile(int blckActual, int noBlckBitMap, std:
                         char bit;
                         bool bandera = false;
                         char one = '1';
-                        //actualizacion sb
+                        //actualizacion ejecutarReporte_sb
                         for (int bmI = start; bmI < end; bmI++) {
                             fseek(this->file, bmI, SEEK_SET);
                             fread(&bit, sizeof(char), 1, this->file);
@@ -2211,7 +2211,7 @@ TablaInodo AdminArchivosCarpetas::addFile(int blckActual, int noBlckBitMap, std:
                                 char bit;
                                 bool bandera = false;
                                 char one = '1';
-                                //actualizacion sb
+                                //actualizacion ejecutarReporte_sb
                                 for (int bmI = start; bmI < end; bmI++) {
                                     fseek(this->file, bmI, SEEK_SET);
                                     fread(&bit, sizeof(char), 1, this->file);
@@ -2243,7 +2243,7 @@ TablaInodo AdminArchivosCarpetas::addFile(int blckActual, int noBlckBitMap, std:
                         char bit;
                         bool bandera = false;
                         char one = '1';
-                        //actualizacion sb
+                        //actualizacion ejecutarReporte_sb
                         for (int bmI = start; bmI < end; bmI++) {
                             fseek(this->file, bmI, SEEK_SET);
                             fread(&bit, sizeof(char), 1, this->file);
@@ -2283,7 +2283,7 @@ TablaInodo AdminArchivosCarpetas::addFile(int blckActual, int noBlckBitMap, std:
 
                         bit2 = 0;
                         bandera = false;
-                        //actualizacion sb
+                        //actualizacion ejecutarReporte_sb
                         for (int bmI = start; bmI < end; bmI++) {
                             fseek(this->file, bmI, SEEK_SET);
                             fread(&bit, sizeof(char), 1, this->file);

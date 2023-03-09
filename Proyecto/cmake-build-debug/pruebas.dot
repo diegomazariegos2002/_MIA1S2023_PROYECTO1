@@ -1,0 +1,37 @@
+digraph G {
+rankdir=LR;
+node[shape=none]
+	n37886600[label=<<table>
+<tr><td colspan="2" border="0">aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</td></tr>
+<tr><td colspan="2" bgcolor="gray">INODO 37886600</td></tr>
+<tr>
+<td>i_uid</td>
+<td>1</td>
+</tr>
+</table>>]
+
+n43244232[label=<<table>
+<tr>
+<td colspan="2" bgcolor="#f34037">Bloque Carpeta</td></tr>
+<tr>
+<td>.</td>
+<td port="37886600">37886600</td>
+</tr>
+<tr>
+<td>..</td>
+<td port="37886600">37886600</td>
+</tr>
+<tr>
+<td>users.txt</td>
+<td port="37886712">37886712</td>
+</tr>
+<tr>
+<td>home</td>
+<td port="37886824">37886824</td>
+</tr>
+</table>>]
+
+n43244232:37886712->n37886600;
+
+}
+// © 2022 Costa Shulyupin, licensed under EPL

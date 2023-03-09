@@ -9,7 +9,6 @@ fdisk >type=P >unit=M >name=Part1 >size=25 >path=/home/pruebas/DiscoParte2.dsk
 fdisk >type=P >unit=M >name=Part2 >size=25 >path=/home/pruebas/DiscoParte2.dsk
 fdisk >type=P >unit=M >name=Part3 >size=25 >path=/home/pruebas/DiscoParte2.dsk
 fdisk >type=P >unit=M >name=Part4 >size=25 >path=/home/pruebas/DiscoParte2.dsk
-
 mount >path=/home/pruebas/DiscoParte2.dsk >name=Part1 #id 751DiscoParte2
 mount >path=/home/pruebas/DiscoParte2.dsk >name=Part2 #id 752DiscoParte2
 mount >path=/home/pruebas/DiscoParte2.dsk >name=Part3 #id 753DiscoParte2

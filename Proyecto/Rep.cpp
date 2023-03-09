@@ -7,128 +7,149 @@
 #include <stdlib.h>
 #include <cmath>
 #include <sstream>
+#include <filesystem>
 
 Rep::Rep() {
-    this->path=" ";
+    this->mountList=new MountList();
     this->name=" ";
+    this->path=" ";
     this->id=" ";
-    this->ruta=" ";
     this->directorio=" ";
     this->extension=" ";
-    this->mountList=new MountList();
+    this->ruta=" ";
 }
 
 void Rep::generate() {
-    if (this->path!=" "){
-        if (this->id!=" "){
+    if (this->id!=" "){
+        if (this->path!=" "){
             if (this->name=="mbr"){
-                this->mbr();
+                this->ejecutarReporte_mbr();
             }
             else if (this->name=="disk"){
-                this->disk();
+                this->ejecutarReporte_disk();
             }
             else if (this->name=="inode"){
-                this->inode();
+                this->ejecutarReporte_inode();
             }
-            else if (this->name=="journaling"){
-                this->journaling();
+            else if (this->name=="Journaling"){
+                this->ejecutarReporte_Journaling();
             }
             else if (this->name=="block"){
-                this->block();
+                this->ejecutarReporte_block();
             }
             else if (this->name=="bm_inode"){
-                this->bm_inode();
+                this->ejecutarReporte_bm_inode();
             }
             else if (this->name=="bm_block"){
-                this->bm_block();
+                this->ejecutarReporte_bm_block();
             }
             else if (this->name=="tree"){
-                this->tree();
+                this->ejecutarReporte_tree();
             }
             else if (this->name=="sb"){
-                this->sb();
+                this->ejecutarReporte_sb();
             }
             else if (this->name=="file"){
-                this->file();
+                this->ejecutarReporte_file();
             }
             else if (this->name=="ls"){
-                this->ls();
+                this->ejecutarReporte_ls();
             }
             else{
                 cout << "EL NOMBRE ASIGNADO PARA EL REPORTE ES INVALIDO"<< endl;
             }
         }else{
-            cout << "EL ID DE LA PARTICION ES OBLIGATORIO"<< endl;
+            cout << "EL PARAMETRO DE LA UBICACION DEL REPORTE ES OBLIGATORIO"<< endl;
         }
     }else{
-        cout << "EL PARAMETRO DE LA UBICACION DEL REPORTE ES OBLIGATORIO"<< endl;
+        cout << "EL ID DE LA PARTICION ES OBLIGATORIO"<< endl;
+
     }
 
 }
 
-void Rep::mbr() {
+void Rep::ejecutarReporte_mbr() {
     Nodo_M *nodo=this->mountList->buscar(this->id);
     if (nodo!=NULL){
-        this->directorio=this->getDirectorio(this->path);
-        this->extension=this->getExtension(this->path);
+        FILE *file;
+
+        this->directorio= this->getCarpetas(this->path);
+        this->extension= this->getExtensionFile(this->path);
         system(("sudo -S mkdir -p \'"+this->directorio+"\'").c_str());
         system(("sudo -S chmod -R 777 \'"+this->directorio+"\'").c_str());
 
-        FILE *file;
+
         if ((file= fopen(nodo->path.c_str(),"rb+"))){
             MBR mbr;
             fseek(file,0,SEEK_SET);
             fread(&mbr,sizeof (MBR),1,file);
-
-            FILE *dot= fopen("rep.dot","w");
-            fprintf(dot,"digraph G {\n");
-            fprintf(dot, "node[shape=none]\n");
-            fprintf(dot, "start[label=<<table>");
-            fprintf(dot,R"(<tr><td colspan="2" bgcolor="#6308d8"><font color="white">REPORTE DE MBR</font></td></tr>)");
-            fprintf(dot,R"(<tr>)");
-            fprintf(dot,R"(<td>mbr_tamano</td>)");
-            fprintf(dot,(R"(<td>)"+ to_string(mbr.mbr_tamano)+"</td>").c_str());
-            fprintf(dot,R"(</tr>)");
-            fprintf(dot,R"(<tr>)");
-            fprintf(dot,R"(<td bgcolor="#b48be8">mbr_fecha_creacion</td>)");
+            FILE *fileDot= fopen("mbr.dot", "w");
+            string cuerpoDot = "";
             char fecha[70];
             strftime(fecha,sizeof (fecha),"%Y-%m-%d %H:%M:%S",localtime(&mbr.mbr_fecha_creacion));
-            string f=fecha;
-            fprintf(dot,(R"(<td bgcolor="#b48be8">)"+f+"</td>").c_str());
-            fprintf(dot,R"(</tr>)");
-            fprintf(dot,R"(<tr>)");
-            fprintf(dot,R"(<td>mbr_disk_signature</td>)");
-            fprintf(dot,(R"(<td>)"+ to_string(mbr.mbr_dsk_signature)+"</td>").c_str());
-            fprintf(dot,R"(</tr>)");
-
-            for (int i = 0; i < 4; ++i) {
-                if (mbr.mbr_partition[i].part_start!=-1){
-                    fprintf(dot,R"(<tr><td colspan="2" bgcolor="#6308d8"><font color="white">Particion</font></td></tr>)");
-                    fprintf(dot,R"(<tr>)");
-                    fprintf(dot,R"(<td>part_status</td>)");
-                    fprintf(dot,(R"(<td>)"+string(1,mbr.mbr_partition[i].part_status)+"</td>").c_str());
-                    fprintf(dot,R"(</tr>)");
-                    fprintf(dot,R"(<tr>)");
-                    fprintf(dot,R"(<td bgcolor="#b48be8">part_type</td>)");
-                    fprintf(dot,(R"(<td bgcolor="#b48be8">)"+string (1,mbr.mbr_partition[i].part_type)+"</td>").c_str());
-                    fprintf(dot,R"(</tr>)");
-                    fprintf(dot,R"(<tr>)");
-                    fprintf(dot,R"(<td>part_fit</td>)");
-                    fprintf(dot,(R"(<td>)"+ string(1,mbr.mbr_partition[i].part_fit)+"</td>").c_str());
-                    fprintf(dot,R"(</tr>)");
-                    fprintf(dot,R"(<tr>)");
-                    fprintf(dot,R"(<td bgcolor="#b48be8">part_start</td>)");
-                    fprintf(dot,(R"(<td bgcolor="#b48be8">)"+to_string(mbr.mbr_partition[i].part_s)+"</td>").c_str());
-                    fprintf(dot,R"(</tr>)");
-                    fprintf(dot,R"(<tr>)");
-                    fprintf(dot,R"(<td>part_size</td>)");
-                    fprintf(dot,(R"(<td>)"+ to_string(mbr.mbr_partition[i].part_s)+"</td>").c_str());
-                    fprintf(dot,R"(</tr>)");
-                    fprintf(dot,R"(<tr>)");
-                    fprintf(dot,R"(<td bgcolor="#b48be8">part_name</td>)");
+            string date = fecha;
+            cuerpoDot += 
+                "digraph G {"
+                "\n"
+                "node[shape=none]"
+                "\n"
+                "start[label=<<table>"
+                "\n"
+                R"(<tr><td colspan="2" bgcolor="darkorchid4"><font color="white">REPORTE DE MBR</font></td></tr>)"
+                "\n"
+                R"(<tr>)"
+                "\n"
+                R"(<td border="0">mbr_tamano</td>)"
+                "\n"
+                R"(<td border="0">)" + to_string(mbr.mbr_tamano) + "</td>"
+                "\n"
+                R"(</tr>)"
+                "\n"    
+                R"(<tr>)"
+                                                        "\n"
+                R"(<td bgcolor="plum2">mbr_fecha_creacion</td>)"
+                                                        "\n"
+                R"(<td bgcolor="plum2">)" + date + "</td>"
+                                                     "\n"
+                R"(</tr>)"
+                                                     "\n"
+                R"(<tr>)"
+                                                     "\n"
+                R"(<td border="0">mbr_disk_signature</td>)"
+                                                     "\n"
+                R"(<td border="0">)" + to_string(mbr.mbr_dsk_signature) + "</td>"
+                                                               "\n"
+                R"(</tr>)"
+                                                               "\n";
+                
+                for (int i = 0; i < 4; ++i) {
+                    if (mbr.mbr_partition[i].part_start!=-1){
+                    cuerpoDot +=R"(<tr><td colspan="2" bgcolor="darkorchid4"><font color="white">Particion</font></td></tr>)";
+                    cuerpoDot +=R"(<tr>)";
+                    cuerpoDot +=R"(<td border="0">part_status</td>)";
+                    cuerpoDot +=(R"(<td border="0">)" + string(1, mbr.mbr_partition[i].part_status) + "</td>").c_str();
+                    cuerpoDot +=R"(</tr>)";
+                    cuerpoDot +=R"(<tr>)";
+                    cuerpoDot +=R"(<td bgcolor="plum2">part_type</td>)";
+                    cuerpoDot +=(R"(<td bgcolor="plum2">)" + string (1, mbr.mbr_partition[i].part_type) + "</td>").c_str();
+                    cuerpoDot +=R"(</tr>)";
+                    cuerpoDot +=R"(<tr>)";
+                    cuerpoDot +=R"(<td border="0">part_fit</td>)";
+                    cuerpoDot +=(R"(<td border="0">)" + string(1, mbr.mbr_partition[i].part_fit) + "</td>").c_str();
+                    cuerpoDot +=R"(</tr>)";
+                    cuerpoDot +=R"(<tr>)";
+                    cuerpoDot +=R"(<td bgcolor="plum2">part_start</td>)";
+                    cuerpoDot +=(R"(<td bgcolor="plum2">)" + to_string(mbr.mbr_partition[i].part_s) + "</td>").c_str();
+                    cuerpoDot +=R"(</tr>)";
+                    cuerpoDot +=R"(<tr>)";
+                    cuerpoDot +=R"(<td border="0">part_size</td>)";
+                    cuerpoDot +=(R"(<td border="0">)" + to_string(mbr.mbr_partition[i].part_s) + "</td>").c_str();
+                    cuerpoDot +=R"(</tr>)";
+                    cuerpoDot +=R"(<tr>)";
+                    cuerpoDot +=R"(<td bgcolor="plum2">part_name</td>)";
                     string name1=mbr.mbr_partition[i].part_name;
-                    fprintf(dot,(R"(<td bgcolor="#b48be8">)"+name1+"</td>").c_str());
-                    fprintf(dot,R"(</tr>)");
+                    cuerpoDot +=(R"(<td bgcolor="plum2">)" + name1 + "</td>").c_str();
+                    cuerpoDot +=R"(</tr>)";
 
                     if (mbr.mbr_partition[i].part_type=='e'){
                         EBR ebr;
@@ -136,32 +157,32 @@ void Rep::mbr() {
                         fread(&ebr,sizeof(EBR),1,file);
                         if (!(ebr.part_s==-1 && ebr.part_next==-1)){
                             while (true){
-                                fprintf(dot,R"(<tr><td colspan="2" bgcolor="#ff738c"><font color="white">Particion Logica</font></td></tr>)");
-                                fprintf(dot,R"(<tr>)");
-                                fprintf(dot,R"(<td>part_status</td>)");
-                                fprintf(dot,(R"(<td>)"+string(1,ebr.part_status)+"</td>").c_str());
-                                fprintf(dot,R"(</tr>)");
-                                fprintf(dot,R"(<tr>)");
-                                fprintf(dot,R"(<td bgcolor="#ffb2c0">part_next</td>)");
-                                fprintf(dot,(R"(<td bgcolor="#ffb2c0">)"+ to_string(ebr.part_next)+"</td>").c_str());
-                                fprintf(dot,R"(</tr>)");
-                                fprintf(dot,R"(<tr>)");
-                                fprintf(dot,R"(<td>part_fit</td>)");
-                                fprintf(dot,(R"(<td>)"+string(1,ebr.part_fit)+"</td>").c_str());
-                                fprintf(dot,R"(</tr>)");
-                                fprintf(dot,R"(<tr>)");
-                                fprintf(dot,R"(<td bgcolor="#ffb2c0">part_start</td>)");
-                                fprintf(dot,(R"(<td bgcolor="#ffb2c0">)"+ to_string(ebr.part_start)+"</td>").c_str());
-                                fprintf(dot,R"(</tr>)");
-                                fprintf(dot,R"(<tr>)");
-                                fprintf(dot,R"(<td>part_size</td>)");
-                                fprintf(dot,(R"(<td>)"+ to_string(ebr.part_s)+"</td>").c_str());
-                                fprintf(dot,R"(</tr>)");
-                                fprintf(dot,R"(<tr>)");
-                                fprintf(dot,R"(<td bgcolor="#ffb2c0">part_name</td>)");
+                                cuerpoDot +=R"(<tr><td colspan="2" bgcolor="salmon"><font color="white">Particion Logica</font></td></tr>)";
+                                cuerpoDot +=R"(<tr>)";
+                                cuerpoDot +=R"(<td border="0">part_status</td>)";
+                                cuerpoDot +=(R"(<td border="0">)" + string(1, ebr.part_status) + "</td>").c_str();
+                                cuerpoDot +=R"(</tr>)";
+                                cuerpoDot +=R"(<tr>)";
+                                cuerpoDot +=R"(<td bgcolor="lightpink">part_next</td>)";
+                                cuerpoDot +=(R"(<td bgcolor="lightpink">)" + to_string(ebr.part_next) + "</td>").c_str();
+                                cuerpoDot +=R"(</tr>)";
+                                cuerpoDot +=R"(<tr>)";
+                                cuerpoDot +=R"(<td border="0">part_fit</td>)";
+                                cuerpoDot +=(R"(<td border="0">)" + string(1, ebr.part_fit) + "</td>").c_str();
+                                cuerpoDot +=R"(</tr>)";
+                                cuerpoDot +=R"(<tr>)";
+                                cuerpoDot +=R"(<td bgcolor="lightpink">part_start</td>)";
+                                cuerpoDot +=(R"(<td bgcolor="lightpink">)" + to_string(ebr.part_start) + "</td>").c_str();
+                                cuerpoDot +=R"(</tr>)";
+                                cuerpoDot +=R"(<tr>)";
+                                cuerpoDot +=R"(<td border="0">part_size</td>)";
+                                cuerpoDot +=(R"(<td border="0">)" + to_string(ebr.part_s) + "</td>").c_str();
+                                cuerpoDot +=R"(</tr>)";
+                                cuerpoDot +=R"(<tr>)";
+                                cuerpoDot +=R"(<td bgcolor="lightpink">part_name</td>)";
                                 string name1=ebr.part_name;
-                                fprintf(dot,(R"(<td bgcolor="#ffb2c0">)"+name1+"</td>").c_str());
-                                fprintf(dot,R"(</tr>)");
+                                cuerpoDot +=(R"(<td bgcolor="lightpink">)" + name1 + "</td>").c_str();
+                                cuerpoDot +=R"(</tr>)";
                                 if (ebr.part_next==-1){
                                     break;
                                 }
@@ -171,153 +192,170 @@ void Rep::mbr() {
                         }
                     }
                 }
-            }
+                }
 
-            fprintf(dot,"</table>>];\n");
-            fprintf(dot,"}");
-            fclose(dot);
+            cuerpoDot +="</table>>];\n";
+            cuerpoDot +="}";
+            fprintf(fileDot, cuerpoDot.c_str());
+            fclose(fileDot);
             fclose(file);
-            string command="sudo -S  dot -T"+this->extension+" rep.dot -o \""+ this->path+"\"";
+            string command="sudo -S  dot -T"+this->extension+" mbr.dot -o \""+ this->path+"\"";
             system(command.c_str());
-            cout<<"SE GENERO EL REPORTE MBR"<<endl;
+            cout<<"REPORTE GENERADO CON EXITO:  MBR"<<endl;
         }else{
-            cout <<"DISCO INEXISTENTE"<<endl;
+            cout << "EL DISCO SE MOVIO DE LUGAR PORQUE NO SE ENCUENTRA" << endl;
             return;
         }
     }else{
-        cout <<"NO SE HA ENCONTRADO ALGUNA MONTURA CON EL ID: "<< this->id<<endl;
+        cout << "LA MONTURA CON EL ID: " << this->id << " NO EXISTE O NO SE ENCUENTRA EN EL SISTEMA" << endl;
         return;
     }
 }
 
-void Rep::disk() {
-    Nodo_M *nodo=this->mountList->buscar(this->id);
-    if (nodo!=NULL){
-        this->directorio=this->getDirectorio(this->path);
-        this->extension=this->getExtension(this->path);
+void Rep::ejecutarReporte_disk() {
+    Nodo_M *nodoMontura=this->mountList->buscar(this->id);
+    if (nodoMontura != NULL){
+        FILE *fileReporte;
+        MBR mbr;
+        this->extension= this->getExtensionFile(this->path);
+        this->directorio= this->getCarpetas(this->path);
         system(("sudo -S mkdir -p \'"+this->directorio+"\'").c_str());
         system(("sudo -S chmod -R 777 \'"+this->directorio+"\'").c_str());
+        if ((fileReporte= fopen(nodoMontura->path.c_str(), "rb+"))){
+            fseek(fileReporte, 0, SEEK_SET);
+            fread(&mbr, sizeof (MBR), 1, fileReporte);
+            int size=mbr.mbr_tamano;
 
-        FILE *file;
-        if ((file= fopen(nodo->path.c_str(),"rb+"))){
-            MBR mbr;
-            fseek(file,0,SEEK_SET);
-            fread(&mbr,sizeof (MBR),1,file);
-            int tamanioT=mbr.mbr_tamano;
+            FILE *fileDot= fopen("disk.dot", "w");
+            fprintf(fileDot, "digraph G {\n");
+            fprintf(fileDot, "node[shape=none]\n");
+            fprintf(fileDot, "start[label=<<table><tr>");
+            fprintf(fileDot, "<td rowspan=\"2\">MBR</td>");
 
-            FILE *dot= fopen("rep.dot","w");
-            fprintf(dot,"digraph G {\n");
-            fprintf(dot, "node[shape=none]\n");
-            fprintf(dot, "start[label=<<table><tr>");
-            fprintf(dot, "<td rowspan=\"2\">MBR</td>");
-
+            int start=sizeof(MBR);
             int i=0;
-            int inicio=sizeof(MBR);
+
             while (i<4){
-                if (mbr.mbr_partition[i].part_start!=-1){
-                    if (mbr.mbr_partition[i].part_type=='p'){
-                        float p1=(mbr.mbr_partition[i].part_s*1.0)/tamanioT;
-                        float porcentaje=p1*100.0;
-                        string name1=mbr.mbr_partition[i].part_name;
-                        fprintf(dot, ("<td rowspan=\"2\">"+name1+" <br/>"+ to_string(lround(porcentaje))+"</td>").c_str());
-                        if (i!=3){
-                            if ((mbr.mbr_partition[i].part_start+mbr.mbr_partition[i].part_s)<mbr.mbr_partition[i+1].part_start){
-                                porcentaje=((mbr.mbr_partition[i+1].part_start-(mbr.mbr_partition[i].part_start+mbr.mbr_partition[i].part_s))/tamanioT)*100;
-                                fprintf(dot, ("<td rowspan=\"2\">LIBRE <br/>"+ to_string(lround(porcentaje))+"</td>").c_str());
-                            }
-                        }else if ((mbr.mbr_partition[i].part_start+mbr.mbr_partition[i].part_s)<tamanioT){
-                            porcentaje=((tamanioT-(mbr.mbr_partition[i].part_start+mbr.mbr_partition[i].part_s))/tamanioT)*100;
-                            fprintf(dot, ("<td rowspan=\"2\">LIBRE <br/>"+ to_string(lround(porcentaje))+"</td>").c_str());
-                        }
-
-                    }else if (mbr.mbr_partition[i].part_type=='e'){
-                        float porcentaje=((mbr.mbr_partition[i].part_s)/tamanioT)*100.0;
-                        fprintf(dot, "<td rowspan=\"2\">EXTENDIDA</td>");
-                        EBR ebr;
-                        fseek(file,mbr.mbr_partition[i].part_start,SEEK_SET);
-                        fread(&ebr,sizeof(EBR),1,file);
-                        if (!(ebr.part_s==-1 && ebr.part_next==-1)){
-                            if (ebr.part_s>-1){
-                                string name1=ebr.part_name;
-                                fprintf(dot, ("<td rowspan=\"2\">EBR <br/>"+name1+"</td>").c_str());
-                                porcentaje=((ebr.part_s*1.0)/tamanioT)*100.0;
-                                fprintf(dot, ("<td rowspan=\"2\">Logica <br/>"+ to_string(lround(porcentaje))+"</td>").c_str());
-                            }else{
-                                string name1=ebr.part_name;
-                                fprintf(dot, "<td rowspan=\"2\">EBR</td>");
-                                porcentaje=(((ebr.part_next-ebr.part_start)*1.0)/tamanioT)*100.0;
-                                fprintf(dot, ("<td rowspan=\"2\">Libre <br/>"+ to_string(lround(porcentaje))+"</td>").c_str());
-
-                            }
-                            fseek(file,ebr.part_next,SEEK_SET);
-                            fread(&ebr,sizeof (EBR),1,file);
-                            while (true){
-                                string name1=ebr.part_name;
-                                fprintf(dot, ("<td rowspan=\"2\">EBR <br/>"+name1+"</td>").c_str());
-                                porcentaje=((ebr.part_s*1.0)/tamanioT)*100.0;
-                                fprintf(dot, ("<td rowspan=\"2\">Logica <br/>"+ to_string(lround(porcentaje))+"</td>").c_str());
-                                if (ebr.part_next==-1){
-                                    if ((ebr.part_start+ebr.part_s)<mbr.mbr_partition[i].part_s){
-                                        porcentaje=(((mbr.mbr_partition[i].part_s-(ebr.part_start+ebr.part_s))*1.0)/tamanioT)*100.0;
-                                        fprintf(dot, ("<td rowspan=\"2\">Libre <br/>"+ to_string(lround(porcentaje))+"</td>").c_str());
-                                    }
-                                    break;
-                                }else{
-                                    if ((ebr.part_start+ebr.part_s)<ebr.part_next){
-                                        porcentaje=(((ebr.part_next-(ebr.part_start+ebr.part_s))*1.0)/tamanioT)*100.0;
-                                        fprintf(dot, ("<td rowspan=\"2\">Libre <br/>"+ to_string(lround(porcentaje))+"</td>").c_str());
-                                    }
-                                }
-                                fseek(file,ebr.part_next,SEEK_SET);
-                                fread(&ebr,sizeof (EBR),1,file);
-                            }
-                        }
-                        fprintf(dot, "<td rowspan=\"2\">EXTENDIDA</td>");
-                    }
-                    inicio=mbr.mbr_partition[i].part_start+mbr.mbr_partition[i].part_s;
-                }else{
+                if (mbr.mbr_partition[i].part_start == -1){ // ESTA LIBRE
                     i++;
                     while (i<4){
                         if (mbr.mbr_partition[i].part_start!=-1){
-                            int porcentaje=((mbr.mbr_partition[i].part_start-inicio)/(tamanioT*1.0))*100.0;
-                            fprintf(dot, ("<td rowspan=\"2\">LIBRE <br/>"+ to_string(lround(porcentaje))+"</td>").c_str());
+                            int porcentaje= ((mbr.mbr_partition[i].part_start - start) / (size * 1.0)) * 100.0;
+                            fprintf(fileDot, ("<td rowspan=\"2\">LIBRE <br/>" + to_string(lround(porcentaje)) + "</td>").c_str());
                             break;
                         }
                         i++;
                     }
                     if (i==4){
-                        float porcentaje=(((tamanioT-inicio)*1.0)/tamanioT)*(100.0);
-                        fprintf(dot, ("<td rowspan=\"2\">LIBRE <br/>"+ to_string(lround(porcentaje))+"</td>").c_str());
-                        goto salto1;
+                        float porcentaje= (((size - start) * 1.0) / size) * (100.0);
+                        fprintf(fileDot, ("<td rowspan=\"2\">LIBRE <br/>" + to_string(lround(porcentaje)) + "</td>").c_str());
+                        goto salida1;
                     }
                     i--;
+
+                }
+                else{ // ESTA OCUPADA
+                    if (mbr.mbr_partition[i].part_type=='e'){
+                        float porcentaje= ((mbr.mbr_partition[i].part_s) / size) * 100.0;
+                        fprintf(fileDot, "<td colspan=\"100\">EXTENDIDA</td>");
+                        EBR ebr;
+                        fseek(fileReporte, mbr.mbr_partition[i].part_start, SEEK_SET);
+                        fread(&ebr, sizeof(EBR), 1, fileReporte);
+                        if (!(ebr.part_s==-1 && ebr.part_next==-1)){
+                            string nombre_1=ebr.part_name;
+                            if (ebr.part_s>-1){
+                                fprintf(fileDot, ("<td rowspan=\"2\">EBR <br/>" + nombre_1 + "</td>").c_str());
+                                porcentaje= ((ebr.part_s*1.0) / size) * 100.0;
+                                fprintf(fileDot, ("<td rowspan=\"2\">Logica <br/>" + to_string(lround(porcentaje)) + "</td>").c_str());
+                            }
+                            else{
+                                fprintf(fileDot, "<td rowspan=\"2\">EBR</td>");
+                                porcentaje= (((ebr.part_next-ebr.part_start)*1.0) / size) * 100.0;
+                                fprintf(fileDot, ("<td rowspan=\"2\">Libre <br/>" + to_string(lround(porcentaje)) + "</td>").c_str());
+
+                            }
+                            fseek(fileReporte, ebr.part_next, SEEK_SET);
+                            fread(&ebr, sizeof (EBR), 1, fileReporte);
+                            while (true){
+                                string name1=ebr.part_name;
+                                fprintf(fileDot, ("<td rowspan=\"2\">EBR <br/>" + name1 + "</td>").c_str());
+                                porcentaje= ((ebr.part_s*1.0) / size) * 100.0;
+                                fprintf(fileDot, ("<td rowspan=\"2\">Logica <br/>" + to_string(lround(porcentaje)) + "</td>").c_str());
+                                if (ebr.part_next==-1){
+                                    if ((ebr.part_start+ebr.part_s)<mbr.mbr_partition[i].part_s){
+                                        porcentaje= (((mbr.mbr_partition[i].part_s-(ebr.part_start+ebr.part_s))*1.0) / size) * 100.0;
+                                        fprintf(fileDot, ("<td rowspan=\"2\">Libre <br/>" + to_string(lround(porcentaje)) + "</td>").c_str());
+                                    }
+                                    break;
+                                }else{
+                                    if ((ebr.part_start+ebr.part_s)<ebr.part_next){
+                                        porcentaje= (((ebr.part_next-(ebr.part_start+ebr.part_s))*1.0) / size) * 100.0;
+                                        fprintf(fileDot, ("<td rowspan=\"2\">Libre <br/>" + to_string(lround(porcentaje)) + "</td>").c_str());
+                                    }
+                                }
+                                fseek(fileReporte, ebr.part_next, SEEK_SET);
+                                fread(&ebr, sizeof (EBR), 1, fileReporte);
+                            }
+                        }
+                        fprintf(fileDot, "<td rowspan=\"2\">EXTENDIDA</td>");
+                    }
+                    else if (mbr.mbr_partition[i].part_type=='p'){
+                        float p1= (mbr.mbr_partition[i].part_s*1.0) / size;
+                        float porcentaje=p1*100.0;
+                        string name1=mbr.mbr_partition[i].part_name;
+                        fprintf(fileDot, ("<td rowspan=\"2\">" + name1 + " <br/>" + to_string(lround(porcentaje)) + "</td>").c_str());
+                        if (i!=3){
+                            if ((mbr.mbr_partition[i].part_start+mbr.mbr_partition[i].part_s)<mbr.mbr_partition[i+1].part_start){
+                                porcentaje= ((mbr.mbr_partition[i+1].part_start-(mbr.mbr_partition[i].part_start+mbr.mbr_partition[i].part_s)) / size) * 100;
+                                fprintf(fileDot, ("<td rowspan=\"2\">LIBRE <br/>" + to_string(lround(porcentaje)) + "</td>").c_str());
+                            }
+                        }else if ((mbr.mbr_partition[i].part_start+mbr.mbr_partition[i].part_s) < size){
+                            porcentaje= ((size - (mbr.mbr_partition[i].part_start + mbr.mbr_partition[i].part_s)) / size) * 100;
+                            fprintf(fileDot, ("<td rowspan=\"2\">LIBRE <br/>" + to_string(lround(porcentaje)) + "</td>").c_str());
+                        }
+
+                    }
+                    start= mbr.mbr_partition[i].part_start + mbr.mbr_partition[i].part_s;
                 }
                 i++;
             }
-            salto1:
-            fprintf(dot,"</tr></table>>];\n");
-            fprintf(dot,"}");
-            fclose(dot);
-            fclose(file);
-            string command="sudo -S  dot -T"+this->extension+" rep.dot -o \""+ this->path+"\"";
+
+            salida1:
+            fprintf(fileDot, "</tr></table>>];\n");
+            fprintf(fileDot, "}");
+            fclose(fileDot);
+            fclose(fileReporte);
+            string command="sudo -S  dot -T"+this->extension+" disk.dot -o \""+ this->path+"\"";
             system(command.c_str());
-            cout<<"SE GENERO EL REPORTE DISK"<<endl;
+            cout<<"REPORTE GENERADO CON EXITO:  DISK"<<endl;
         }
         else{
-            cout <<"DISCO INEXISTENTE"<<endl;
+            cout << "EL DISCO SE MOVIO DE LUGAR PORQUE NO SE ENCUENTRA" << endl;
             return;
         }
     }else{
-        cout <<"NO SE HA ENCONTRADO ALGUNA MONTURA CON EL ID: "<< this->id<<endl;
+        cout << "LA MONTURA CON EL ID: " << this->id << " NO EXISTE O NO SE ENCUENTRA EN EL SISTEMA" << endl;
         return;
     }
 }
 
-void Rep::sb() {
+string Rep::getCarpetas(string ruta) {
+    std::filesystem::path path(ruta);
+    std::string dir = path.parent_path().string();
+    dir += "/";
+    return dir;
+}
+string Rep::getExtensionFile(string path) {
+    int i= path.find('.');
+    string extension=path.substr(i+1,path.length());
+    return extension;
+}
+
+void Rep::ejecutarReporte_sb() {
     Nodo_M *nodo=this->mountList->buscar(this->id);
     if (nodo!=NULL) {
-        this->directorio = this->getDirectorio(this->path);
-        this->extension = this->getExtension(this->path);
+        this->directorio = this->getCarpetas(this->path);
+        this->extension = this->getExtensionFile(this->path);
         string nameD=this->getName(nodo->path);
         system(("sudo -S mkdir -p \'" + this->directorio + "\'").c_str());
         system(("sudo -S chmod -R 777 \'" + this->directorio + "\'").c_str());
@@ -466,22 +504,22 @@ void Rep::sb() {
             fclose(dot);
             string command="sudo -S  dot -T"+this->extension+" rep.dot -o \""+ this->path+"\"";
             system(command.c_str());
-            cout<<"SE GENERO EL REPORTE SB"<<endl;
+            cout<<"REPORTE GENERADO CON EXITO:  SB"<<endl;
         }else{
-            cout <<"DISCO INEXISTENTE"<<endl;
+            cout << "EL DISCO SE MOVIO DE LUGAR PORQUE NO SE ENCUENTRA" << endl;
             return;
         }
     }else{
-        cout <<"NO SE HA ENCONTRADO ALGUNA MONTURA CON EL ID: "<< this->id<<endl;
+        cout << "LA MONTURA CON EL ID: " << this->id << " NO EXISTE O NO SE ENCUENTRA EN EL SISTEMA" << endl;
         return;
     }
 }
 
-void Rep::inode() {
+void Rep::ejecutarReporte_inode() {
     Nodo_M *nodo=this->mountList->buscar(this->id);
     if (nodo!=NULL) {
-        this->directorio = this->getDirectorio(this->path);
-        this->extension = this->getExtension(this->path);
+        this->directorio = this->getCarpetas(this->path);
+        this->extension = this->getExtensionFile(this->path);
         system(("sudo -S mkdir -p \'" + this->directorio + "\'").c_str());
         system(("sudo -S chmod -R 777 \'" + this->directorio + "\'").c_str());
 
@@ -581,23 +619,23 @@ void Rep::inode() {
             fclose(file);
             string command="sudo -S  dot -T"+this->extension+" rep.dot -o \""+ this->path+"\"";
             system(command.c_str());
-            cout<<"SE GENERO EL REPORTE INODE"<<endl;
+            cout<<"REPORTE GENERADO CON EXITO:  INODE"<<endl;
 
         }else{
-            cout <<"DISCO INEXISTENTE"<<endl;
+            cout << "EL DISCO SE MOVIO DE LUGAR PORQUE NO SE ENCUENTRA" << endl;
             return;
         }
     }else{
-        cout <<"NO SE HA ENCONTRADO ALGUNA MONTURA CON EL ID: "<< this->id<<endl;
+        cout << "LA MONTURA CON EL ID: " << this->id << " NO EXISTE O NO SE ENCUENTRA EN EL SISTEMA" << endl;
         return;
     }
 }
 
-void Rep::bm_inode() {
+void Rep::ejecutarReporte_bm_inode() {
     Nodo_M *nodo=this->mountList->buscar(this->id);
     if (nodo!=NULL) {
-        this->directorio = this->getDirectorio(this->path);
-        this->extension = this->getExtension(this->path);
+        this->directorio = this->getCarpetas(this->path);
+        this->extension = this->getExtensionFile(this->path);
         string nameD=this->getName(nodo->path);
         system(("sudo -S mkdir -p \'" + this->directorio + "\'").c_str());
         system(("sudo -S chmod -R 777 \'" + this->directorio + "\'").c_str());
@@ -654,22 +692,22 @@ void Rep::bm_inode() {
             fclose(file);
             string command="sudo -S  dot -T"+this->extension+" rep.dot -o \""+ this->path+"\"";
             system(command.c_str());
-            cout<<"SE GENERO EL REPORTE BM INODE"<<endl;
+            cout<<"REPORTE GENERADO CON EXITO:  BM INODE"<<endl;
         }else{
-            cout <<"DISCO INEXISTENTE"<<endl;
+            cout << "EL DISCO SE MOVIO DE LUGAR PORQUE NO SE ENCUENTRA" << endl;
             return;
         }
     }else{
-        cout <<"NO SE HA ENCONTRADO ALGUNA MONTURA CON EL ID: "<< this->id<<endl;
+        cout << "LA MONTURA CON EL ID: " << this->id << " NO EXISTE O NO SE ENCUENTRA EN EL SISTEMA" << endl;
         return;
     }
 }
 
-void Rep::bm_block() {
+void Rep::ejecutarReporte_bm_block() {
     Nodo_M *nodo=this->mountList->buscar(this->id);
     if (nodo!=NULL) {
-        this->directorio = this->getDirectorio(this->path);
-        this->extension = this->getExtension(this->path);
+        this->directorio = this->getCarpetas(this->path);
+        this->extension = this->getExtensionFile(this->path);
         string nameD=this->getName(nodo->path);
         system(("sudo -S mkdir -p \'" + this->directorio + "\'").c_str());
         system(("sudo -S chmod -R 777 \'" + this->directorio + "\'").c_str());
@@ -726,24 +764,24 @@ void Rep::bm_block() {
             fclose(file);
             string command="sudo -S  dot -T"+this->extension+" rep.dot -o \""+ this->path+"\"";
             system(command.c_str());
-            cout<<"SE GENERO EL REPORTE BM BLOCK"<<endl;
+            cout<<"REPORTE GENERADO CON EXITO:  BM BLOCK"<<endl;
         }else{
-            cout <<"DISCO INEXISTENTE"<<endl;
+            cout << "EL DISCO SE MOVIO DE LUGAR PORQUE NO SE ENCUENTRA" << endl;
             return;
         }
     }else{
-        cout <<"NO SE HA ENCONTRADO ALGUNA MONTURA CON EL ID: "<< this->id<<endl;
+        cout << "LA MONTURA CON EL ID: " << this->id << " NO EXISTE O NO SE ENCUENTRA EN EL SISTEMA" << endl;
         return;
     }
 }
 
-void Rep::file() {
+void Rep::ejecutarReporte_file() {
     if (this->ruta!=" "){
         Nodo_M *nodo=this->mountList->buscar(this->id);
         if (nodo!=NULL) {
 
-            this->directorio = this->getDirectorio(this->path);
-            this->extension = this->getExtension(this->path);
+            this->directorio = this->getCarpetas(this->path);
+            this->extension = this->getExtensionFile(this->path);
             string nameD=this->getName(nodo->path);
             system(("sudo -S mkdir -p \'" + this->directorio + "\'").c_str());
             system(("sudo -S chmod -R 777 \'" + this->directorio + "\'").c_str());
@@ -792,15 +830,15 @@ void Rep::file() {
 
                 if (nodo->type=='p'){
                     fseek(file,nodo->start,SEEK_SET);
-                    fread(&this->sbb, sizeof(SuperBloque),1,file);
+                    fread(&this->superBloqueGlobal, sizeof(SuperBloque), 1, file);
                 }else if (nodo->type=='l'){
                     fseek(file,nodo->start+ sizeof(EBR),SEEK_SET);
-                    fread(&this->sbb, sizeof(SuperBloque),1,file);
+                    fread(&this->superBloqueGlobal, sizeof(SuperBloque), 1, file);
                 }
 
                 TablaInodo inodo;
 
-                int posInodoF=this->getInodoF(rutaS,0,rutaS.size()-1,this->sbb.s_inode_start,file);
+                int posInodoF=this->getInodoF(rutaS, 0,rutaS.size()-1, this->superBloqueGlobal.s_inode_start, file);
 
                 if (posInodoF==-1){
                     cout << "ARCHIVO NO ENCONTRADO " << endl;
@@ -828,25 +866,25 @@ void Rep::file() {
                 fclose(file);
                 string command="sudo -S  dot -T"+this->extension+" rep.dot -o \""+ this->path+"\"";
                 system(command.c_str());
-                cout<<"SE GENERO EL REPORTE FILE DE "<<rutaS[rutaS.size()-1]<<endl;
+                cout<<"REPORTE GENERADO CON EXITO:  FILE DE "<<rutaS[rutaS.size()-1]<<endl;
 
             }else{
-                cout <<"DISCO INEXISTENTE"<<endl;
+                cout << "EL DISCO SE MOVIO DE LUGAR PORQUE NO SE ENCUENTRA" << endl;
             }
         }else{
-            cout <<"NO SE HA ENCONTRADO ALGUNA MONTURA CON EL ID: "<< this->id<<endl;
+            cout << "LA MONTURA CON EL ID: " << this->id << " NO EXISTE O NO SE ENCUENTRA EN EL SISTEMA" << endl;
             return;
         }
     }
 }
 
-void Rep::ls() {
+void Rep::ejecutarReporte_ls() {
     if (this->ruta!=" "){
         Nodo_M *nodo=this->mountList->buscar(this->id);
         if (nodo!=NULL) {
 
-            this->directorio = this->getDirectorio(this->path);
-            this->extension = this->getExtension(this->path);
+            this->directorio = this->getCarpetas(this->path);
+            this->extension = this->getExtensionFile(this->path);
             string nameD=this->getName(nodo->path);
             system(("sudo -S mkdir -p \'" + this->directorio + "\'").c_str());
             system(("sudo -S chmod -R 777 \'" + this->directorio + "\'").c_str());
@@ -890,10 +928,10 @@ void Rep::ls() {
 
                 if (nodo->type=='p'){
                     fseek(file,nodo->start,SEEK_SET);
-                    fread(&this->sbb, sizeof(SuperBloque),1,file);
+                    fread(&this->superBloqueGlobal, sizeof(SuperBloque), 1, file);
                 }else if (nodo->type=='l'){
                     fseek(file,nodo->start+ sizeof(EBR),SEEK_SET);
-                    fread(&this->sbb, sizeof(SuperBloque),1,file);
+                    fread(&this->superBloqueGlobal, sizeof(SuperBloque), 1, file);
                 }
 
                 TablaInodo inodo;
@@ -901,7 +939,7 @@ void Rep::ls() {
                 vector<string> rutaS;
 
                 if (this->ruta=="/"){
-                    posInodoF=this->sbb.s_inode_start;
+                    posInodoF=this->superBloqueGlobal.s_inode_start;
                     rutaS.push_back("/");
                 }else{
                     rutaS= this->splitRuta(this->ruta);
@@ -910,7 +948,7 @@ void Rep::ls() {
                         fclose(file);
                         return;
                     }
-                    posInodoF=this->getInodoF(rutaS,0,rutaS.size()-1,this->sbb.s_inode_start,file);
+                    posInodoF=this->getInodoF(rutaS, 0,rutaS.size()-1, this->superBloqueGlobal.s_inode_start, file);
                 }
 
                 if (posInodoF==-1){
@@ -948,13 +986,13 @@ void Rep::ls() {
                 fclose(file);
                 string command="sudo -S  dot -T"+this->extension+" rep.dot -o \""+ this->path+"\"";
                 system(command.c_str());
-                cout<<"SE GENERO EL REPORTE LS DE "<<rutaS[rutaS.size()-1]<<endl;
+                cout<<"REPORTE GENERADO CON EXITO:  LS DE "<<rutaS[rutaS.size()-1]<<endl;
 
             }else{
-                cout <<"DISCO INEXISTENTE"<<endl;
+                cout << "EL DISCO SE MOVIO DE LUGAR PORQUE NO SE ENCUENTRA" << endl;
             }
         }else{
-            cout <<"NO SE HA ENCONTRADO ALGUNA MONTURA CON EL ID: "<< this->id<<endl;
+            cout << "LA MONTURA CON EL ID: " << this->id << " NO EXISTE O NO SE ENCUENTRA EN EL SISTEMA" << endl;
             return;
         }
     }
@@ -1097,7 +1135,7 @@ string Rep::lsInodo(int pos,string name1, FILE *file) {
 }
 
 string Rep::getUsuario(int id, FILE *file) {
-    string content=this->getContent(this->sbb.s_inode_start+ sizeof(TablaInodo),file);
+    string content=this->getContent(this->superBloqueGlobal.s_inode_start + sizeof(TablaInodo), file);
     vector<string> split;
     string usuario;
     stringstream ss(content);
@@ -1115,7 +1153,7 @@ string Rep::getUsuario(int id, FILE *file) {
 }
 
 string Rep::getGrupo(int id, FILE *file) {
-    string content=this->getContent(this->sbb.s_inode_start+ sizeof(TablaInodo),file);
+    string content=this->getContent(this->superBloqueGlobal.s_inode_start + sizeof(TablaInodo), file);
     vector<string> split;
     string usuario;
     stringstream ss(content);
@@ -1163,11 +1201,11 @@ string Rep::getPermiso(int permiso) {
     return dot;
 }
 
-void Rep::journaling() {
+void Rep::ejecutarReporte_Journaling() {
     Nodo_M *nodo=this->mountList->buscar(this->id);
     if (nodo!=NULL) {
-        this->directorio = this->getDirectorio(this->path);
-        this->extension = this->getExtension(this->path);
+        this->directorio = this->getCarpetas(this->path);
+        this->extension = this->getExtensionFile(this->path);
         string nameD=this->getName(nodo->path);
         system(("sudo -S mkdir -p \'" + this->directorio + "\'").c_str());
         system(("sudo -S chmod -R 777 \'" + this->directorio + "\'").c_str());
@@ -1259,24 +1297,13 @@ void Rep::journaling() {
             system(command.c_str());
             cout<<"SE GENERO EL Journaling"<<endl;
         }else{
-            cout <<"DISCO INEXISTENTE"<<endl;
+            cout << "EL DISCO SE MOVIO DE LUGAR PORQUE NO SE ENCUENTRA" << endl;
         }
 
     }else{
-        cout <<"NO SE HA ENCONTRADO ALGUNA MONTURA CON EL ID: "<< this->id<<endl;
+        cout << "LA MONTURA CON EL ID: " << this->id << " NO EXISTE O NO SE ENCUENTRA EN EL SISTEMA" << endl;
         return;
     }
-}
-
-string Rep::getDirectorio(std::string path) {
-    string aux=path;
-    size_t p=0;
-    string directorio="";
-    while ((p=aux.find("/"))!= string::npos){
-        directorio += aux.substr(0,p)+"/";
-        aux.erase(0,p+1);
-    }
-    return directorio;
 }
 
 string Rep::getName(std::string path) {
@@ -1289,11 +1316,7 @@ string Rep::getName(std::string path) {
     }
     return aux;
 }
-string Rep::getExtension(std::string path) {
-    int i= path.find('.');
-    string extension=path.substr(i+1,path.length());
-    return extension;
-}
+
 
 string Rep::getContent(int inodoStart, FILE *file) {
     TablaInodo inodo;
@@ -1502,11 +1525,11 @@ int Rep::getInodoF(vector<std::string> rutaS, int posAct, int rutaSize, int star
     return -1;
 }
 
-void Rep::block() {
+void Rep::ejecutarReporte_block() {
     Nodo_M *nodo=this->mountList->buscar(this->id);
     if (nodo!=NULL) {
-        this->directorio = this->getDirectorio(this->path);
-        this->extension = this->getExtension(this->path);
+        this->directorio = this->getCarpetas(this->path);
+        this->extension = this->getExtensionFile(this->path);
         system(("sudo -S mkdir -p \'" + this->directorio + "\'").c_str());
         system(("sudo -S chmod -R 777 \'" + this->directorio + "\'").c_str());
 
@@ -1622,14 +1645,14 @@ void Rep::block() {
             fclose(file);
             string command="sudo -S  dot -T"+this->extension+" rep.dot -o \""+ this->path+"\"";
             system(command.c_str());
-            cout<<"SE GENERO EL REPORTE BLOCK"<<endl;
+            cout<<"REPORTE GENERADO CON EXITO:  BLOCK"<<endl;
 
         }else{
-            cout <<"DISCO INEXISTENTE"<<endl;
+            cout << "EL DISCO SE MOVIO DE LUGAR PORQUE NO SE ENCUENTRA" << endl;
             return;
         }
     }else{
-        cout <<"NO SE HA ENCONTRADO ALGUNA MONTURA CON EL ID: "<< this->id<<endl;
+        cout << "LA MONTURA CON EL ID: " << this->id << " NO EXISTE O NO SE ENCUENTRA EN EL SISTEMA" << endl;
         return;
     }
 }
@@ -1717,117 +1740,130 @@ string Rep::graphBlockApuntador(int pos, FILE *file) {
     return  dot;
 }
 
-void Rep::tree() {
+void Rep::ejecutarReporte_tree() {
     Nodo_M *nodo=this->mountList->buscar(this->id);
     if (nodo!=NULL) {
-        this->directorio = this->getDirectorio(this->path);
-        this->extension = this->getExtension(this->path);
+        this->directorio = this->getCarpetas(this->path);
+        this->extension = this->getExtensionFile(this->path);
         system(("sudo -S mkdir -p \'" + this->directorio + "\'").c_str());
         system(("sudo -S chmod -R 777 \'" + this->directorio + "\'").c_str());
 
+        SuperBloque superBloqueReporteTree;
         FILE *file;
         if ((file= fopen(nodo->path.c_str(),"rb+"))){
-            SuperBloque sb;
-            if (nodo->type=='p'){
-                fseek(file,nodo->start,SEEK_SET);
-            }else if (nodo->type=='l'){
+            if (nodo->type=='l'){
                 fseek(file,nodo->start+ sizeof(EBR),SEEK_SET);
             }
-            fread(&sb, sizeof(SuperBloque),1,file);
-            int start=sb.s_bm_inode_start,
-                    end=start+sb.s_inodes_count;
-            TablaInodo inodo;
-            BloqueApuntador apuntador1,apuntador2,apuntador3;
+            else if (nodo->type=='p'){
+                fseek(file,nodo->start,SEEK_SET);
+            }
+            fread(&superBloqueReporteTree, sizeof(SuperBloque), 1, file);
+            int bitMapInodos_Start=superBloqueReporteTree.s_bm_inode_start;
+            int bitMapInodos_End= bitMapInodos_Start + superBloqueReporteTree.s_inodes_count;
+            BloqueApuntador blkApuntador1,blkApuntador2,blkApuntador3;
+            TablaInodo tablaInodo;
+            char date[70];
             char bit;
-            int cont=0;
-            char fecha[70];
-            string fecha2="";
+            string date2="";
+            int contador=0;
 
-            FILE *dot= fopen("rep.dot","w");
+            FILE *dot= fopen("tree.dot","w");
             fprintf(dot,"digraph G {\n");
             fprintf(dot, "rankdir=LR;\n");
             fprintf(dot, "node[shape=none]\n");
 
-            for (int i = start; i < end; ++i) {
+            for (int i = bitMapInodos_Start; i < bitMapInodos_End; ++i) {
                 fseek(file,i,SEEK_SET);
                 fread(&bit, sizeof(char),1,file);
                 if (bit=='1'){
-                    int posInodo=(sb.s_inode_start+(cont* sizeof(TablaInodo)));
-                    fseek(file,posInodo,SEEK_SET);
-                    fread(&inodo, sizeof(TablaInodo),1,file);
-                    fprintf(dot, treeInodo(posInodo,file).c_str());
+                    int direccionInodo=(superBloqueReporteTree.s_inode_start + (contador * sizeof(TablaInodo)));
+                    fseek(file, direccionInodo, SEEK_SET);
+                    fread(&tablaInodo, sizeof(TablaInodo), 1, file);
+                    fprintf(dot, dibujarInodoReporteTree(direccionInodo, file).c_str());
                     for (int i = 0; i < 15; ++i) {
-                        if (inodo.i_block[i]!=-1){
+                        if (tablaInodo.i_block[i] != -1){
                             if (i<12){
-                                if (inodo.i_type=='0'){
-                                    fprintf(dot, treeBlock(inodo.i_block[i],0,file).c_str());
-                                }else if (inodo.i_type=='1'){
-                                    fprintf(dot, treeBlock(inodo.i_block[i],1,file).c_str());
+                                if (tablaInodo.i_type == '0'){
+                                    fprintf(dot, dibujarBlkReporteTree(tablaInodo.i_block[i], 0, file).c_str());
+                                }else if (tablaInodo.i_type == '1'){
+                                    fprintf(dot, dibujarBlkReporteTree(tablaInodo.i_block[i], 1, file).c_str());
                                 }
-                                fprintf(dot,this->conexiones(posInodo,inodo.i_block[i]).c_str());
-                            } else if (i==12){
-                                fseek(file,inodo.i_block[i],SEEK_SET);
-                                fread(&apuntador1, sizeof(BloqueApuntador),1,file);
-                                fprintf(dot, treeBlock(inodo.i_block[i],2,file).c_str());
-                                fprintf(dot,this->conexiones(posInodo,inodo.i_block[i]).c_str());
+                                fprintf(dot, this->enlaces(direccionInodo, tablaInodo.i_block[i]).c_str());
+                            }
+                            else if (i==12){
+                                fseek(file, tablaInodo.i_block[i], SEEK_SET);
+                                fread(&blkApuntador1, sizeof(BloqueApuntador), 1, file);
+                                fprintf(dot, dibujarBlkReporteTree(tablaInodo.i_block[i], 2, file).c_str());
+                                fprintf(dot, this->enlaces(direccionInodo, tablaInodo.i_block[i]).c_str());
                                 for (int j = 0; j < 16; ++j) {
-                                    if (apuntador1.b_pointers[j]!=-1){
-                                        if (inodo.i_type=='0'){
-                                            fprintf(dot, treeBlock(apuntador1.b_pointers[j],0,file).c_str());
-                                        }else if (inodo.i_type=='1'){
-                                            fprintf(dot, treeBlock(apuntador1.b_pointers[j],1,file).c_str());
+                                    if (blkApuntador1.b_pointers[j] != -1){
+                                        if (tablaInodo.i_type == '0'){
+                                            fprintf(dot, dibujarBlkReporteTree(blkApuntador1.b_pointers[j], 0, file).c_str());
+                                        }else if (tablaInodo.i_type == '1'){
+                                            fprintf(dot, dibujarBlkReporteTree(blkApuntador1.b_pointers[j], 1, file).c_str());
                                         }
-                                        fprintf(dot,this->conexiones(inodo.i_block[i],apuntador1.b_pointers[j]).c_str());
+                                        fprintf(dot, this->enlaces(tablaInodo.i_block[i], blkApuntador1.b_pointers[j]).c_str());
                                     }
                                 }
-                            }else if (i==13){
-                                fseek(file,inodo.i_block[i],SEEK_SET);
-                                fread(&apuntador1, sizeof(BloqueApuntador),1,file);
-                                fprintf(dot, treeBlock(inodo.i_block[i],2,file).c_str());
-                                fprintf(dot,this->conexiones(posInodo,inodo.i_block[i]).c_str());
+                            }
+                            else if (i==13){
+                                fseek(file, tablaInodo.i_block[i], SEEK_SET);
+                                fread(&blkApuntador1, sizeof(BloqueApuntador), 1, file);
+                                fprintf(dot, dibujarBlkReporteTree(tablaInodo.i_block[i], 2, file).c_str());
+                                fprintf(dot, this->enlaces(direccionInodo, tablaInodo.i_block[i]).c_str());
                                 for (int j = 0; j < 16; ++j) {
-                                    if (apuntador1.b_pointers[j]!=-1){
-                                        fseek(file,apuntador1.b_pointers[j],SEEK_SET);
-                                        fread(&apuntador2, sizeof(BloqueApuntador),1,file);
-                                        fprintf(dot, treeBlock(apuntador1.b_pointers[j],2,file).c_str());
-                                        fprintf(dot,this->conexiones(inodo.i_block[i],apuntador1.b_pointers[j]).c_str());
+                                    if (blkApuntador1.b_pointers[j] != -1){
+                                        fseek(file, blkApuntador1.b_pointers[j], SEEK_SET);
+                                        fread(&blkApuntador2, sizeof(BloqueApuntador), 1, file);
+                                        fprintf(dot, dibujarBlkReporteTree(blkApuntador1.b_pointers[j], 2, file).c_str());
+                                        fprintf(dot, this->enlaces(tablaInodo.i_block[i], blkApuntador1.b_pointers[j]).c_str());
                                         for (int k = 0; k < 16; ++k) {
-                                            if (apuntador2.b_pointers[k]!=-1){
-                                                if (inodo.i_type=='0'){
-                                                    fprintf(dot, treeBlock(apuntador2.b_pointers[k],0,file).c_str());
-                                                }else if (inodo.i_type=='1'){
-                                                    fprintf(dot, treeBlock(apuntador2.b_pointers[k],1,file).c_str());
+                                            if (blkApuntador2.b_pointers[k] != -1){
+                                                if (tablaInodo.i_type == '0'){
+                                                    fprintf(dot,
+                                                            dibujarBlkReporteTree(blkApuntador2.b_pointers[k], 0, file).c_str());
+                                                }else if (tablaInodo.i_type == '1'){
+                                                    fprintf(dot,
+                                                            dibujarBlkReporteTree(blkApuntador2.b_pointers[k], 1, file).c_str());
                                                 }
-                                                fprintf(dot,this->conexiones(apuntador1.b_pointers[j],apuntador2.b_pointers[k]).c_str());
+                                                fprintf(dot, this->enlaces(blkApuntador1.b_pointers[j],
+                                                                           blkApuntador2.b_pointers[k]).c_str());
                                             }
                                         }
                                     }
                                 }
-                            }else if (i==14){
-                                fseek(file,inodo.i_block[i],SEEK_SET);
-                                fread(&apuntador1, sizeof(BloqueApuntador),1,file);
-                                fprintf(dot, treeBlock(inodo.i_block[i],2,file).c_str());
-                                fprintf(dot,this->conexiones(posInodo,inodo.i_block[i]).c_str());
+                            }
+                            else if (i==14){
+                                fseek(file, tablaInodo.i_block[i], SEEK_SET);
+                                fread(&blkApuntador1, sizeof(BloqueApuntador), 1, file);
+                                fprintf(dot, dibujarBlkReporteTree(tablaInodo.i_block[i], 2, file).c_str());
+                                fprintf(dot, this->enlaces(direccionInodo, tablaInodo.i_block[i]).c_str());
                                 for (int j = 0; j < 16; ++j) {
-                                    if (apuntador1.b_pointers[j]!=-1){
-                                        fseek(file,apuntador1.b_pointers[j],SEEK_SET);
-                                        fread(&apuntador2, sizeof(BloqueApuntador),1,file);
-                                        fprintf(dot, treeBlock(apuntador1.b_pointers[j],2,file).c_str());
-                                        fprintf(dot,this->conexiones(inodo.i_block[i],apuntador1.b_pointers[j]).c_str());
+                                    if (blkApuntador1.b_pointers[j] != -1){
+                                        fseek(file, blkApuntador1.b_pointers[j], SEEK_SET);
+                                        fread(&blkApuntador2, sizeof(BloqueApuntador), 1, file);
+                                        fprintf(dot, dibujarBlkReporteTree(blkApuntador1.b_pointers[j], 2, file).c_str());
+                                        fprintf(dot, this->enlaces(tablaInodo.i_block[i], blkApuntador1.b_pointers[j]).c_str());
                                         for (int k = 0; k < 16; ++k) {
-                                            if (apuntador2.b_pointers[k]!=-1){
-                                                fseek(file,apuntador2.b_pointers[k],SEEK_SET);
-                                                fread(&apuntador3, sizeof(BloqueApuntador),1,file);
-                                                fprintf(dot, treeBlock(apuntador2.b_pointers[k],2,file).c_str());
-                                                fprintf(dot,this->conexiones(apuntador1.b_pointers[j],apuntador2.b_pointers[k]).c_str());
+                                            if (blkApuntador2.b_pointers[k] != -1){
+                                                fseek(file, blkApuntador2.b_pointers[k], SEEK_SET);
+                                                fread(&blkApuntador3, sizeof(BloqueApuntador), 1, file);
+                                                fprintf(dot, dibujarBlkReporteTree(blkApuntador2.b_pointers[k], 2, file).c_str());
+                                                fprintf(dot, this->enlaces(blkApuntador1.b_pointers[j],
+                                                                           blkApuntador2.b_pointers[k]).c_str());
                                                 for (int l = 0; l < 16; ++l) {
-                                                    if (apuntador3.b_pointers[l]!=-1){
-                                                        if (inodo.i_type=='0'){
-                                                            fprintf(dot, treeBlock(apuntador3.b_pointers[l],0,file).c_str());
-                                                        }else if (inodo.i_type=='1'){
-                                                            fprintf(dot, treeBlock(apuntador3.b_pointers[l],1,file).c_str());
+                                                    if (blkApuntador3.b_pointers[l] != -1){
+                                                        if (tablaInodo.i_type == '0'){
+                                                            fprintf(dot,
+                                                                    dibujarBlkReporteTree(blkApuntador3.b_pointers[l],
+                                                                                          0, file).c_str());
+                                                        }else if (tablaInodo.i_type == '1'){
+                                                            fprintf(dot,
+                                                                    dibujarBlkReporteTree(blkApuntador3.b_pointers[l],
+                                                                                          1, file).c_str());
                                                         }
-                                                        fprintf(dot,this->conexiones(apuntador2.b_pointers[k],apuntador3.b_pointers[l]).c_str());
+                                                        fprintf(dot, this->enlaces(blkApuntador2.b_pointers[k],
+                                                                                   blkApuntador3.b_pointers[l]).c_str());
                                                     }
                                                 }
                                             }
@@ -1840,27 +1876,108 @@ void Rep::tree() {
 
 
                 }
-                cont++;
+                contador++;
             }
 
             fprintf(dot,"}");
             fclose(dot);
             fclose(file);
-            string command="sudo -S  dot -T"+this->extension+" rep.dot -o \""+ this->path+"\"";
+            string command="sudo -S  dot -T"+this->extension+" tree.dot -o \""+ this->path+"\"";
             system(command.c_str());
-            cout<<"SE GENERO EL REPORTE TREE"<<endl;
+            cout<<"COMANDO EJECUTADO CON EXITO, REPORTE TREE GENERADO"<<endl;
 
-        }else{
-            cout <<"DISCO INEXISTENTE"<<endl;
+        }
+        else{
+            cout <<"EL DISCO SE MOVIO DE RUTA O NO EXISTE"<<endl;
             return;
         }
     }else{
-        cout <<"NO SE HA ENCONTRADO ALGUNA MONTURA CON EL ID: "<< this->id<<endl;
+        cout << "LA MONTURA CON EL ID: " << this->id << " NO EXISTE O NO SE ENCUENTRA EN EL SISTEMA" << endl;
         return;
     }
 }
 
-string Rep::treeBlock(int pos, int type, FILE *file) {
+string Rep::dibujarInodoReporteTree(int direccionInodo, FILE *disco) {
+
+    char date[70];
+    string date2="";
+    string cadenaDot="";
+
+    TablaInodo tablaInodo;
+    fseek(disco, direccionInodo, SEEK_SET);
+    fread(&tablaInodo, sizeof(TablaInodo), 1, disco);
+
+    cadenaDot+= "n" + to_string(direccionInodo) + "[label=<<table>";
+    cadenaDot+= "<tr><td colspan=\"2\" border=\"0\">"+ to_string(direccionInodo) + "</td></tr>";
+    cadenaDot+= R"(<tr><td colspan="2" bgcolor="lightskyblue"> TABLA INODO )" + to_string(direccionInodo) + "</td></tr>\n";
+
+    cadenaDot+="<tr>\n";
+    cadenaDot+="<td>i_uid</td>\n";
+    cadenaDot+= "<td>" + to_string(tablaInodo.i_uid) + "</td>\n";
+    cadenaDot+="</tr>\n";
+
+    cadenaDot+="<tr>\n";
+    cadenaDot+="<td>i_gid</td>\n";
+    cadenaDot+= "<td>" + to_string(tablaInodo.i_gid) + "</td>\n";
+    cadenaDot+="</tr>\n";
+
+    cadenaDot+="<tr>\n";
+    cadenaDot+="<td>i_s</td>\n";
+    cadenaDot+= "<td>" + to_string(tablaInodo.i_s) + "</td>\n";
+    cadenaDot+="</tr>\n";
+
+    strftime(date, sizeof (date), "%Y-%m-%d %H:%M:%S", localtime(&tablaInodo.i_atime));
+    date2=date;
+    cadenaDot+="<tr>\n";
+    cadenaDot+="<td>i_atime</td>\n";
+    cadenaDot+= "<td>" + date2 + "</td>\n";
+    cadenaDot+="</tr>\n";
+
+    strftime(date, sizeof (date), "%Y-%m-%d %H:%M:%S", localtime(&tablaInodo.i_ctime));
+    date2=date;
+    cadenaDot+="<tr>\n";
+    cadenaDot+="<td>i_ctime</td>\n";
+    cadenaDot+= "<td>" + date2 + "</td>\n";
+    cadenaDot+="</tr>\n";
+
+    strftime(date, sizeof (date), "%Y-%m-%d %H:%M:%S", localtime(&tablaInodo.i_mtime));
+    date2=date;
+    cadenaDot+="<tr>\n";
+    cadenaDot+="<td>i_mtime</td>\n";
+    cadenaDot+= "<td>" + date2 + "</td>\n";
+    cadenaDot+="</tr>\n";
+
+    for (int j = 0; j < 15; ++j) {
+        if (tablaInodo.i_block[j] != -1){
+            cadenaDot+="<tr>\n";
+            cadenaDot+= "<td>ap" + to_string(j) + "</td>\n";
+            cadenaDot+= "<td port=\"" + to_string(tablaInodo.i_block[j]) + "\">" + to_string(tablaInodo.i_block[j]) + "</td>\n";
+            cadenaDot+="</tr>\n";
+        }
+        else{
+            cadenaDot+="<tr>\n";
+            cadenaDot+="<td>i_block</td>\n";
+            cadenaDot+="<td>-1</td>\n";
+            cadenaDot+="</tr>\n";
+        }
+
+    }
+
+    cadenaDot+="<tr>\n";
+    cadenaDot+="<td>i_type</td>\n";
+    cadenaDot+= "<td>" + string(1, tablaInodo.i_type) + "</td>\n";
+    cadenaDot+="</tr>\n";
+
+    cadenaDot+="<tr>\n";
+    cadenaDot+="<td>i_perm</td>\n";
+    cadenaDot+= "<td>" + to_string(tablaInodo.i_perm) + "</td>\n";
+    cadenaDot+="</tr>\n";
+
+    cadenaDot+="</table>>]\n";
+    return cadenaDot;
+}
+
+string Rep::dibujarBlkReporteTree(int pos, int type, FILE *file) {
     string dot="";
     if (type==0){
         BloqueCarpeta carpeta;
@@ -1869,7 +1986,7 @@ string Rep::treeBlock(int pos, int type, FILE *file) {
 
         dot+="n"+ to_string(pos)+"[label=<<table>\n";
         dot+="<tr>\n";
-        dot+=R"(<td colspan="2" bgcolor="#f34037">Bloque Carpeta</td>)";
+        dot+=R"(<td colspan="2" bgcolor="lightcoral">Bloque Carpeta</td>)";
         dot+="</tr>\n";
         for (int i = 0; i < 4; ++i) {
             string b_name="";
@@ -1890,7 +2007,7 @@ string Rep::treeBlock(int pos, int type, FILE *file) {
         for (int i = 0; i < 4; ++i) {
             string name1=carpeta.b_content[i].b_name;
             if (carpeta.b_content[i].b_inodo!=-1 && (name1!="." && name1!="..")){
-                dot+= conexiones(pos,carpeta.b_content[i].b_inodo);
+                dot+= enlaces(pos, carpeta.b_content[i].b_inodo);
             }
         }
     }else if (type==1){
@@ -1908,7 +2025,7 @@ string Rep::treeBlock(int pos, int type, FILE *file) {
 
         dot+="n"+ to_string(pos)+"[label=<<table>\n";
         dot+="<tr>\n";
-        dot+=R"(<td colspan="2" bgcolor="#c3f8b6">Bloque Archivo</td>)";
+        dot+=R"(<td colspan="2" bgcolor="lemonchiffon">Bloque Archivo</td>)";
         dot+="</tr>\n";
         dot+="<tr>\n";
         dot+="<td>"+content+"</td>\n";
@@ -1935,84 +2052,14 @@ string Rep::treeBlock(int pos, int type, FILE *file) {
     return dot;
 }
 
-string Rep::treeInodo(int pos, FILE *file) {
-    string dot="";
-    char fecha[70];
-    string fecha2="";
-
-    TablaInodo inodo;
-    fseek(file,pos,SEEK_SET);
-    fread(&inodo, sizeof(TablaInodo),1,file);
-
-    dot+="n"+ to_string(pos)+R"([label=<<table><tr><td colspan="2" bgcolor="#376ef3">INODO )"+ to_string(pos)+"</td></tr>\n";
-
-    dot+="<tr>\n";
-    dot+="<td>i_uid</td>\n";
-    dot+="<td>"+ to_string(inodo.i_uid)+"</td>\n";
-    dot+="</tr>\n";
-
-    dot+="<tr>\n";
-    dot+="<td>i_gid</td>\n";
-    dot+="<td>"+ to_string(inodo.i_gid)+"</td>\n";
-    dot+="</tr>\n";
-
-    dot+="<tr>\n";
-    dot+="<td>i_s</td>\n";
-    dot+="<td>"+ to_string(inodo.i_s)+"</td>\n";
-    dot+="</tr>\n";
-
-    strftime(fecha,sizeof (fecha),"%Y-%m-%d %H:%M:%S",localtime(&inodo.i_atime));
-    fecha2=fecha;
-    dot+="<tr>\n";
-    dot+="<td>i_atime</td>\n";
-    dot+="<td>"+fecha2+"</td>\n";
-    dot+="</tr>\n";
-
-    strftime(fecha,sizeof (fecha),"%Y-%m-%d %H:%M:%S",localtime(&inodo.i_ctime));
-    fecha2=fecha;
-    dot+="<tr>\n";
-    dot+="<td>i_ctime</td>\n";
-    dot+="<td>"+fecha2+"</td>\n";
-    dot+="</tr>\n";
-
-    strftime(fecha,sizeof (fecha),"%Y-%m-%d %H:%M:%S",localtime(&inodo.i_mtime));
-    fecha2=fecha;
-    dot+="<tr>\n";
-    dot+="<td>i_mtime</td>\n";
-    dot+="<td>"+fecha2+"</td>\n";
-    dot+="</tr>\n";
-
-    for (int j = 0; j < 15; ++j) {
-        if (inodo.i_block[j]!=-1){
-            dot+="<tr>\n";
-            dot+="<td>ap"+ to_string(j)+"</td>\n";
-            dot+="<td port=\""+to_string(inodo.i_block[j])+"\">"+ to_string(inodo.i_block[j])+"</td>\n";
-            dot+="</tr>\n";
-        }else{
-            dot+="<tr>\n";
-            dot+="<td>i_block</td>\n";
-            dot+="<td>-1</td>\n";
-            dot+="</tr>\n";
-        }
-
-    }
-
-    dot+="<tr>\n";
-    dot+="<td>i_type</td>\n";
-    dot+="<td>"+ string(1,inodo.i_type)+"</td>\n";
-    dot+="</tr>\n";
-
-    dot+="<tr>\n";
-    dot+="<td>i_perm</td>\n";
-    dot+="<td>"+ to_string(inodo.i_perm)+"</td>\n";
-    dot+="</tr>\n";
-
-    dot+="</table>>]\n";
-    return dot;
-}
-
-string Rep::conexiones(int inicio, int final) {
+string Rep::enlaces(int inicio, int final) {
     string dot="";
     dot+="n"+ to_string(inicio)+":"+ to_string(final)+"->n"+ to_string(final)+";\n";
     return dot;
 }
+
+string Rep::getDireccionCarpetas(int direccionInodoCarpeta) {
+
+    return std::string();
+}
+
