@@ -271,9 +271,18 @@ rename >path="/home/prueba.txt" >name=pruebaError.txt
 logout
 
 login >pass=123 >user=user1 >id=752DiscoParte2
+# error porque solo root puede ejecutar esto
+chmod >path=/ >ugo=000 >r
+logout
+
+login >pass=123 >user=root >id=752DiscoParte2
+#chmod >path=/ >ugo=000 >r
+#chmod >path=/ >ugo=100 >r
+#chmod >path=/ >ugo=010 >r
+#chmod >path=/ >ugo=001 >r
+chmod >path=/ >ugo=101 >r
 # REPORTES
 execute >path="/home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Entradas prueba/Parte 2/parte2-reportes.eea"
-rep >id=752DiscoParte2 >path="/home/pruebas/parte2/ext3_bm_inode_1.txt" >name=bm_inode
 
 logout
 unmount >id=751DiscoParte2

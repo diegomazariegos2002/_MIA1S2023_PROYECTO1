@@ -52,6 +52,8 @@ public:
     int enlazarArchivoCarpeta(int direccionArchivo, int direccionCarpeta, string nombreArchivo);
     TablaInodo addFile(int blckActual, int noBlckBitMap, std::string cadena, TablaInodo inodo);
     void cambiarNombre(TablaInodo tablaInodoCarpeta, std::string nombreOriginal);
+
+    void cambiarPermisosRecursivo(int direccionInodo, int ugo, bool r);
 };
 
 

@@ -11,1105 +11,1105 @@ start[label=<<table CELLSPACING="0">
 <td><b>Name</b></td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:04</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>/</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>180</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Archivo</td>
 <td>users.txt</td>
 </tr><tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>home</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>carpeta1</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>carpeta2</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a1</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a2</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a3</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a4</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a5</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a6</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a7</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a8</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a9</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a10</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a11</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a12</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a13</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a14</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a15</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a16</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a17</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a18</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a19</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a20</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a21</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a22</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a23</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a24</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a25</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a26</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a27</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a28</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a29</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a30</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a31</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a32</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a33</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a34</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a35</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a36</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a37</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a38</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a39</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a40</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a41</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a42</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a43</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a44</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a45</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>a46</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b1</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b2</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b3</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b4</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b5</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b6</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b7</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b8</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b9</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b10</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b11</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b12</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b13</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b14</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b15</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b16</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b17</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b18</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b19</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b20</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b21</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b22</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b23</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b24</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b25</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b26</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b27</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b28</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b29</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b30</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b31</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b32</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b33</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b34</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b35</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b36</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b37</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b38</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b39</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b40</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b41</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b42</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b43</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b44</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b45</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b46</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b47</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b48</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b49</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b50</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b51</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b52</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b53</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b54</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b55</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b56</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b57</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b58</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b59</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b60</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b61</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b62</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b63</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>b64</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>c1</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>renombrado2</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>root</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>carpeta4</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>user1</td>
 <td>root</td>
 <td>75</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Archivo</td>
 <td>directo_1.tx</td>
 </tr><tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>user1</td>
 <td>root</td>
 <td>0</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Carpeta</td>
 <td>Var</td>
 </tr>
 <tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>user1</td>
 <td>root</td>
 <td>75</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Archivo</td>
 <td>b1.txt</td>
 </tr><tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>user1</td>
 <td>root</td>
 <td>10000</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Archivo</td>
 <td>indirecto_1.</td>
 </tr><tr>
-<td>-rw-rw-r</td>
+<td>-x --- -x </td>
 <td>user1</td>
 <td>root</td>
 <td>23</td>
-<td>2023-03-14 18:08:07</td>
+<td>2023-03-15 11:32:24</td>
 <td>Archivo</td>
 <td>prueba.txt</td>
 </tr>"</table>>]}

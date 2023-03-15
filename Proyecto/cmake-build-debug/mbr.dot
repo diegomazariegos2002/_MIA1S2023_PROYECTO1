@@ -8,11 +8,11 @@ start[label=<<table CELLSPACING="0">
 </tr>
 <tr>
 <td bgcolor="plum2">mbr_fecha_creacion</td>
-<td bgcolor="plum2">2023-03-14 18:08:03</td>
+<td bgcolor="plum2">2023-03-15 11:32:22</td>
 </tr>
 <tr>
 <td border="0">mbr_disk_signature</td>
-<td border="0">1678838883</td>
+<td border="0">1678901542</td>
 </tr>
 <tr><td colspan="2" bgcolor="darkorchid4"><font color="white">Particion</font></td></tr><tr><td border="0">part_status</td><td border="0">2</td></tr><tr><td bgcolor="plum2">part_type</td><td bgcolor="plum2">p</td></tr><tr><td border="0">part_fit</td><td border="0">w</td></tr><tr><td bgcolor="plum2">part_start</td><td bgcolor="plum2">26214400</td></tr><tr><td border="0">part_size</td><td border="0">26214400</td></tr><tr><td bgcolor="plum2">part_name</td><td bgcolor="plum2">Part1</td></tr><tr><td colspan="2" bgcolor="darkorchid4"><font color="white">Particion</font></td></tr><tr><td border="0">part_status</td><td border="0">2</td></tr><tr><td bgcolor="plum2">part_type</td><td bgcolor="plum2">p</td></tr><tr><td border="0">part_fit</td><td border="0">w</td></tr><tr><td bgcolor="plum2">part_start</td><td bgcolor="plum2">26214400</td></tr><tr><td border="0">part_size</td><td border="0">26214400</td></tr><tr><td bgcolor="plum2">part_name</td><td bgcolor="plum2">Part2</td></tr><tr><td colspan="2" bgcolor="darkorchid4"><font color="white">Particion</font></td></tr><tr><td border="0">part_status</td><td border="0">2</td></tr><tr><td bgcolor="plum2">part_type</td><td bgcolor="plum2">p</td></tr><tr><td border="0">part_fit</td><td border="0">w</td></tr><tr><td bgcolor="plum2">part_start</td><td bgcolor="plum2">26214400</td></tr><tr><td border="0">part_size</td><td border="0">26214400</td></tr><tr><td bgcolor="plum2">part_name</td><td bgcolor="plum2">Part3</td></tr><tr><td colspan="2" bgcolor="darkorchid4"><font color="white">Particion</font></td></tr><tr><td border="0">part_status</td><td border="0">1</td></tr><tr><td bgcolor="plum2">part_type</td><td bgcolor="plum2">p</td></tr><tr><td border="0">part_fit</td><td border="0">w</td></tr><tr><td bgcolor="plum2">part_start</td><td bgcolor="plum2">26214400</td></tr><tr><td border="0">part_size</td><td border="0">26214400</td></tr><tr><td bgcolor="plum2">part_name</td><td bgcolor="plum2">Part4</td></tr></table>>];
 }

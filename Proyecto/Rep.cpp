@@ -1659,8 +1659,9 @@ void Rep::ejecutarReporte_ls() {
                 fprintf(cuerpoDot, "</tr>\n");
 
                 fprintf(cuerpoDot,
-                        this->graficarInodoRecursivoLs(direccionInodoFile, rutaDividida[rutaDividida.size() - 1],
-                                                       fileDisco).c_str());
+                        (this->graficarInodoRecursivoLs(direccionInodoFile,
+                                                       rutaDividida[rutaDividida.size() - 1],
+                                                       fileDisco).c_str()));
 
                 fprintf(cuerpoDot, R"("</table>>])");
                 fprintf(cuerpoDot, "}");
@@ -1834,6 +1835,15 @@ string Rep::getPermisosInodo(int permisoInodo) {
     string permisosString= to_string(permisoInodo);
     for (int i = 0; i < permisosString.length(); ++i) {
         cuerpoDot+="-";
+        if(permisosString[i]=='0'){
+            if(permisosString.length()==1){
+                cuerpoDot+="-- ";
+                cuerpoDot+="--- ";
+                cuerpoDot+="--- ";
+                continue;
+            }
+            cuerpoDot+="--";
+        }
         if ((permisosString[i] == '4') || (permisosString[i] == '5') || (permisosString[i] == '6') || (permisosString[i] == '7')){
             cuerpoDot+="r";
         }
@@ -1843,6 +1853,7 @@ string Rep::getPermisosInodo(int permisoInodo) {
         if ((permisosString[i] == '1') || (permisosString[i] == '3') || (permisosString[i] == '5') || (permisosString[i] == '7')){
             cuerpoDot+="x";
         }
+        cuerpoDot+=" ";
     }
     return cuerpoDot;
 }

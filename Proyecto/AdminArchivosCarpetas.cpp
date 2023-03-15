@@ -1254,7 +1254,7 @@ void AdminArchivosCarpetas::mkfile() {
             fread(&ebr, sizeof(EBR),1,file);
             if (ebr.part_status != '2') {
                 fclose(file);
-                cout<<"NO SE HA FORMATEADO LA MONTURA DE LA PARTICION"<<nodo->name<<endl;
+                cout<<"PARTICION NO FORMATEADA, IMPOSIBLE EJECUTAR COMANDO"<<endl;
                 return;
             }
             fseek(file,nodo->start+ sizeof(EBR),SEEK_SET);
@@ -1264,7 +1264,7 @@ void AdminArchivosCarpetas::mkfile() {
             fseek(this->file,0,SEEK_SET);
             fread(&mbr, sizeof(MBR),1,file);
             if (mbr.mbr_partition[nodo->pos].part_status!='2'){
-                cout<<"NO SE HA FORMATEADO LA MONTURA DE LA PARTICION"<<nodo->name<<endl;
+                cout<<"PARTICION NO FORMATEADA, IMPOSIBLE EJECUTAR COMANDO"<<endl;
                 return;
             }
             fseek(this->file,nodo->start,SEEK_SET);
@@ -2343,7 +2343,7 @@ void AdminArchivosCarpetas::rename() {
             fread(&ebr, sizeof(EBR),1,file);
             if (ebr.part_status != '2') {
                 fclose(file);
-                cout<<"NO SE HA FORMATEADO LA MONTURA DE LA PARTICION"<<nodo->name<<endl;
+                cout<<"PARTICION NO FORMATEADA, IMPOSIBLE EJECUTAR COMANDO"<<endl;
                 return;
             }
             fseek(file,nodo->start+ sizeof(EBR),SEEK_SET);
@@ -2353,7 +2353,7 @@ void AdminArchivosCarpetas::rename() {
             fseek(this->file,0,SEEK_SET);
             fread(&mbr, sizeof(MBR),1,file);
             if (mbr.mbr_partition[nodo->pos].part_status!='2'){
-                cout<<"NO SE HA FORMATEADO LA MONTURA DE LA PARTICION"<<nodo->name<<endl;
+                cout<<"PARTICION NO FORMATEADA, IMPOSIBLE EJECUTAR COMANDO"<<endl;
                 return;
             }
             fseek(this->file,nodo->start,SEEK_SET);
@@ -2506,6 +2506,226 @@ void AdminArchivosCarpetas::cambiarNombre(TablaInodo tablaInodoCarpeta, std::str
                                                 fseek(this->file, blkApuntador_3.b_pointers[z], SEEK_SET);
                                                 fwrite(&blkCarpeta, sizeof(BloqueCarpeta), 1, this->file);
                                                 return;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void AdminArchivosCarpetas::chmod() {
+
+    if (this->path==" "){
+        cout<<"DEBE INGRESAR LA RUTA DEL ARCHIVO O CARPETA A CAMBIAR"<<endl;
+        return;
+    }
+
+    // validar si es usuario admin
+    if (usuario->idU==1 && usuario->idG==1){
+        string u= to_string(this->ugo);
+        if (u.length()>3){
+            cout<<"LIMITE DE DIGITOS EXCEDIDO, COMO MAXIMO SE PUEDEN INGRESAR 3 DIGITOS"<<endl;
+            return;
+        }
+
+        if (u.length()==2){
+            u="0"+u;
+        }
+        else if (u.length()==1){
+            u="00"+u;
+        }
+
+        Nodo_M *nodoMontura=this->mountList->buscar(usuario->idMount);
+        if (nodoMontura == NULL){
+            cout <<"NO EXISTE MONTURA CON EL ID: "<< this->usuario->idMount<<" EN EL SISTEMA"<<endl;
+            return;
+        }
+        int direccionInodoFile;
+        vector<string> rutaDividida;
+        if ((this->file= fopen(nodoMontura->path.c_str(), "rb+"))){
+            if (nodoMontura->type == 'l'){
+                EBR ebr;
+
+                fseek(file, nodoMontura->start, SEEK_SET);
+                fread(&ebr, sizeof(EBR),1,file);
+                if (ebr.part_status != '2') {
+                    fclose(file);
+                    cout<<"PARTICION NO FORMATEADA, IMPOSIBLE EJECUTAR COMANDO"<<endl;
+                    return;
+                }
+                fseek(file, nodoMontura->start + sizeof(EBR), SEEK_SET);
+            }
+            else if (nodoMontura->type == 'p'){
+                MBR mbr;
+
+                fseek(this->file,0,SEEK_SET);
+                fread(&mbr, sizeof(MBR),1,file);
+                if (mbr.mbr_partition[nodoMontura->pos].part_status != '2'){
+                    cout<<"PARTICION NO FORMATEADA, IMPOSIBLE EJECUTAR COMANDO"<<endl;
+                    return;
+                }
+                fseek(this->file, nodoMontura->start, SEEK_SET);
+            } 
+
+            fread(&this->sb, sizeof(SuperBloque),1,file);
+
+
+            if (this->path=="/"){
+                direccionInodoFile=this->sb.s_inode_start;
+            }
+            else{
+                vector<string> rutaDividida= this->getRutaDividida(this->path);
+                if (rutaDividida.empty()){
+                    fclose(this->file);
+                    cout<<"LA RUTA INGRESADA NO ES VALIDA"<<endl;
+
+                    return;
+                }
+                direccionInodoFile=this->getDireccionInodo(rutaDividida, 0, rutaDividida.size() - 1, this->sb.s_inode_start, file);
+                if (direccionInodoFile == -1){
+                    cout << "LA RUTA INDICADA NO EXISTE Y NO SE ENCONTRO NINGUN ARCHIVO" << endl;
+                    return;
+                }
+            }
+
+            this->cambiarPermisosRecursivo(direccionInodoFile, this->ugo, this->r);
+
+            if (this->sb.s_filesystem_type==3){
+                this->registrarJournal("chmod", '1', this->path, to_string(this->ugo), nodoMontura);
+            }
+
+            fclose(this->file);
+            cout<<"COMANDO EJECUTADO CON EXITO, PERMISOS MODIFICADOS"<<endl;
+        }
+        else{
+            cout <<"ERROR EL DISCO SE MOVIO DE LUGAR PORQUE NO SE ENCUENTRA"<<endl;
+        }
+    }
+    else{
+        cout<<"SOLO EL USUARIO ROOT PUEDE EJECUTAR ESTE COMANDO"<<endl;
+    }
+}
+/**
+ * Método recursivo para modificar los permisos en el correspondiente inodo.
+ * Recordar que si la opción "r" esta activada y el inodo es de una carpeta
+ * tiene que ir recursivamente aplicando el permiso a todos sus inodos hijos.
+ * @param direccionInodo
+ * @param ugo
+ * @param r
+ */
+void AdminArchivosCarpetas::cambiarPermisosRecursivo(int direccionInodo, int ugo, bool r) {
+    BloqueApuntador  blkApuntador_1,blkApuntador_2,blkApuntador_3;
+    BloqueCarpeta blkCarpeta;
+    TablaInodo tablaInodo;
+    fseek(file, direccionInodo, SEEK_SET);
+    fread(&tablaInodo, sizeof(TablaInodo), 1, file);
+    tablaInodo.i_perm=this->ugo;
+    tablaInodo.i_mtime= time(nullptr);
+    fseek(file, direccionInodo, SEEK_SET);
+    fwrite(&tablaInodo, sizeof(TablaInodo), 1, file);
+
+    // si el inodo es de una carpeta y esta activada "r"
+    if (tablaInodo.i_type == '0' && r){
+        // RECORRER APUNTADORES
+        for (int i = 0; i < 15; ++i) {
+            // si esta ocupado el apuntador correspondiente
+            if (tablaInodo.i_block[i] != -1){
+                // APUNTADORES DIRECTOS
+                if (i<12){
+                    fseek(file, tablaInodo.i_block[i], SEEK_SET);
+                    fread(&blkCarpeta, sizeof(BloqueCarpeta), 1, file);
+                    // BLOQUE CARPETA
+                    string nombreFile;
+                    for (int j = 0; j < 4; ++j) {
+                        nombreFile=blkCarpeta.b_content[j].b_name;
+                        if ((nombreFile != "." && nombreFile != "..") && blkCarpeta.b_content[j].b_inodo != -1) {
+                            this->cambiarPermisosRecursivo(blkCarpeta.b_content[j].b_inodo, ugo, r);
+                        }
+                    }
+
+                }
+                // APUNTADORES SIMPLES
+                else if (i==12){
+                    fseek(file, tablaInodo.i_block[i], SEEK_SET);
+                    fread(&blkApuntador_1, sizeof(BloqueApuntador), 1, file);
+                    // APUNTADORES DIRECTOS
+                    for (int j = 0; j < 16; ++j) {
+                        if (blkApuntador_1.b_pointers[j] != -1){
+                            fseek(file, blkApuntador_1.b_pointers[j], SEEK_SET);
+                            fread(&blkCarpeta, sizeof(BloqueCarpeta), 1, file);
+                            // BLOQUE CARPETA
+                            string nombreFile;
+                            for (int k = 0; k < 4; ++k) {
+                                nombreFile=blkCarpeta.b_content[k].b_name;
+                                // LOS NOMBRES DE "." Y ".." SE IGNORAN
+                                if ((nombreFile != "." && nombreFile != "..") && blkCarpeta.b_content[k].b_inodo != -1) {
+                                    this->cambiarPermisosRecursivo(blkCarpeta.b_content[k].b_inodo, ugo, r);
+                                }
+                            }
+                        }
+                    }
+                }
+                // APUNTADORES DOBLES
+                else if (i==13){
+                    fseek(file, tablaInodo.i_block[i], SEEK_SET);
+                    fread(&blkApuntador_1, sizeof(BloqueApuntador), 1, file);
+                    // APUNTADORES SIMPLES
+                    for (int j = 0; j < 16; ++j) {
+                        if (blkApuntador_1.b_pointers[j] != -1){
+                            fseek(file, blkApuntador_1.b_pointers[j], SEEK_SET);
+                            fread(&blkApuntador_2, sizeof(BloqueApuntador), 1, file);
+                            // APUNTADORES DIRECTOS
+                            for (int k = 0; k < 16; ++k) {
+                                if (blkApuntador_2.b_pointers[k] != -1){
+                                    fseek(file, blkApuntador_2.b_pointers[k], SEEK_SET);
+                                    fread(&blkCarpeta, sizeof(BloqueCarpeta), 1, file);
+                                    // BLOQUE CARPETA
+                                    string nombreFile;
+                                    for (int z = 0; z < 4; ++z) {
+                                        nombreFile=blkCarpeta.b_content[z].b_name;
+                                        // LOS NOMBRES DE "." Y ".." SE IGNORAN
+                                        if ((nombreFile != "." && nombreFile != "..") && blkCarpeta.b_content[z].b_inodo != -1) {
+                                            this->cambiarPermisosRecursivo(blkCarpeta.b_content[z].b_inodo, ugo, r);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                // APUNTADORES TRIPLES
+                else if (i==14){
+                    fseek(file, tablaInodo.i_block[i], SEEK_SET);
+                    fread(&blkApuntador_1, sizeof(BloqueApuntador), 1, file);
+                    // APUNTADORES DOBLES
+                    for (int j = 0; j < 16; ++j) {
+                        if (blkApuntador_1.b_pointers[j] != -1){
+                            fseek(file, blkApuntador_1.b_pointers[j], SEEK_SET);
+                            fread(&blkApuntador_2, sizeof(BloqueApuntador), 1, file);
+                            // APUNTADORES SIMPLES
+                            for (int k = 0; k < 16; ++k) {
+                                if (blkApuntador_2.b_pointers[k] != -1){
+                                    fseek(file, blkApuntador_2.b_pointers[k], SEEK_SET);
+                                    fread(&blkApuntador_3, sizeof(BloqueApuntador), 1, file);
+                                    // APUNTADORES DIRECTOS
+                                    for (int z = 0; z < 16; ++z) {
+                                        if (blkApuntador_3.b_pointers[z] != -1) {
+                                            fseek(file, blkApuntador_3.b_pointers[z], SEEK_SET);
+                                            fread(&blkCarpeta, sizeof(BloqueCarpeta), 1, file);
+                                            // BLOQUE CARPETA
+                                            string nombreFile;
+                                            for (int y = 0; y < 4; ++y) {
+                                                nombreFile=blkCarpeta.b_content[y].b_name;
+                                                // LOS NOMBRES DE "." Y ".." SE IGNORAN
+                                                if ((nombreFile != "." && nombreFile != "..") && blkCarpeta.b_content[y].b_inodo != -1) {
+                                                    this->cambiarPermisosRecursivo(blkCarpeta.b_content[y].b_inodo, ugo, r);
+                                                }
                                             }
                                         }
                                     }
