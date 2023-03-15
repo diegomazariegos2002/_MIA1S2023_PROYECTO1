@@ -375,7 +375,8 @@ void Montar::mkfs() {
                         fclose(file);
                         cout<<"PARTICION FORMATEADA CON EXITO"<<endl;
 
-                    }else if (nodoM->type=='l'){
+                    }
+                    else if (nodoM->type=='l'){
                         // Lo mismo que con la partición primara solo que aquí no es con el MBR sino con el EBR
                         EBR ebr;
                         fseek(file,nodoM->start,SEEK_SET);

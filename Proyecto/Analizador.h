@@ -29,8 +29,6 @@ public:
     Usuario *usuario;
     AdminUsuarios *adminU;
     AdminArchivosCarpetas *adminArcCarpt;
-
-
     Analizador(string entrada, MountList *mountList, Usuario *usuario);
     void analizarEntrada();
     string toLowerr(string cadena);

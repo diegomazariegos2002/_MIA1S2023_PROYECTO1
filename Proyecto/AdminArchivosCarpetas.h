@@ -22,11 +22,13 @@ public:
     int size;
     bool flagGlobal;
     string name;
+    int ugo;
     AdminArchivosCarpetas();
     void cat();
     void mkdir();
     void mkfile();
     void rename();
+    void chmod();
     vector<string> getRutaDividida(string cadena);
     int getDireccionInodo(vector<string> rutaDividida, int direccionActual, int numCarpetas, int rutaActual, FILE *discoActual);
     bool verificarPermisoInodo_Lectura(int direccionInodo);
@@ -43,19 +45,12 @@ public:
     void insertInodoCarpeta(int direccionInodo, int direccionBloqueCarpetaInicial);
     int insertBlckCarpetaExtra(int direccionInodoHijo, string nombreCarpeta);
     int insertBlckApuntador(int direccionInodoHijo);
-
     string leerArchivoComputadora();
-
     string getCadenaSize();
-
     vector<string> getArrayBlks(string cadena);
-
     void crearInodoArchivo(int direccionInodo);
-
     int enlazarArchivoCarpeta(int direccionArchivo, int direccionCarpeta, string nombreArchivo);
-
     TablaInodo addFile(int blckActual, int noBlckBitMap, std::string cadena, TablaInodo inodo);
-
     void cambiarNombre(TablaInodo tablaInodoCarpeta, std::string nombreOriginal);
 };
 

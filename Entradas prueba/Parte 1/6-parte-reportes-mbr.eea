@@ -2,6 +2,10 @@
 rep >id=751Disco1 >path=/home/pruebas/particiones/Disco1_mbr.jpg >name=mbr
 rep >id=751Disco2 >path=/home/pruebas/particiones/Disco2_mbr.jpg >name=mbr
 rep >id=751Disco3 >path=/home/pruebas/particiones/Disco3_mbr.jpg >name=mbr
+########reporte disk del estado inicial de las particiones
+rep >id=751Disco1 >path=/home/pruebas/particiones/Disco1_Start.jpg >name=disk
+rep >id=751Disco2 >path=/home/pruebas/particiones/Disco2_Start.jpg >name=disk
+rep >id=751Disco3 >path=/home/pruebas/particiones/Disco3_Start.jpg >name=disk
 
 #UNMOUNT
 unmount >id=751Disco3

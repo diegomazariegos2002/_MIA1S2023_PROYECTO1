@@ -1511,7 +1511,8 @@ void Analizador::analizarEntrada() {
                         this->entrada = this->entrada.erase(0, i);
                     }
 
-                }else if (strncmp(entradaMinus.c_str(), ">name", 5) == 0){
+                }
+                else if (strncmp(entradaMinus.c_str(), ">name", 5) == 0){
                     i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;
@@ -1541,10 +1542,12 @@ void Analizador::analizarEntrada() {
                         this->entrada = this->entrada.erase(0, i);
                     }
 
-                }else if (strncmp(entradaMinus.c_str(), "#", 1) == 0) {
+                }
+                else if (strncmp(entradaMinus.c_str(), "#", 1) == 0) {
                     //No se opera, ya que entro un comentario
                     break;
-                }else {
+                }
+                else {
                     cout << "ERROR EN LA ENTRADA: " << entradaMinus << endl;
                     return;
                 }
@@ -1554,6 +1557,89 @@ void Analizador::analizarEntrada() {
             adminArcCarpt->rename();
             this->mountList=adminArcCarpt->mountList;
             this->usuario=adminArcCarpt->usuario;
+        }
+        //CHMOD
+        else if (strncmp(entradaMinus.c_str(), "chmod", 5) == 0) {
+            int i = 5;
+            while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                i++;
+            }
+
+            entradaMinus = entradaMinus.erase(0, i);
+            entrada = entrada.erase(0, i);
+
+            while (entrada.length() > 0) {
+                if (strncmp(entradaMinus.c_str(), ">path", 5) == 0){
+                    i = entradaMinus.find("=") + 1;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    if (entradaMinus[0] == '\"') {
+                        entradaMinus = entradaMinus.erase(0, 1);
+                        this->entrada = this->entrada.erase(0, 1);
+                        i = entradaMinus.find("\"");
+
+                        this->adminArcCarpt->path = this->entrada.substr(0, i);
+                        i += 2;
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    } else {
+                        i = entradaMinus.find(" ");
+                        this->adminArcCarpt->path = this->entrada.substr(0, i);
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    }
+
+                }else if (strncmp(entradaMinus.c_str(), ">ugo", 4) == 0){
+                    i = entradaMinus.find("=") + 1;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    i = entradaMinus.find(" ");
+                    this->adminArcCarpt->ugo = stoi(this->entrada.substr(0, i));
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                }else if (strncmp(entradaMinus.c_str(), ">r", 2) == 0){
+                    i = 2;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    this->adminArcCarpt->r = true;
+
+                }else if (strncmp(entradaMinus.c_str(), "#", 1) == 0) {
+
+                    //comentario
+                    break;
+                }else {
+                    cout << "ERROR EN LA ENTRADA: " << entradaMinus << endl;
+                    return;
+                }
+            }
+            this->adminArcCarpt->usuario=this->usuario;
+            this->adminArcCarpt->mountList= this->mountList;
+            this->adminArcCarpt->chmod();
+            this->mountList=this->adminArcCarpt->mountList;
+            this->usuario=this->adminArcCarpt->usuario;
+
         }
         //EXECUTE
         else if(strncmp(entradaMinus.c_str(), "execute", 7) == 0){

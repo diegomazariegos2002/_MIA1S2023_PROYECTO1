@@ -2520,3 +2520,5 @@ void AdminArchivosCarpetas::cambiarNombre(TablaInodo tablaInodoCarpeta, std::str
 }
 
 
+
+
