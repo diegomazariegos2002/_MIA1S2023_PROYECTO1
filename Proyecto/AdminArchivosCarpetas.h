@@ -29,6 +29,7 @@ public:
     void mkfile();
     void rename();
     void chmod();
+    void chown();
     vector<string> getRutaDividida(string cadena);
     int getDireccionInodo(vector<string> rutaDividida, int direccionActual, int numCarpetas, int rutaActual, FILE *discoActual);
     bool verificarPermisoInodo_Lectura(int direccionInodo);
@@ -52,7 +53,6 @@ public:
     int enlazarArchivoCarpeta(int direccionArchivo, int direccionCarpeta, string nombreArchivo);
     TablaInodo addFile(int blckActual, int noBlckBitMap, std::string cadena, TablaInodo inodo);
     void cambiarNombre(TablaInodo tablaInodoCarpeta, std::string nombreOriginal);
-
     void cambiarPermisosRecursivo(int direccionInodo, int ugo, bool r);
 };
 

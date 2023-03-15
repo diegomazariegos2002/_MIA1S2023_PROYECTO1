@@ -1641,6 +1641,87 @@ void Analizador::analizarEntrada() {
             this->usuario=this->adminArcCarpt->usuario;
 
         }
+        //CHOWN
+        else if (strncmp(entradaMinus.c_str(), "chown", 5) == 0) {
+            int i = 5;
+            while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                i++;
+            }
+
+            entradaMinus = entradaMinus.erase(0, i);
+            entrada = entrada.erase(0, i);
+
+            while (entrada.length() > 0) {
+                if (strncmp(entradaMinus.c_str(), ">path", 5) == 0){
+                    i = entradaMinus.find("=") + 1;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    if (entradaMinus[0] == '\"') {
+                        entradaMinus = entradaMinus.erase(0, 1);
+                        this->entrada = this->entrada.erase(0, 1);
+                        i = entradaMinus.find("\"");
+                        this->adminArcCarpt->path = this->entrada.substr(0, i);
+                        i += 2;
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    } else {
+                        i = entradaMinus.find(" ");
+                        this->adminArcCarpt->path = this->entrada.substr(0, i);
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    }
+
+                }else if (strncmp(entradaMinus.c_str(), ">user", 5) == 0){
+                    i = entradaMinus.find("=") + 1;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    i = entradaMinus.find(" ");
+                    this->adminArcCarpt->name =this->entrada.substr(0, i);
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                }else if (strncmp(entradaMinus.c_str(), ">r", 2) == 0){
+                    i = 2;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+                    this->adminArcCarpt->r = true;
+
+                }else if (strncmp(entradaMinus.c_str(), "#", 1) == 0) {
+                    // Comentario
+                    break;
+                }else {
+                    cout << "ERROR EN LA ENTRADA: " << entradaMinus << endl;
+                    return;
+                }
+            }
+
+            adminArcCarpt->usuario=this->usuario;
+            adminArcCarpt->mountList= this->mountList;
+            adminArcCarpt->chown();
+            this->mountList=adminArcCarpt->mountList;
+            this->usuario=adminArcCarpt->usuario;
+
+        }
         //EXECUTE
         else if(strncmp(entradaMinus.c_str(), "execute", 7) == 0){
             string path = "";

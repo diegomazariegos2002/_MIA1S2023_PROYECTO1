@@ -2739,6 +2739,12 @@ void AdminArchivosCarpetas::cambiarPermisosRecursivo(int direccionInodo, int ugo
     }
 }
 
+void AdminArchivosCarpetas::chown() {
+
+}
+
+
+
 
 
 
