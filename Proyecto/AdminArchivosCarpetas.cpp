@@ -3026,6 +3026,282 @@ void AdminArchivosCarpetas::cambiarPropietarioRecursivo_pt2(TablaInodo tablaInod
     }
 }
 
+void AdminArchivosCarpetas::find() {
+    Nodo_M *nodoMontura=this->mountList->buscar(usuario->idMount);
+    if (this->path==" "){
+        cout<<"EL PARAMETRO PATH ES OBLIGATORIO"<<endl;
+        return;
+    }
+    if (this->name==" "){
+        cout<<"EL PARAMETRO NAME ES OBLIGATORIO"<<endl;
+        return;
+    }
+    if (nodoMontura == NULL){
+        cout <<"NO EXISTE MONTURA CON EL ID: "<< this->usuario->idMount<<" EN EL SISTEMA"<<endl;
+        return;
+    }
+    if ((this->file= fopen(nodoMontura->path.c_str(), "rb+"))){
+        if (nodoMontura->type == 'l'){
+            EBR ebr;
+            fseek(file, nodoMontura->start, SEEK_SET);
+            fread(&ebr, sizeof(EBR),1,file);
+            if (ebr.part_status != '2') {
+                fclose(file);
+                cout<<"LA PARTICION "<<nodoMontura->name<<" NO HA SIDO FORMATEADA AL PARECER" << endl;
+                return;
+            }
+            fseek(file, nodoMontura->start + sizeof(EBR), SEEK_SET);
+        }
+        else if (nodoMontura->type == 'p'){
+            MBR mbr;
+            fseek(this->file,0,SEEK_SET);
+            fread(&mbr, sizeof(MBR),1,file);
+            if (mbr.mbr_partition[nodoMontura->pos].part_status != '2'){
+                cout<<"LA PARTICION "<<nodoMontura->name<<" NO HA SIDO FORMATEADA AL PARECER" << endl;
+                return;
+            }
+            fseek(this->file, nodoMontura->start, SEEK_SET);
+        }
+        fread(&this->sb, sizeof(SuperBloque),1,file);
+        /**
+         * Nota: para buscar en una carpeta en especifico utilizando el parametro PATH
+         * pues simplemente utilizamos el dividirRuta y enviamos en lugar de el inodo inicial
+         * el inodo de la carpeta en el metodo y ya esta.
+         *
+         * y para el * y ? pues agregar unos if que si el nameBuscado es eso, se imprime all.
+         */
+
+        string ruta;
+        if(this->name=="/"){ // Imprimes la root
+            ruta = "/";
+        }else{
+            ruta = "/\n";
+            string extra = find_ImprimirBusqueda(this->sb.s_inode_start, this->name, 1);
+            if(extra == " "){
+                fclose(this->file);
+                cout << "EL ARCHIVO O CARPETA NO EXISTE" << endl;
+                return;
+            }
+            ruta += extra;
+        }
+
+        cout << ruta << endl;
+        fclose(this->file);
+
+        // POR EL MOMENTO MOSTRAR all
+        if(this->name=="*" || this->name=="*.?" || this->name=="?.*" || this->name=="?" || this->name=="*.*" || this->name=="?.?"){
+
+        }
+        // SI ES UN RUTA NORMAL
+        else{
+
+        }
+    }
+    else{
+        cout <<"EL DISCO SE MOVIO DE LUGAR PORQUE NO SE ENCUENTRA"<<endl;
+    }
+}
+
+string AdminArchivosCarpetas::find_ImprimirBusqueda(int direccionInodo, string nombreBusqueda, int contadorProfundidad) {
+    BloqueApuntador  blkApuntador_1,blkApuntador_2,blkApuntador_3;
+    BloqueCarpeta blkCarpeta;
+    BloqueArchivo blkArchivo;
+    TablaInodo tablaInodo;
+    fseek(file, direccionInodo, SEEK_SET);
+    fread(&tablaInodo, sizeof(TablaInodo), 1, file);
+
+    if(tablaInodo.i_type=='1'){
+        return " ";
+    }
+    // SI ES UNA CARPETA SE RECORRE RECURSIVAMENTE
+    if (tablaInodo.i_type == '0'){
+        // RECORRER PUNTEROS
+        for (int i = 0; i < 15; ++i) {
+            if (tablaInodo.i_block[i] != -1){
+                // PUNTEROS DIRECTOS
+                if (i<12){
+                    fseek(file, tablaInodo.i_block[i], SEEK_SET);
+                    fread(&blkCarpeta, sizeof(BloqueCarpeta), 1, file);
+                    // BLOQUE CARPETA
+                    for (int j = 0; j < 4; ++j) {
+                        // RECORDAR QUE "." Y ".." NO TIENEN QUE MOSTRARSE
+                        string nombreFile=blkCarpeta.b_content[j].b_name;
+                        if ((nombreFile != "." && nombreFile != "..") && blkCarpeta.b_content[j].b_inodo != -1) {
+                            // Si se encuentra el nombre se retorna
+                            if(nombreFile == nombreBusqueda){
+                                string retorno = "";
+                                for (int k = 0; k < contadorProfundidad; ++k) {
+                                    retorno += "    ";
+                                }
+                                retorno += "| " + nombreFile + "\n";
+                                return retorno;
+                            }
+                            // Si no se encuentra se sigue viajando hasta encontrarlo
+                            string retorno = this->find_ImprimirBusqueda(blkCarpeta.b_content[j].b_inodo, nombreBusqueda, contadorProfundidad+1);
+                            // Si se encontro algo pues retornar recursivamente
+                            if(retorno != " "){
+                                string extra = "";
+                                for (int k = 0; k < contadorProfundidad; ++k) {
+                                    extra += "    ";
+                                }
+                                extra += "| " + nombreFile + "\n";
+                                extra += retorno;
+                                return extra;
+                            }
+                        }
+                    }
+
+                }
+                // PUNTEROS SIMPLES
+                else if (i==12){
+                    fseek(file, tablaInodo.i_block[i], SEEK_SET);
+                    fread(&blkApuntador_1, sizeof(BloqueApuntador), 1, file);
+                    // PUNTEROS DIRECTOS
+                    for (int j = 0; j < 16; ++j) {
+                        if (blkApuntador_1.b_pointers[j] != -1){
+                            fseek(file, blkApuntador_1.b_pointers[j], SEEK_SET);
+                            fread(&blkCarpeta, sizeof(BloqueCarpeta), 1, file);
+                            // BLOQUE CARPETA
+                            for (int k = 0; k < 4; ++k) {
+                                // RECORDAR QUE "." Y ".." NO TIENEN QUE MOSTRARSE
+                                string nombreFile=blkCarpeta.b_content[k].b_name;
+                                if ((nombreFile != "." && nombreFile != "..") && blkCarpeta.b_content[k].b_inodo != -1) {
+                                    // Si se encuentra el nombre se retorna
+                                    if(nombreFile == nombreBusqueda){
+                                        string retorno = "";
+                                        for (int k = 0; k < contadorProfundidad; ++k) {
+                                            retorno += "    ";
+                                        }
+                                        retorno += "| " + nombreFile + "\n";
+                                        return retorno;
+                                    }
+                                    // Si no se encuentra se sigue viajando hasta encontrarlo
+                                    string retorno = this->find_ImprimirBusqueda(blkCarpeta.b_content[k].b_inodo, nombreBusqueda, contadorProfundidad+1);
+                                    // Si se encontro algo pues retornar recursivamente
+                                    if(retorno != " "){
+                                        string extra = "";
+                                        for (int k = 0; k < contadorProfundidad; ++k) {
+                                            extra += "    ";
+                                        }
+                                        extra += "| " + nombreFile + "\n";
+                                        extra += retorno;
+                                        return extra;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                // PUNTEROS DOBLES
+                else if (i==13){
+                    fseek(file, tablaInodo.i_block[i], SEEK_SET);
+                    fread(&blkApuntador_1, sizeof(BloqueApuntador), 1, file);
+                    // PUNTEROS SIMPLES
+                    for (int j = 0; j < 16; ++j) {
+                        if (blkApuntador_1.b_pointers[j] != -1){
+                            fseek(file, blkApuntador_1.b_pointers[j], SEEK_SET);
+                            fread(&blkApuntador_2, sizeof(BloqueApuntador), 1, file);
+                            // PUNTEROS DIRECTOS
+                            for (int k = 0; k < 16; ++k) {
+                                if (blkApuntador_2.b_pointers[k] != -1){
+                                    fseek(file, blkApuntador_2.b_pointers[k], SEEK_SET);
+                                    fread(&blkCarpeta, sizeof(BloqueCarpeta), 1, file);
+                                    // BLOQUE CARPETA
+                                    for (int z = 0; z < 4; ++z) {
+                                        string nombreFile=blkCarpeta.b_content[z].b_name;
+                                        // RECORDAR QUE "." Y ".." NO TIENEN QUE MOSTRARSE
+                                        if ((nombreFile != "." && nombreFile != "..") && blkCarpeta.b_content[z].b_inodo != -1) {
+                                            // Si se encuentra el nombre se retorna
+                                            if(nombreFile == nombreBusqueda){
+                                                string retorno = "";
+                                                for (int k = 0; k < contadorProfundidad; ++k) {
+                                                    retorno += "    ";
+                                                }
+                                                retorno += "| " + nombreFile + "\n";
+                                                return retorno;
+                                            }
+                                            // Si no se encuentra se sigue viajando hasta encontrarlo
+                                            string retorno = this->find_ImprimirBusqueda(blkCarpeta.b_content[z].b_inodo, nombreBusqueda, contadorProfundidad+1);
+                                            // Si se encontro algo pues retornar recursivamente
+                                            if(retorno != " "){
+                                                string extra = "";
+                                                for (int k = 0; k < contadorProfundidad; ++k) {
+                                                    extra += "    ";
+                                                }
+                                                extra += "| " + nombreFile + "\n";
+                                                extra += retorno;
+                                                return extra;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                // PUNTEROS TRIPLES
+                else if (i==14){
+                    fseek(file, tablaInodo.i_block[i], SEEK_SET);
+                    fread(&blkApuntador_1, sizeof(BloqueApuntador), 1, file);
+                    // PUNTEROS DOBLES
+                    for (int j = 0; j < 16; ++j) {
+                        if (blkApuntador_1.b_pointers[j] != -1){
+                            fseek(file, blkApuntador_1.b_pointers[j], SEEK_SET);
+                            fread(&blkApuntador_2, sizeof(BloqueApuntador), 1, file);
+                            // PUNTEROS SIMPLES
+                            for (int k = 0; k < 16; ++k) {
+                                if (blkApuntador_2.b_pointers[k] != -1){
+                                    fseek(file, blkApuntador_2.b_pointers[k], SEEK_SET);
+                                    fread(&blkApuntador_3, sizeof(BloqueApuntador), 1, file);
+                                    // PUNTEROS DIRECTOS
+                                    for (int z = 0; z < 16; ++z) {
+                                        if (blkApuntador_3.b_pointers[z] != -1) {
+                                            fseek(file, blkApuntador_3.b_pointers[z], SEEK_SET);
+                                            fread(&blkCarpeta, sizeof(BloqueCarpeta), 1, file);
+                                            // BLOQUE CARPETA
+                                            for (int x = 0; x < 4; ++x) {
+                                                // RECORDAR QUE "." Y ".." NO TIENEN QUE MOSTRARSE
+                                                string nombreFile=blkCarpeta.b_content[x].b_name;
+                                                if ((nombreFile != "." && nombreFile != "..") && blkCarpeta.b_content[x].b_inodo != -1) {
+                                                    // Si se encuentra el nombre se retorna
+                                                    if(nombreFile == nombreBusqueda){
+                                                        string retorno = "";
+                                                        for (int k = 0; k < contadorProfundidad; ++k) {
+                                                            retorno += "    ";
+                                                        }
+                                                        retorno += "| " + nombreFile + "\n";
+                                                        return retorno;
+                                                    }
+                                                    // Si no se encuentra se sigue viajando hasta encontrarlo
+                                                    string retorno = this->find_ImprimirBusqueda(blkCarpeta.b_content[x].b_inodo, nombreBusqueda, contadorProfundidad+1);
+                                                    // Si se encontro algo pues retornar recursivamente
+                                                    if(retorno != " "){
+                                                        string extra = "";
+                                                        for (int k = 0; k < contadorProfundidad; ++k) {
+                                                            extra += "    ";
+                                                        }
+                                                        extra += "| " + nombreFile + "\n";
+                                                        extra += retorno;
+                                                        return extra;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return " ";
+}
+
+
+
 
 
 

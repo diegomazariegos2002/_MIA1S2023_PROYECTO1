@@ -1277,8 +1277,11 @@ void Rep::ejecutarReporte_file() {
                     fread(&this->superBloqueGlobal, sizeof(SuperBloque), 1, fileDisco);
                 }
 
-                int direccionInodoFile= this->getDireccionInodo(rutaDividida, 0, rutaDividida.size() - 1,
-                                                                this->superBloqueGlobal.s_inode_start, fileDisco);
+                int direccionInodoFile= this->getDireccionInodo(rutaDividida,
+                                                                0,
+                                                                rutaDividida.size() - 1,
+                                                                this->superBloqueGlobal.s_inode_start,
+                                                                fileDisco);
 
                 if (direccionInodoFile == -1){
                     cout << "EL ARCHIVO NO SE PUDO ENCONTRAR CON LA RUTA ESPECIFICADA" << endl;
