@@ -54,6 +54,12 @@ public:
     TablaInodo addFile(int blckActual, int noBlckBitMap, std::string cadena, TablaInodo inodo);
     void cambiarNombre(TablaInodo tablaInodoCarpeta, std::string nombreOriginal);
     void cambiarPermisosRecursivo(int direccionInodo, int ugo, bool r);
+    int getIdUser();
+    int getIdGrupoUsuario();
+    vector<string> getCampos(string entrada);
+    int getIdGrupo(string nameGrupo);
+    void cambiarPropietarioRecursivo_pt1(int direccionInodo, int idUser, int idGrupo, bool r);
+    void cambiarPropietarioRecursivo_pt2(TablaInodo tablaInodo, int idUser, int idGrupo, bool r);
 };
 
 
