@@ -31,6 +31,7 @@ public:
     void chmod();
     void chown();
     void find();
+    void edit();
     vector<string> getRutaDividida(string cadena);
     int getDireccionInodo(vector<string> rutaDividida, int direccionActual, int numCarpetas, int rutaActual, FILE *discoActual);
     bool verificarPermisoInodo_Lectura(int direccionInodo);
@@ -61,7 +62,6 @@ public:
     int getIdGrupo(string nameGrupo);
     void cambiarPropietarioRecursivo_pt1(int direccionInodo, int idUser, int idGrupo, bool r);
     void cambiarPropietarioRecursivo_pt2(TablaInodo tablaInodo, int idUser, int idGrupo, bool r);
-
     string find_ImprimirBusqueda(int direccionInodo, string nombreBusqueda, int contadorProfundidad);
 };
 

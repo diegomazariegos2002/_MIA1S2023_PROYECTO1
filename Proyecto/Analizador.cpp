@@ -1813,6 +1813,90 @@ void Analizador::analizarEntrada() {
             this->usuario=adminArcCarpt->usuario;
 
         }
+        //EDIT
+        else if (strncmp(entradaMinus.c_str(), "edit", 4) == 0) {
+            int i = 4;
+            while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                i++;
+            }
+
+            entradaMinus = entradaMinus.erase(0, i);
+            entrada = entrada.erase(0, i);
+
+            while (entrada.length() > 0) {
+                if (strncmp(entradaMinus.c_str(), ">path", 5) == 0){
+                    i = entradaMinus.find("=") + 1;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    if (entradaMinus[0] == '\"') {
+                        entradaMinus = entradaMinus.erase(0, 1);
+                        this->entrada = this->entrada.erase(0, 1);
+                        i = entradaMinus.find("\"");
+                        this->adminArcCarpt->path = this->entrada.substr(0, i);
+                        i += 2;
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    } else {
+                        i = entradaMinus.find(" ");
+                        this->adminArcCarpt->path = this->entrada.substr(0, i);
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    }
+
+                }else if (strncmp(entradaMinus.c_str(), ">cont", 5) == 0){
+                    i = entradaMinus.find("=") + 1;
+                    while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                        i++;
+                    }
+                    entradaMinus = entradaMinus.erase(0, i);
+                    this->entrada = this->entrada.erase(0, i);
+
+                    if (entradaMinus[0] == '\"') {
+                        entradaMinus = entradaMinus.erase(0, 1);
+                        this->entrada = this->entrada.erase(0, 1);
+                        i = entradaMinus.find("\"");
+                        this->adminArcCarpt->cont = this->entrada.substr(0, i);
+                        i += 2;
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    } else {
+                        i = entradaMinus.find(" ");
+                        this->adminArcCarpt->cont = this->entrada.substr(0, i);
+                        while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
+                            i++;
+                        }
+                        entradaMinus = entradaMinus.erase(0, i);
+                        this->entrada = this->entrada.erase(0, i);
+                    }
+
+                }else if (strncmp(entradaMinus.c_str(), "#", 1) == 0) {
+                    //COMENTARIO
+                    break;
+                }else {
+                    cout << "ERROR EN EL COMANDO DE ENTRADA: " << entradaMinus << endl;
+                    return;
+                }
+            }
+            adminArcCarpt->usuario=this->usuario;
+            adminArcCarpt->mountList= this->mountList;
+            adminArcCarpt->edit();
+            this->mountList=adminArcCarpt->mountList;
+            this->usuario=adminArcCarpt->usuario;
+        }
+
         //EXECUTE
         else if(strncmp(entradaMinus.c_str(), "execute", 7) == 0){
             string path = "";

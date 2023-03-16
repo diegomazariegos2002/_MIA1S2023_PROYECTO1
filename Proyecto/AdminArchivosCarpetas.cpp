@@ -3300,6 +3300,10 @@ string AdminArchivosCarpetas::find_ImprimirBusqueda(int direccionInodo, string n
     return " ";
 }
 
+void AdminArchivosCarpetas::edit() {
+
+}
+
 
 
 
