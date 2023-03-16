@@ -2847,6 +2847,7 @@ int AdminArchivosCarpetas::getIdGrupoUsuario() {
     }
     return -1;
 }
+
 vector<string> AdminArchivosCarpetas::getCampos(std::string entrada) {
     vector<string> campos;
     string copiaEntrada=entrada;
@@ -2858,6 +2859,7 @@ vector<string> AdminArchivosCarpetas::getCampos(std::string entrada) {
     }
     return campos;
 }
+
 int AdminArchivosCarpetas::getIdGrupo(string nameGrupo) {
     string grupo;
     string stringAlmacenadoInodo=this->getStringAlmacenadoInodo(this->sb.s_inode_start + sizeof(TablaInodo));
