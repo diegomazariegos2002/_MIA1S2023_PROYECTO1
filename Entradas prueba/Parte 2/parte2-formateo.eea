@@ -239,7 +239,7 @@ mkfile >path="/home/Var/b1.txt" >r >size=75
 mkfile >path="/home/b1.txt" >size=-45
 
 #indirectos
-mkfile >path="/home/indirecto_1.txt" >size=10000
+mkfile >path="/home/indir1.txt" >size=10000
 
 #Debe dar error porque no tengo una archivo así en mi compu
 mkfile >path="/home/entrada.txt" >cont="/home/error.txt"
@@ -300,7 +300,21 @@ chown >path="/home" >user=user1 >r
 logout
 login >pass=123 >user=user1 >id=752DiscoParte2
 
+#COMANDO FIND
 find >path=“/” >name=prueba.txt
+
+#COMANDO EDIT
+edit >path="/home/prueba.txt" >cont="/home/pruebas/editprueba1.txt"
+# error pero no se porque si la ruta esta bien
+edit >path="/home/directo_1.txt" >cont="/home/pruebas/editprueba1.txt"
+# probando eliminacion de punteros directos
+edit >path="/home/Var/b1.txt" >cont="/home/pruebas/editprueba1.txt"
+# probando eliminación de punteros ya mas complejos
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/indir1_parte1.txt" >ruta=/home/indir1.txt >name=file
+edit >path="/home/indir1.txt" >cont="/home/pruebas/editprueba1.txt"
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/indir1_parte2.txt" >ruta=/home/indir1.txt >name=file
+edit >path="/home/indir1.txt" >cont="/home/pruebas/editprueba2.txt"
+rep >id=752DiscoParte2 >path="/home/pruebas/parte2/indir1_parte3.txt" >ruta=/home/indir1.txt >name=file
 
 # REPORTES
 execute >path="/home/diego-mazariegos/Escritorio/Proyectos_Oficiales/C++/_MIA1S2023_PROYECTO1/Entradas prueba/Parte 2/parte2-reportes.eea"
