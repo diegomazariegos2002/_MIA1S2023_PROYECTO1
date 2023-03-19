@@ -2058,7 +2058,7 @@ void Rep::ejecutarReporte_tree() {
             fprintf(dot,"}");
             fclose(dot);
             fclose(fileDisco);
-            string command="sudo -S  dot -T"+this->extension+" tree.dot -o \""+ this->path+"\"";
+            string command="sudo -S  dot -T"+this->extension+" tree.dot -o \""+ this->path+"\" -q";
             system(command.c_str());
             cout<<"COMANDO EJECUTADO CON EXITO, REPORTE TREE GENERADO"<<endl;
 

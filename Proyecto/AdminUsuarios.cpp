@@ -323,8 +323,8 @@ void AdminUsuarios::mkgrp() {
                     int bitMapBlks_End = bitMapBlks_Start + this->sb.s_block_start;
                     int blksLibresSeguidos = 0;
                     int inicioBM = -1;
-                    int startB = -1;
                     int contAux = 0;
+                    int startB = -1;
                     char bit;
                     if ((blksActualizado - blksActuales) > 0){
                         for (int i = bitMapBlks_Start; i < bitMapBlks_End; ++i) { // Recorrer el BitMap

@@ -63,6 +63,15 @@ public:
     void cambiarPropietarioRecursivo_pt1(int direccionInodo, int idUser, int idGrupo, bool r);
     void cambiarPropietarioRecursivo_pt2(TablaInodo tablaInodo, int idUser, int idGrupo, bool r);
     string find_ImprimirBusqueda(int direccionInodo, string nombreBusqueda, int contadorProfundidad);
+
+    int getInicioBloqueLibresSeguidos(int bits_a_Buscar);
+
+
+    TablaInodo editarInodoRecursivamente(string contenidoBlk, TablaInodo tablaInodoActual, int indexBlk, bool eliminarBlk);
+
+    int getIndiceBitMapBlks(int direccionBlkBusqueda);
+
+    void update_First_BlkFree();
 };
 
 

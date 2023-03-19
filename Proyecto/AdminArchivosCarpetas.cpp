@@ -149,7 +149,7 @@ int AdminArchivosCarpetas::getDireccionInodo(vector<string> rutaDividida, int di
                 fread(&blck_Carpeta, sizeof(BloqueCarpeta), 1, discoActual);
                 for (int j = 0; j < 4; ++j) { // Recorrer los valores de la carpeta
                     // si existe una carpeta en bloque de carpetas que coincida con la carpeta que toca
-                    if (blck_Carpeta.b_content[j].b_name == rutaDividida[direccionActual]){
+                    if (strcmp(blck_Carpeta.b_content[j].b_name, (rutaDividida[direccionActual]).c_str()) == 0){
                         if (direccionActual < numCarpetas) { // si todavía falta recorrer más carpetas, continuar en la siguiente
                             return this->getDireccionInodo(rutaDividida,
                                                            direccionActual + 1,
@@ -1342,10 +1342,10 @@ void AdminArchivosCarpetas::mkfile() {
         // Validar el parametro cont
         string texto="";
         if (this->cont!=" "){
-            FILE *fileCont;
-            if ((fileCont = fopen(this->cont.c_str(), "r"))) {
+            FILE *fileComputadora;
+            if ((fileComputadora = fopen(this->cont.c_str(), "r"))) {
                 texto= this->leerArchivoComputadora();
-                fclose(fileCont);
+                fclose(fileComputadora);
             } else {
                 cout << "EL ARCHIVO "<<this->cont <<" INDICADO EN EL PARAMETRO CONT NO EXISTE." <<endl;
                 return;
@@ -3069,6 +3069,8 @@ void AdminArchivosCarpetas::find() {
          * el inodo de la carpeta en el metodo y ya esta.
          *
          * y para el * y ? pues agregar unos if que si el nameBuscado es eso, se imprime all.
+         *
+         * añadir Journal del FIND
          */
 
         string ruta;
@@ -3301,11 +3303,592 @@ string AdminArchivosCarpetas::find_ImprimirBusqueda(int direccionInodo, string n
 }
 
 void AdminArchivosCarpetas::edit() {
+    Nodo_M *nodo=this->mountList->buscar(usuario->idMount);
+    if (nodo==NULL){
+        cout <<"NO EXISTE MONTURA CON EL ID: "<< this->usuario->idMount<<" EN EL SISTEMA"<<endl;
+        return;
+    }
+    if (this->cont==" "){
+        cout<<"EL PARAMETRO CONT ES OBLIGATORIO"<<endl;
+        return;
+    }
 
+    if (this->path==" "){
+        cout<<"EL PARAMETRO PATH ES OBLIGATORIO"<<endl;
+        return;
+    }
+
+    if ((this->file= fopen(nodo->path.c_str(),"rb+"))){
+        TablaInodo tablaInodo;
+        vector<string> rutaDividida= this->getRutaDividida(this->path);
+        if (rutaDividida.empty()){
+            cout<<"LA RUTA INGRESADA NO ES VALIDA"<<endl;
+            fclose(this->file);
+            return;
+        }
+        if (nodo->type=='l'){
+            EBR ebr;
+            fseek(file,nodo->start,SEEK_SET);
+            fread(&ebr, sizeof(EBR),1,file);
+            if (ebr.part_status != '2') {
+                fclose(file);
+                cout<<"ERROR PARTICION SIN FORMATEAR"<<endl;
+                return;
+            }
+            fseek(file,nodo->start+ sizeof(EBR),SEEK_SET);
+        }
+        else if (nodo->type=='p'){
+            MBR mbr;
+            fseek(this->file,0,SEEK_SET);
+            fread(&mbr, sizeof(MBR),1,file);
+            if (mbr.mbr_partition[nodo->pos].part_status!='2'){
+                cout<<"ERROR PARTICION SIN FORMATEAR"<<endl;
+                return;
+            }
+            fseek(this->file,nodo->start,SEEK_SET);
+        }
+        fread(&this->sb, sizeof(SuperBloque),1,file);
+
+        int direccionInodoFile=this->getDireccionInodo(rutaDividida, 0, rutaDividida.size() - 1, this->sb.s_inode_start, this->file);
+        if (direccionInodoFile == -1){
+            cout << "LA RUTA INGRESADA NO EXISTE" << endl;
+            fclose(this->file);
+            return;
+        }
+
+        if (!this->verificarPermisoInodo_Escritura(direccionInodoFile)){
+            cout << "IMPOSIBLE EJECUTAR EDITAR POR FALTA DE PERMISOS"<< endl;
+            return;
+        }
+
+        // Leer el Inodo del File para luego leer su contenido.
+        fseek(this->file, direccionInodoFile, SEEK_SET);
+        fread(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+        string textoInodoActual=this->getStringAlmacenadoInodo(direccionInodoFile);
+
+        string infoFileComputadora;
+        FILE *fileComputadora;
+        if ((fileComputadora = fopen(this->cont.c_str(), "r"))) {
+            infoFileComputadora=this->leerArchivoComputadora();
+            fclose(fileComputadora);
+        }
+        else {
+            cout << "ERROR EN LA RUTA "<<this->cont << " NO EXISTE EL ARCHIVO"<< endl;
+            return;
+        }
+
+        vector<string> blksActualesInodoFile=this->getArrayBlks(textoInodoActual);
+        vector<string> blksNuevosInodoFile=this->getArrayBlks(infoFileComputadora);
+        int blksExtraNuevos= blksNuevosInodoFile.size() - blksActualesInodoFile.size();
+        if (this->sb.s_free_blocks_count < blksExtraNuevos){
+            cout << "NO EXISTEN LOS BLOQUES LIBRES SUFICIENTES EN EL SISTEMA" << endl;
+            return;
+        }
+        if (blksNuevosInodoFile.size() >= 4380){
+            cout << "ERROR EL CONTENIDO NUEVO ES MUY GRANDE EXCEDE LOS BLOQUES POR INODO" << endl;
+            return;
+        }
+
+        // NO, SE USAN MENOS BLOQUES DE LOS QUE YA SE USABAN
+        if (blksExtraNuevos < 0){
+            bool eliminarBlk=false;
+            int cont=0;
+            while (cont < blksActualesInodoFile.size()){
+                string cadena="";
+                if (cont >= blksNuevosInodoFile.size()){
+                    eliminarBlk= true;
+                }
+                else if (cont < blksNuevosInodoFile.size()){
+                    cadena=blksNuevosInodoFile[cont];
+                }
+                tablaInodo= this->editarInodoRecursivamente(cadena, tablaInodo, cont, eliminarBlk);
+                if (tablaInodo.i_type == '2'){
+                    fseek(this->file, direccionInodoFile, SEEK_SET);
+                    fwrite(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+                    cout<<"ERROR AL EJECUTAR EL COMANDO"<<endl;
+                    return;
+                }
+                cont++;
+            }
+        }
+        // SI, SE NECESITAN MÁS BLOQUES DE LOS QUE YA ESTABAN
+        else if (blksExtraNuevos > 0){
+            int inicioBlksFree = this->getInicioBloqueLibresSeguidos(blksNuevosInodoFile.size() - blksExtraNuevos);
+
+            // NO HAY ESPACIO
+            if (inicioBlksFree == -1){
+                cout << "NO EXISTEN LOS BLOQUES LIBRES SUFICIENTES EN EL SISTEMA" << endl;
+                return;
+            }
+            // SI HAY ESPACIO
+            else{
+                int contBlkSpace=0;
+                int index=0;
+                while (index < blksNuevosInodoFile.size()){
+                    flagGlobal=false;
+                    tablaInodo=this->addFile(index, (inicioBlksFree + contBlkSpace), blksNuevosInodoFile[index], tablaInodo);
+                    if (tablaInodo.i_type == '2'){
+                        fseek(this->file, direccionInodoFile, SEEK_SET);
+                        fwrite(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+                        cout<<"ERROR AL EJECUTAR EL COMANDO"<<endl;
+                        return;
+                    }
+                    if (flagGlobal){
+                        contBlkSpace++;
+                    }
+                    index++;
+                }
+            }
+        }
+        // IGUAL, SE UTILIZA LA MISMA CANTIDAD DE BLOQUES
+        else{
+            int j=0;
+            while (j < blksActualesInodoFile.size()){
+                string cadena="";
+                if (j < blksNuevosInodoFile.size()){
+                    cadena=blksNuevosInodoFile[j];
+                }
+                tablaInodo= this->editarInodoRecursivamente(cadena, tablaInodo, j, false);
+                if (tablaInodo.i_type == '2'){
+                    cout<<"ERROR AL EJECUTAR EL COMANDO"<<endl;
+                    fseek(this->file, direccionInodoFile, SEEK_SET);
+                    fwrite(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+                    return;
+                }
+                j++;
+            }
+        }
+
+        int size = 0;
+        for (int i = 0; i < blksNuevosInodoFile.size(); i++) {
+            size += blksNuevosInodoFile[i].length();
+        }
+        tablaInodo.i_s=size;
+        tablaInodo.i_mtime = time(nullptr);
+
+        if (nodo->type=='l'){
+            EBR ebr;
+            fseek(file,nodo->start,SEEK_SET);
+            fread(&ebr, sizeof(EBR),1,file);
+            fseek(file,nodo->start+ sizeof(EBR),SEEK_SET);
+        }
+        else if (nodo->type=='p'){
+            MBR mbr;
+            fseek(this->file,0,SEEK_SET);
+            fread(&mbr, sizeof(MBR),1,file);
+            fseek(this->file,nodo->start,SEEK_SET);
+        }
+        fwrite(&this->sb, sizeof(SuperBloque),1,file);
+
+        fseek(this->file, direccionInodoFile, SEEK_SET);
+        fwrite(&tablaInodo, sizeof(TablaInodo), 1, this->file);
+
+        if (this->sb.s_filesystem_type==3){
+            this->registrarJournal("edit",'1',this->path,this->cont,nodo);
+        }
+        cout<<"COMANDO EJECUTADO CON EXITO, EL ARCHIVO "<<this->path<< " FUE EDITADO CON EXITO"<<endl;
+        fclose(this->file);
+    }
+    else{
+        cout <<"EL DISCO SE MOVIO PORQUE NO SE ENCUENTRA"<<endl;
+    }
+}
+/**
+ * Método para buscar el primer grupo de bloques libres seguidos en el bitmap de bloques.
+ * @param bits_a_Buscar
+ * @return
+ */
+int AdminArchivosCarpetas::getInicioBloqueLibresSeguidos(int bits_a_Buscar) {
+    int bitMapBlks_Start = this->sb.s_bm_block_start;
+    int bitMapBlks_End = bitMapBlks_Start + this->sb.s_block_start;
+    int blksLibresSeguidos = 0;
+    int inicioBM = -1;
+    int contAux = 0;
+    int inicioB = -1;
+    char bit;
+    if (bits_a_Buscar > 0) {
+        for (int i = bitMapBlks_Start; i < bitMapBlks_End; ++i) {
+            fseek(this->file, i, SEEK_SET);
+            fread(&bit, sizeof(char), 1, this->file);
+            // Bloque disponible
+            if (bit == '0') {
+                if (blksLibresSeguidos == 0) {
+                    inicioBM = i;
+                    inicioB = contAux;
+                }
+                blksLibresSeguidos++;
+
+            }
+            // Bloque no disponible
+            else {
+                blksLibresSeguidos = 0;
+                inicioBM = -1;
+                inicioB = -1;
+            }
+
+            if (blksLibresSeguidos >= bits_a_Buscar) break;
+            contAux++;
+        }
+        // Validar que si se encontro espacio libre
+        if (inicioBM == -1 || (blksLibresSeguidos != bits_a_Buscar)) {
+            cout << "NO EXISTEN LOS SUFICIENTES BLOQUES O BLOQUES SEGUIDOS EN EL SISTEMA PARA ACTUALIZAR EL ARCHIVO" << endl;
+            return -1;
+        }
+
+        for (int i = inicioBM; i < (inicioBM + bits_a_Buscar); ++i) {
+            char uno = '1';
+            fseek(this->file, i, SEEK_SET);
+            fwrite(&uno, sizeof(char), 1, this->file);
+
+        }
+        int bit2 = 0;
+        this->sb.s_free_blocks_count -= bits_a_Buscar; // restar la cantidad de bloques disponibles
+
+        for (int k = bitMapBlks_Start; k < bitMapBlks_End; k++) {
+            fseek(this->file, k, SEEK_SET);
+            fread(&bit, sizeof(char), 1, this->file);
+            bit2++;
+            if (bit == '0') break;
+        }
+        this->sb.s_first_blo = bit2; //ACTUALIZAR PRIMER BLOQUE DISPONIBLE
+    }
+    return inicioB;
 }
 
+TablaInodo AdminArchivosCarpetas::editarInodoRecursivamente(string contenidoBlk, TablaInodo tablaInodoActual, int indexBlk, bool eliminarBlk) {
+    BloqueApuntador blkApuntador_1,blkApuntador_2,blkApuntador_3;
+    SuperBloque sblk;
+    for (int i = 0; i < 15; ++i) {
+        if (tablaInodoActual.i_block[i] != -1){
+            // PUNTERO DIRECTO
+            if (i<12 && i == indexBlk){ // rango indexBlk[0-11] es de los punteros directos
+                BloqueArchivo blkArchivo;
+                // SI EL BLOQUE SE TIENE QUE ELIMINAR
+                if (eliminarBlk){
+                    // primero sumamos uno al número de bloques libres.
+                    this->sb.s_free_blocks_count+=1;
+                    // se encuentra el indice del bitmap a vaciar
+                    char bit_0='0';
+                    int indiceBitMap = this->getIndiceBitMapBlks(tablaInodoActual.i_block[i]);
+                    fseek(this->file, this->sb.s_bm_block_start + indiceBitMap, SEEK_SET);
+                    fwrite(&bit_0, sizeof(char), 1, this->file);
+                    // se actualiza el bloque vacio
+                    this->update_First_BlkFree();
+                    tablaInodoActual.i_block[i]=-1;
+                    return tablaInodoActual;
+                }
+                fseek(this->file, tablaInodoActual.i_block[i], SEEK_SET);
+                fread(&blkArchivo, sizeof(BloqueArchivo), 1, this->file);
+                strcpy(blkArchivo.b_content, contenidoBlk.c_str());
+                fseek(this->file, tablaInodoActual.i_block[i], SEEK_SET);
+                fwrite(&blkArchivo, sizeof(BloqueArchivo), 1, this->file);
+                return tablaInodoActual;
+            }
+            // PUNTERO SIMPLE
+            else if (i==12){
+                fseek(this->file, tablaInodoActual.i_block[i], SEEK_SET);
+                fread(&blkApuntador_1, sizeof(BloqueApuntador), 1, this->file);
+                for (int j = 0; j < 16; ++j) {
+                    if (blkApuntador_1.b_pointers[j] != -1 && (indexBlk == (12 + j))){ // rango indexBlk[12-27] es de los punteros simples
+                        BloqueArchivo blkArchivo;
+                        // SI EL BLOQUE SE TIENE QUE ELIMINAR
+                        if (eliminarBlk){
+                            // PRIMERO ELIMINAMOS EL BLOQUE ARCHIVO
+                            // primero sumamos uno al número de bloques libres.
+                            this->sb.s_free_blocks_count+=1;
+                            // se encuentra el indice del bitmap a vaciar
+                            char bit_0='0';
+                            int indiceBitMap = this->getIndiceBitMapBlks(blkApuntador_1.b_pointers[j]);
+                            fseek(this->file, this->sb.s_bm_block_start + indiceBitMap, SEEK_SET);
+                            fwrite(&bit_0, sizeof(char), 1, this->file);
+                            // se actualiza el bloque vacio
+                            this->update_First_BlkFree();
+                            // se actualiza el bloque apuntador simple
+                            blkApuntador_1.b_pointers[j]=-1;
+                            fseek(this->file, tablaInodoActual.i_block[i], SEEK_SET);
+                            fwrite(&blkApuntador_1, sizeof(BloqueApuntador), 1, this->file);
 
+                            // VALIDAMOS SI HAY QUE ELIMINAR EL BLOQUE APUNTADOR SIMPLE
+                            if (j==15){
+                                int indiceBitMap_Blk = this->getIndiceBitMapBlks(tablaInodoActual.i_block[i]);
+                                fseek(this->file, this->sb.s_bm_block_start + indiceBitMap_Blk, SEEK_SET);
+                                fwrite(&bit_0, sizeof(char), 1, this->file);
+                                this->sb.s_free_blocks_count+=1;
+                                this->update_First_BlkFree();
+                                tablaInodoActual.i_block[i]=-1;
+                            }
+                            else if (blkApuntador_1.b_pointers[j + 1] == -1){
+                                int indiceBitMap_Blk = this->getIndiceBitMapBlks(tablaInodoActual.i_block[i]);
 
+                                fseek(this->file, this->sb.s_bm_block_start + indiceBitMap_Blk, SEEK_SET);
+                                fwrite(&bit_0, sizeof(char), 1, this->file);
+                                this->sb.s_free_blocks_count+=1;
+                                this->update_First_BlkFree();
+                                tablaInodoActual.i_block[i]=-1;
+                            }
+                            return tablaInodoActual;
+                        }
+                        fseek(this->file, blkApuntador_1.b_pointers[j], SEEK_SET);
+                        fread(&blkArchivo, sizeof(BloqueArchivo), 1, this->file);
+                        strcpy(blkArchivo.b_content, contenidoBlk.c_str());
+                        fseek(this->file, blkApuntador_1.b_pointers[j], SEEK_SET);
+                        fwrite(&blkArchivo, sizeof(BloqueArchivo), 1, this->file);
+                        return tablaInodoActual;
+                    }
+                }
+            }
+            // PUNTERO DOBLE
+            else if (i==13){
+                bool deleteBlkP1=false;
+                fseek(this->file, tablaInodoActual.i_block[i], SEEK_SET);
+                fread(&blkApuntador_1, sizeof(BloqueApuntador), 1, this->file);
+                for (int j = 0; j < 16; ++j) {
+                    if (blkApuntador_1.b_pointers[j] != -1){
+                        fseek(this->file, blkApuntador_1.b_pointers[j], SEEK_SET);
+                        fread(&blkApuntador_2, sizeof(BloqueApuntador), 1, this->file);
+                        for (int k = 0; k < 16; ++k) {
+                            if (blkApuntador_2.b_pointers[k] != -1 && (indexBlk == (28 + k + (16 * j)))){
+                                if (eliminarBlk){
+                                    int indiceBitMapBlks = this->getIndiceBitMapBlks(blkApuntador_2.b_pointers[k]);
+                                    char bit_0='0';
+                                    fseek(this->file, this->sb.s_bm_block_start + indiceBitMapBlks, SEEK_SET);
+                                    fwrite(&bit_0, sizeof(char), 1, this->file);
+                                    this->sb.s_free_blocks_count+=1;
+                                    this->update_First_BlkFree();
+                                    blkApuntador_2.b_pointers[k]=-1;
+                                    fseek(this->file, blkApuntador_1.b_pointers[j], SEEK_SET);
+                                    fwrite(&blkApuntador_2, sizeof(BloqueApuntador), 1, this->file);
 
+                                    if (k==15){
+                                        deleteBlkP1=true;
+                                        indiceBitMapBlks = this->getIndiceBitMapBlks(blkApuntador_1.b_pointers[j]);
+                                        fseek(this->file,this->sb.s_bm_block_start+indiceBitMapBlks,SEEK_SET);
+                                        fwrite(&bit_0, sizeof(char), 1, this->file);
+                                        this->sb.s_free_blocks_count+=1;
+                                        this->update_First_BlkFree();
+                                        blkApuntador_1.b_pointers[j]=-1;
+                                        fseek(this->file, tablaInodoActual.i_block[i], SEEK_SET);
+                                        fwrite(&blkApuntador_1, sizeof(BloqueApuntador), 1, this->file);
+                                        break;
+                                    }
+                                    else if (blkApuntador_2.b_pointers[k + 1] == -1){
+                                        deleteBlkP1=true;
+                                        indiceBitMapBlks = this->getIndiceBitMapBlks(blkApuntador_1.b_pointers[j]);
+                                        fseek(this->file,this->sb.s_bm_block_start+indiceBitMapBlks,SEEK_SET);
+                                        fwrite(&bit_0, sizeof(char), 1, this->file);
+                                        this->sb.s_free_blocks_count+=1;
+                                        this->update_First_BlkFree();
+                                        blkApuntador_1.b_pointers[j]=-1;
+                                        fseek(this->file, tablaInodoActual.i_block[i], SEEK_SET);
+                                        fwrite(&blkApuntador_1, sizeof(BloqueApuntador), 1, this->file);
+                                        break;
+                                    }
+                                    return tablaInodoActual;
+                                }
+                                BloqueArchivo blkArchivo;
+                                fseek(this->file, blkApuntador_2.b_pointers[k], SEEK_SET);
+                                fread(&blkArchivo, sizeof(BloqueArchivo), 1, this->file);
+                                strcpy(blkArchivo.b_content, contenidoBlk.c_str());
+                                fseek(this->file, blkApuntador_2.b_pointers[k], SEEK_SET);
+                                fwrite(&blkArchivo, sizeof(BloqueArchivo), 1, this->file);
+                                return tablaInodoActual;
+                            }
+                        }
+                    }
+                    if (deleteBlkP1){
+                        char bit_0='0';
+                        if (j==15){
+                            int bm = this->getIndiceBitMapBlks(tablaInodoActual.i_block[i]);
+                            fseek(this->file,this->sb.s_bm_block_start+bm,SEEK_SET);
+                            fwrite(&bit_0, sizeof(char), 1, this->file);
+                            this->sb.s_free_blocks_count+=1;
+                            this->update_First_BlkFree();
+                            tablaInodoActual.i_block[i]=-1;
+                            return tablaInodoActual;
+                        }
+                        else if (blkApuntador_1.b_pointers[j + 1] == -1){
+                            int bm = this->getIndiceBitMapBlks(tablaInodoActual.i_block[i]);
+                            fseek(this->file,this->sb.s_bm_block_start+bm,SEEK_SET);
+                            fwrite(&bit_0, sizeof(char), 1, this->file);
+                            this->sb.s_free_blocks_count+=1;
+                            this->update_First_BlkFree();
+                            tablaInodoActual.i_block[i]=-1;
+                            return tablaInodoActual;
+                        }
+                        else{
+                            return tablaInodoActual;
+                        }
+                    }
+                }
+            }
+            // PUNTERO TRIPLE
+            else if (i==14){
+                bool deleteBlkP1=false;
+                bool deleteBlkP2= false;
+                fseek(this->file, tablaInodoActual.i_block[i], SEEK_SET);
+                fread(&blkApuntador_1, sizeof(BloqueApuntador), 1, this->file);
+                for (int j = 0; j < 16; ++j) {
+                    if (blkApuntador_1.b_pointers[j] != -1){
+                        fseek(this->file, blkApuntador_1.b_pointers[j], SEEK_SET);
+                        fread(&blkApuntador_2, sizeof(BloqueApuntador), 1, this->file);
+                        for (int k = 0; k < 16; ++k) {
+                            if (blkApuntador_2.b_pointers[k] != -1){
+                                fseek(this->file, blkApuntador_2.b_pointers[k], SEEK_SET);
+                                fread(&blkApuntador_3, sizeof(BloqueApuntador), 1, this->file);
+                                for (int z = 0; z < 16; ++z) {
+                                    if (blkApuntador_3.b_pointers[z] != -1 && (indexBlk == (284 + z + (16 * k) + (256 * j)))) {
+                                        if (eliminarBlk){
+                                            char bit_0='0';
+                                            this->sb.s_free_blocks_count+=1;
+                                            int indiceBitMapBlks = this->getIndiceBitMapBlks(blkApuntador_3.b_pointers[z]);
+                                            fseek(this->file, this->sb.s_bm_block_start + indiceBitMapBlks, SEEK_SET);
+                                            fwrite(&bit_0, sizeof(char), 1, this->file);
+                                            this->update_First_BlkFree();
+                                            blkApuntador_3.b_pointers[z]=-1;
+                                            fseek(this->file, blkApuntador_2.b_pointers[k], SEEK_SET);
+                                            fread(&blkApuntador_3, sizeof(BloqueApuntador), 1, this->file);
+
+                                            if (z == 15){
+                                                indiceBitMapBlks = this->getIndiceBitMapBlks(blkApuntador_2.b_pointers[k]);
+                                                fseek(this->file,this->sb.s_bm_block_start+indiceBitMapBlks,SEEK_SET);
+                                                fwrite(&bit_0, sizeof(char),1,this->file);
+                                                this->sb.s_free_blocks_count+=1;
+                                                this->update_First_BlkFree();
+                                                blkApuntador_2.b_pointers[k]=-1;
+                                                fseek(this->file, blkApuntador_1.b_pointers[j], SEEK_SET);
+                                                fwrite(&blkApuntador_2, sizeof(BloqueApuntador), 1, this->file);
+                                                deleteBlkP2=true;
+                                                break;
+                                            }
+                                            else if (blkApuntador_3.b_pointers[z + 1] == -1){
+                                                indiceBitMapBlks = this->getIndiceBitMapBlks(blkApuntador_2.b_pointers[k]);
+                                                fseek(this->file,this->sb.s_bm_block_start+indiceBitMapBlks,SEEK_SET);
+                                                fwrite(&bit_0, sizeof(char),1,this->file);
+                                                this->sb.s_free_blocks_count+=1;
+                                                this->update_First_BlkFree();
+                                                blkApuntador_2.b_pointers[k]=-1;
+                                                fseek(this->file, blkApuntador_1.b_pointers[j], SEEK_SET);
+                                                fwrite(&blkApuntador_2, sizeof(BloqueApuntador), 1, this->file);
+                                                deleteBlkP2=true;
+                                                break;
+                                            }
+                                            return tablaInodoActual;
+                                        }
+                                        BloqueArchivo blkArchivo;
+                                        fseek(this->file, blkApuntador_3.b_pointers[z], SEEK_SET);
+                                        fread(&blkArchivo, sizeof(BloqueArchivo), 1, this->file);
+                                        strcpy(blkArchivo.b_content, contenidoBlk.c_str());
+                                        fseek(this->file, blkApuntador_3.b_pointers[z], SEEK_SET);
+                                        fwrite(&blkArchivo, sizeof(BloqueArchivo), 1, this->file);
+                                        return tablaInodoActual;
+                                    }
+                                }
+                            }
+
+                            if (deleteBlkP2){
+                                char bit_0='0';
+                                if (k==15){
+                                    int indiceBitMapBlks = this->getIndiceBitMapBlks(blkApuntador_1.b_pointers[j]);
+                                    fseek(this->file, this->sb.s_bm_block_start + indiceBitMapBlks, SEEK_SET);
+                                    fwrite(&bit_0, sizeof(char), 1, this->file);
+                                    this->sb.s_free_blocks_count+=1;
+                                    this->update_First_BlkFree();
+                                    blkApuntador_1.b_pointers[j]=-1;
+                                    fseek(this->file, tablaInodoActual.i_block[i], SEEK_SET);
+                                    fwrite(&blkApuntador_1, sizeof(BloqueApuntador), 1, this->file);
+                                    deleteBlkP1= true;
+                                    break;
+                                }
+                                else if (blkApuntador_2.b_pointers[k + 1] == -1){
+                                    int indiceBitMapBlks = this->getIndiceBitMapBlks(blkApuntador_1.b_pointers[j]);
+                                    fseek(this->file, this->sb.s_bm_block_start + indiceBitMapBlks, SEEK_SET);
+                                    fwrite(&bit_0, sizeof(char), 1, this->file);
+                                    this->sb.s_free_blocks_count+=1;
+                                    this->update_First_BlkFree();
+                                    blkApuntador_1.b_pointers[j]=-1;
+                                    fseek(this->file, tablaInodoActual.i_block[i], SEEK_SET);
+                                    fwrite(&blkApuntador_1, sizeof(BloqueApuntador), 1, this->file);
+                                    deleteBlkP1= true;
+                                    break;
+                                }
+                                else{
+                                    return tablaInodoActual;
+                                }
+                            }
+
+                        }
+                    }
+
+                    if (deleteBlkP1){
+                        char bit_0='0';
+                        if (j==15){
+                            int indiceBitMapBlks = this->getIndiceBitMapBlks(tablaInodoActual.i_block[i]);
+                            fseek(this->file, this->sb.s_bm_block_start + indiceBitMapBlks, SEEK_SET);
+                            fwrite(&bit_0, sizeof(char), 1, this->file);
+                            this->sb.s_free_blocks_count+=1;
+                            this->update_First_BlkFree();
+                            tablaInodoActual.i_block[i]=-1;
+                            return tablaInodoActual;
+                        }
+                        else if (blkApuntador_1.b_pointers[j + 1] == -1){
+                            int indiceBitMapBlks = this->getIndiceBitMapBlks(tablaInodoActual.i_block[i]);
+                            fseek(this->file, this->sb.s_bm_block_start + indiceBitMapBlks, SEEK_SET);
+                            fwrite(&bit_0, sizeof(char), 1, this->file);
+                            this->sb.s_free_blocks_count+=1;
+                            this->update_First_BlkFree();
+                            tablaInodoActual.i_block[i]=-1;
+                            return tablaInodoActual;
+                        }
+                        else{
+                            return tablaInodoActual;
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+    // SI LLEGA AQUÍ SERÍA UN ERROR PORQUE AL TENER MENOS BLOQUES DEBERÍA DE PODER VALIDAR TODOS LOS PUNTEROS
+    TablaInodo tablaInodo;
+    tablaInodo.i_type = '2';
+    return tablaInodo;
+}
+
+int AdminArchivosCarpetas::getIndiceBitMapBlks(int direccionBlkBusqueda) {
+    int contadorIndices = 0;
+    int bmBlkStart = this->sb.s_bm_block_start;
+    int bmBlkEnd = bmBlkStart + this->sb.s_blocks_count;
+    char bit;
+
+    for (int i = bmBlkStart; i < bmBlkEnd; i++) {
+        fseek(this->file, i, SEEK_SET);
+        fread(&bit, sizeof(char), 1, this->file);
+        if (bit == '1' && direccionBlkBusqueda == (this->sb.s_block_start + (contadorIndices * sizeof(BloqueApuntador)))) {
+            return contadorIndices;
+        }
+        contadorIndices++;
+    }
+
+    return -1;
+}
+
+void AdminArchivosCarpetas::update_First_BlkFree() {
+    int contadorIndice = 0;
+    char bit;
+    int start = this->sb.s_bm_block_start;
+    int end = start + this->sb.s_blocks_count;
+
+    contadorIndice=0;
+    for (int j = start; j < end; j++) {
+        fseek(this->file, j, SEEK_SET);
+        fread(&bit, sizeof(char), 1, this->file);
+        if (bit == '0') {
+            contadorIndice++;
+            break;
+        }
+        contadorIndice++;
+    }
+    this->sb.s_first_blo = contadorIndice;
+}
 
 
