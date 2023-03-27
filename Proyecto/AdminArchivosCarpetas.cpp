@@ -1981,7 +1981,7 @@ TablaInodo AdminArchivosCarpetas::addFile(int blckActual, int noBlckBitMap, std:
             }
 
         }
-            // si no existía se crea el bloque en la dirección indicada.
+        // si no existía se crea el bloque en la dirección indicada.
         else if (i == 13 && inodo.i_block[i] != -1) {
             fseek(this->file, inodo.i_block[i], SEEK_SET);
             fread(&puntero1, sizeof(BloqueApuntador), 1, this->file);
@@ -2625,6 +2625,9 @@ void AdminArchivosCarpetas::cambiarPermisosRecursivo(int direccionInodo, int ugo
     TablaInodo tablaInodo;
     fseek(file, direccionInodo, SEEK_SET);
     fread(&tablaInodo, sizeof(TablaInodo), 1, file);
+    if((tablaInodo.i_type != '0' && tablaInodo.i_type != '1' )){
+        return;
+    }
     tablaInodo.i_perm=this->ugo;
     tablaInodo.i_mtime= time(nullptr);
     fseek(file, direccionInodo, SEEK_SET);
@@ -2891,6 +2894,10 @@ void AdminArchivosCarpetas::cambiarPropietarioRecursivo_pt1(int direccionInodo, 
     fseek(file, direccionInodo, SEEK_SET);
     fread(&tablaInodo, sizeof(TablaInodo), 1, file);
 
+    if((tablaInodo.i_type != '0' && tablaInodo.i_type != '1' )){
+        return;
+    }
+
     // Usuario root (tiene el poder de hacer lo que quiera)
     if (this->usuario->idU==1 && this->usuario->idG==1){
         tablaInodo.i_mtime= time(nullptr);
@@ -2931,8 +2938,12 @@ void AdminArchivosCarpetas::cambiarPropietarioRecursivo_pt2(TablaInodo tablaInod
                     for (int j = 0; j < 4; ++j) {
                         // RECORDAR QUE "." Y ".." NO TIENEN PROPIETARIO COMO TAL
                         string nombreFile=blkCarpeta.b_content[j].b_name;
-                        if ((nombreFile != "." && nombreFile != "..") && blkCarpeta.b_content[j].b_inodo != -1) {
-                            this->cambiarPropietarioRecursivo_pt1(blkCarpeta.b_content[j].b_inodo, idUser, idGrupo, r);
+                        if ((nombreFile != "." && nombreFile != "..")
+                        && blkCarpeta.b_content[j].b_inodo != -1) {
+                            this->cambiarPropietarioRecursivo_pt1(blkCarpeta.b_content[j].b_inodo,
+                                                                  idUser,
+                                                                  idGrupo,
+                                                                  r);
                         }
                     }
 
@@ -2950,9 +2961,12 @@ void AdminArchivosCarpetas::cambiarPropietarioRecursivo_pt2(TablaInodo tablaInod
                             for (int k = 0; k < 4; ++k) {
                                 // RECORDAR QUE "." Y ".." NO TIENEN PROPIETARIO COMO TAL
                                 string nombreFile=blkCarpeta.b_content[k].b_name;
-                                if ((nombreFile != "." && nombreFile != "..") && blkCarpeta.b_content[k].b_inodo != -1) {
-                                    this->cambiarPropietarioRecursivo_pt1(blkCarpeta.b_content[k].b_inodo, idUser,
-                                                                          idGrupo, r);
+                                if ((nombreFile != "." && nombreFile != "..")
+                                && blkCarpeta.b_content[k].b_inodo != -1) {
+                                    this->cambiarPropietarioRecursivo_pt1(blkCarpeta.b_content[k].b_inodo,
+                                                                          idUser,
+                                                                          idGrupo,
+                                                                          r);
                                 }
                             }
                         }
@@ -3072,39 +3086,62 @@ void AdminArchivosCarpetas::find() {
          *
          * añadir Journal del FIND
          */
+        int direccionInodoFile;
+        if (this->path=="/"){
+            direccionInodoFile=this->sb.s_inode_start;
+        }
+        else{
+            vector<string> rutaDivivida= this->getRutaDividida(this->path);
+            if (rutaDivivida.empty()){
+                fclose(this->file);
+                cout<<"LA RUTA INGRESADA NO ES VALIDA O NO EXISTE"<<endl;
+                return;
+            }
+            direccionInodoFile=this->getDireccionInodo(rutaDivivida, 0, rutaDivivida.size() - 1, this->sb.s_inode_start, file);
+            if (direccionInodoFile == -1){
+                cout << "EL ARCHIVO INDICADO NO EXISTE" << endl;
+                return;
+            }
+        }
+
 
         string ruta;
         if(this->name=="/"){ // Imprimes la root
             ruta = "/";
-        }else{
-            ruta = "/\n";
-            string extra = find_ImprimirBusqueda(this->sb.s_inode_start, this->name, 1);
-            if(extra == " "){
-                fclose(this->file);
-                cout << "EL ARCHIVO O CARPETA NO EXISTE" << endl;
-                return;
-            }
-            ruta += extra;
+            cout << ruta << endl;
+            fclose(this->file);
+            return;
+        }
+        else{
+                ruta = "/\n";
+
+                string extra ="";
+                // POR EL MOMENTO MOSTRAR all
+                if(this->name=="*" || this->name=="*.?" || this->name=="?.*" || this->name=="?" || this->name=="*.*" || this->name=="?.?"){
+                    extra = find_ImprimirBusqueda(direccionInodoFile, this->name, 1, true);
+                }
+                // Si es una ruta normal
+                else{
+                    extra = find_ImprimirBusqueda(direccionInodoFile, this->name, 1, false);
+                }
+
+                if(extra == " "){
+                    fclose(this->file);
+                    cout << "EL ARCHIVO O CARPETA NO EXISTE" << endl;
+                    return;
+                }
+                ruta += extra;
         }
 
         cout << ruta << endl;
         fclose(this->file);
-
-        // POR EL MOMENTO MOSTRAR all
-        if(this->name=="*" || this->name=="*.?" || this->name=="?.*" || this->name=="?" || this->name=="*.*" || this->name=="?.?"){
-
-        }
-        // SI ES UN RUTA NORMAL
-        else{
-
-        }
     }
     else{
         cout <<"EL DISCO SE MOVIO DE LUGAR PORQUE NO SE ENCUENTRA"<<endl;
     }
 }
 
-string AdminArchivosCarpetas::find_ImprimirBusqueda(int direccionInodo, string nombreBusqueda, int contadorProfundidad) {
+string AdminArchivosCarpetas::find_ImprimirBusqueda(int direccionInodo, string nombreBusqueda, int contadorProfundidad, bool mostrarTodo) {
     BloqueApuntador  blkApuntador_1,blkApuntador_2,blkApuntador_3;
     BloqueCarpeta blkCarpeta;
     BloqueArchivo blkArchivo;
@@ -3112,9 +3149,14 @@ string AdminArchivosCarpetas::find_ImprimirBusqueda(int direccionInodo, string n
     fseek(file, direccionInodo, SEEK_SET);
     fread(&tablaInodo, sizeof(TablaInodo), 1, file);
 
+    if((tablaInodo.i_type != '0' && tablaInodo.i_type != '1' )){
+        return "";
+    }
+
     if(tablaInodo.i_type=='1'){
         return " ";
     }
+    string mostrarTodoRuta = "";
     // SI ES UNA CARPETA SE RECORRE RECURSIVAMENTE
     if (tablaInodo.i_type == '0'){
         // RECORRER PUNTEROS
@@ -3129,26 +3171,35 @@ string AdminArchivosCarpetas::find_ImprimirBusqueda(int direccionInodo, string n
                         // RECORDAR QUE "." Y ".." NO TIENEN QUE MOSTRARSE
                         string nombreFile=blkCarpeta.b_content[j].b_name;
                         if ((nombreFile != "." && nombreFile != "..") && blkCarpeta.b_content[j].b_inodo != -1) {
-                            // Si se encuentra el nombre se retorna
-                            if(nombreFile == nombreBusqueda){
-                                string retorno = "";
+                            if(mostrarTodo){
                                 for (int k = 0; k < contadorProfundidad; ++k) {
-                                    retorno += "    ";
+                                    mostrarTodoRuta += "    ";
                                 }
-                                retorno += "| " + nombreFile + "\n";
-                                return retorno;
-                            }
-                            // Si no se encuentra se sigue viajando hasta encontrarlo
-                            string retorno = this->find_ImprimirBusqueda(blkCarpeta.b_content[j].b_inodo, nombreBusqueda, contadorProfundidad+1);
-                            // Si se encontro algo pues retornar recursivamente
-                            if(retorno != " "){
-                                string extra = "";
-                                for (int k = 0; k < contadorProfundidad; ++k) {
-                                    extra += "    ";
+                                mostrarTodoRuta += "| " + nombreFile + "\n";
+                                string retorno = this->find_ImprimirBusqueda(blkCarpeta.b_content[j].b_inodo, nombreBusqueda, contadorProfundidad+1, mostrarTodo);
+                                mostrarTodoRuta += retorno;
+                            }else{
+                                // Si se encuentra el nombre se retorna
+                                if(nombreFile == nombreBusqueda){
+                                    string retorno = "";
+                                    for (int k = 0; k < contadorProfundidad; ++k) {
+                                        retorno += "    ";
+                                    }
+                                    retorno += "| " + nombreFile + "\n";
+                                    return retorno;
                                 }
-                                extra += "| " + nombreFile + "\n";
-                                extra += retorno;
-                                return extra;
+                                // Si no se encuentra se sigue viajando hasta encontrarlo
+                                string retorno = this->find_ImprimirBusqueda(blkCarpeta.b_content[j].b_inodo, nombreBusqueda, contadorProfundidad+1, mostrarTodo);
+                                // Si se encontro algo pues retornar recursivamente
+                                if(retorno != " " && retorno != ""){
+                                    string extra = "";
+                                    for (int k = 0; k < contadorProfundidad; ++k) {
+                                        extra += "    ";
+                                    }
+                                    extra += "| " + nombreFile + "\n";
+                                    extra += retorno;
+                                    return extra;
+                                }
                             }
                         }
                     }
@@ -3168,26 +3219,38 @@ string AdminArchivosCarpetas::find_ImprimirBusqueda(int direccionInodo, string n
                                 // RECORDAR QUE "." Y ".." NO TIENEN QUE MOSTRARSE
                                 string nombreFile=blkCarpeta.b_content[k].b_name;
                                 if ((nombreFile != "." && nombreFile != "..") && blkCarpeta.b_content[k].b_inodo != -1) {
-                                    // Si se encuentra el nombre se retorna
-                                    if(nombreFile == nombreBusqueda){
-                                        string retorno = "";
+                                    if(mostrarTodo){
                                         for (int k = 0; k < contadorProfundidad; ++k) {
-                                            retorno += "    ";
+                                            mostrarTodoRuta += "    ";
                                         }
-                                        retorno += "| " + nombreFile + "\n";
-                                        return retorno;
-                                    }
-                                    // Si no se encuentra se sigue viajando hasta encontrarlo
-                                    string retorno = this->find_ImprimirBusqueda(blkCarpeta.b_content[k].b_inodo, nombreBusqueda, contadorProfundidad+1);
-                                    // Si se encontro algo pues retornar recursivamente
-                                    if(retorno != " "){
-                                        string extra = "";
-                                        for (int k = 0; k < contadorProfundidad; ++k) {
-                                            extra += "    ";
+                                        mostrarTodoRuta += "| " + nombreFile + "\n";
+                                        string retorno = this->find_ImprimirBusqueda(blkCarpeta.b_content[k].b_inodo, nombreBusqueda, contadorProfundidad+1, mostrarTodo);
+                                        mostrarTodoRuta += retorno;
+                                    }else {
+                                        // Si se encuentra el nombre se retorna
+                                        if (nombreFile == nombreBusqueda) {
+                                            string retorno = "";
+                                            for (int k = 0; k < contadorProfundidad; ++k) {
+                                                retorno += "    ";
+                                            }
+                                            retorno += "| " + nombreFile + "\n";
+                                            return retorno;
                                         }
-                                        extra += "| " + nombreFile + "\n";
-                                        extra += retorno;
-                                        return extra;
+                                        // Si no se encuentra se sigue viajando hasta encontrarlo
+                                        string retorno = this->find_ImprimirBusqueda(blkCarpeta.b_content[k].b_inodo,
+                                                                                     nombreBusqueda,
+                                                                                     contadorProfundidad + 1,
+                                                                                     mostrarTodo);
+                                        // Si se encontro algo pues retornar recursivamente
+                                        if (retorno != " " && retorno != "") {
+                                            string extra = "";
+                                            for (int k = 0; k < contadorProfundidad; ++k) {
+                                                extra += "    ";
+                                            }
+                                            extra += "| " + nombreFile + "\n";
+                                            extra += retorno;
+                                            return extra;
+                                        }
                                     }
                                 }
                             }
@@ -3213,26 +3276,37 @@ string AdminArchivosCarpetas::find_ImprimirBusqueda(int direccionInodo, string n
                                         string nombreFile=blkCarpeta.b_content[z].b_name;
                                         // RECORDAR QUE "." Y ".." NO TIENEN QUE MOSTRARSE
                                         if ((nombreFile != "." && nombreFile != "..") && blkCarpeta.b_content[z].b_inodo != -1) {
-                                            // Si se encuentra el nombre se retorna
-                                            if(nombreFile == nombreBusqueda){
-                                                string retorno = "";
+                                            if(mostrarTodo){
                                                 for (int k = 0; k < contadorProfundidad; ++k) {
-                                                    retorno += "    ";
+                                                    mostrarTodoRuta += "    ";
                                                 }
-                                                retorno += "| " + nombreFile + "\n";
-                                                return retorno;
-                                            }
-                                            // Si no se encuentra se sigue viajando hasta encontrarlo
-                                            string retorno = this->find_ImprimirBusqueda(blkCarpeta.b_content[z].b_inodo, nombreBusqueda, contadorProfundidad+1);
-                                            // Si se encontro algo pues retornar recursivamente
-                                            if(retorno != " "){
-                                                string extra = "";
-                                                for (int k = 0; k < contadorProfundidad; ++k) {
-                                                    extra += "    ";
+                                                mostrarTodoRuta += "| " + nombreFile + "\n";
+                                                string retorno = this->find_ImprimirBusqueda(blkCarpeta.b_content[z].b_inodo, nombreBusqueda, contadorProfundidad+1, mostrarTodo);
+                                                mostrarTodoRuta += retorno;
+                                            }else {
+                                                // Si se encuentra el nombre se retorna
+                                                if (nombreFile == nombreBusqueda) {
+                                                    string retorno = "";
+                                                    for (int k = 0; k < contadorProfundidad; ++k) {
+                                                        retorno += "    ";
+                                                    }
+                                                    retorno += "| " + nombreFile + "\n";
+                                                    return retorno;
                                                 }
-                                                extra += "| " + nombreFile + "\n";
-                                                extra += retorno;
-                                                return extra;
+                                                // Si no se encuentra se sigue viajando hasta encontrarlo
+                                                string retorno = this->find_ImprimirBusqueda(
+                                                        blkCarpeta.b_content[z].b_inodo, nombreBusqueda,
+                                                        contadorProfundidad + 1, mostrarTodo);
+                                                // Si se encontro algo pues retornar recursivamente
+                                                if (retorno != " " && retorno != "") {
+                                                    string extra = "";
+                                                    for (int k = 0; k < contadorProfundidad; ++k) {
+                                                        extra += "    ";
+                                                    }
+                                                    extra += "| " + nombreFile + "\n";
+                                                    extra += retorno;
+                                                    return extra;
+                                                }
                                             }
                                         }
                                     }
@@ -3265,26 +3339,37 @@ string AdminArchivosCarpetas::find_ImprimirBusqueda(int direccionInodo, string n
                                                 // RECORDAR QUE "." Y ".." NO TIENEN QUE MOSTRARSE
                                                 string nombreFile=blkCarpeta.b_content[x].b_name;
                                                 if ((nombreFile != "." && nombreFile != "..") && blkCarpeta.b_content[x].b_inodo != -1) {
-                                                    // Si se encuentra el nombre se retorna
-                                                    if(nombreFile == nombreBusqueda){
-                                                        string retorno = "";
+                                                    if(mostrarTodo){
                                                         for (int k = 0; k < contadorProfundidad; ++k) {
-                                                            retorno += "    ";
+                                                            mostrarTodoRuta += "    ";
                                                         }
-                                                        retorno += "| " + nombreFile + "\n";
-                                                        return retorno;
-                                                    }
-                                                    // Si no se encuentra se sigue viajando hasta encontrarlo
-                                                    string retorno = this->find_ImprimirBusqueda(blkCarpeta.b_content[x].b_inodo, nombreBusqueda, contadorProfundidad+1);
-                                                    // Si se encontro algo pues retornar recursivamente
-                                                    if(retorno != " "){
-                                                        string extra = "";
-                                                        for (int k = 0; k < contadorProfundidad; ++k) {
-                                                            extra += "    ";
+                                                        mostrarTodoRuta += "| " + nombreFile + "\n";
+                                                        string retorno = this->find_ImprimirBusqueda(blkCarpeta.b_content[x].b_inodo, nombreBusqueda, contadorProfundidad+1, mostrarTodo);
+                                                        mostrarTodoRuta += retorno;
+                                                    }else {
+                                                        // Si se encuentra el nombre se retorna
+                                                        if (nombreFile == nombreBusqueda) {
+                                                            string retorno = "";
+                                                            for (int k = 0; k < contadorProfundidad; ++k) {
+                                                                retorno += "    ";
+                                                            }
+                                                            retorno += "| " + nombreFile + "\n";
+                                                            return retorno;
                                                         }
-                                                        extra += "| " + nombreFile + "\n";
-                                                        extra += retorno;
-                                                        return extra;
+                                                        // Si no se encuentra se sigue viajando hasta encontrarlo
+                                                        string retorno = this->find_ImprimirBusqueda(
+                                                                blkCarpeta.b_content[x].b_inodo, nombreBusqueda,
+                                                                contadorProfundidad + 1, mostrarTodo);
+                                                        // Si se encontro algo pues retornar recursivamente
+                                                        if (retorno != " " && retorno != "") {
+                                                            string extra = "";
+                                                            for (int k = 0; k < contadorProfundidad; ++k) {
+                                                                extra += "    ";
+                                                            }
+                                                            extra += "| " + nombreFile + "\n";
+                                                            extra += retorno;
+                                                            return extra;
+                                                        }
                                                     }
                                                 }
                                             }
@@ -3298,7 +3383,9 @@ string AdminArchivosCarpetas::find_ImprimirBusqueda(int direccionInodo, string n
             }
         }
     }
-
+    if(mostrarTodo){
+        return mostrarTodoRuta;
+    }
     return " ";
 }
 

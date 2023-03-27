@@ -91,7 +91,9 @@ void Montar::mount() {
                 }
                 if (indiceParticion != -1){
                     if (mbr.mbr_partition[indiceParticion].part_type == 'e'){
-                        cout << "EN UN PARTICION EXTENDIDA NO SE PUEDE MONTAR " << endl;
+                        // Corrección al parecer si se montan extendidas.
+                        this->mountList->add(this->p, this->name, 'e', mbr.mbr_partition[indiceParticion].part_start, indiceParticion);
+                        cout << "PARTICION EXTENDIDA MONTADA" << endl;
                         fclose(file);
                         return;
                     }else{ // Se encontro que fue en un partición primaria
@@ -162,7 +164,8 @@ void Montar::unmount() {
                             cout<<"SE LOGRO DESMONTAR LA PARTICION "<<nodo->name<<endl;
                             fclose(file);
                             return;
-                        }else{
+                        }
+                        else{
                             fclose(file);
                             return;
                         }
@@ -179,7 +182,7 @@ void Montar::unmount() {
                             fseek(file,nodo->start,SEEK_SET);
                             fwrite(&sb, sizeof(SuperBloque),1,file);
                         }
-                        cout<<"SE LOGRO DESMONTAR LA PARTICION "<<nodo->name<<endl;
+                        cout<<"SE LOGRO DESMONTAR LA PARTICION PRIMARIA "<<nodo->name<<endl;
                         fclose(file);
                         return;
 
@@ -187,17 +190,24 @@ void Montar::unmount() {
                         fclose(file);
                         return;
                     }
-                }else{
-                    cout<<"LA PARTICION A LA QUE HACE REFERENCIA "<<this->id<<" YA NO EXISTE EN EL DISCO"<<endl;
                 }
-            }else{
-                cout<<"EL DISCO DURO NO SE HA PODIDO ENCONTRAR"<<endl;
+                // correcicón para desmontar extendida
+                else if(indiceParticion != -1 && nodo->type == 'e'){
+                    this->mountList->eliminar(this->id);
+                    cout<<"SE LOGRO DESMONTAR LA PARTICION EXTENDIDA "<<nodo->name<<endl;
+                }
+                else{
+                    cout<<"LA MONTURA CON ID "<<this->id<<" HACE REFERENCIA A UNA PARTICION QUE YA NO EXISTE"<<endl;
+                }
+            }
+            else{
+                cout<<"NO SE PUDO ENCONTRAR EL DISCO"<<endl;
             }
         }else{
-            cout<<"LA PARTICION "<< this->id<<" NO EXISTE EN EL DISCO" <<endl;
+            cout<<"LA MONTURA "<< this->id<<" NO EXISTE EN EL DISCO" <<endl;
         }
     }else{
-        cout<<"EL PARAMETRO DE ID ES OBLIGATORIO AL USAR ESTE COMANDO"<<endl;
+        cout<<"IMPOSIBLE EJECUTAR EL PARAMETRO DE ID ES OBLIGATORIO AL USAR ESTE COMANDO"<<endl;
     }
 }
 // Recordar que este comando tiene que crear un archivo users.txt

@@ -1,5 +1,5 @@
 digraph G {
 node[shape=none]
-start[label=<<table CELLSPACING="0"><tr><td bgcolor="khaki1" rowspan="2">MBR</td><td bgcolor="violet" rowspan="2">Part1 <br/>17</td><td bgcolor="violet" rowspan="2">Part2 <br/>17</td><td bgcolor="violet" rowspan="2">Part3 <br/>17</td><td bgcolor="violet" rowspan="2">Part4 <br/>17</td><td bgcolor="lavender" rowspan="2">LIBRE <br/>0</td></tr>
+start[label=<<table CELLSPACING="0"><tr><td bgcolor="khaki1" rowspan="2">MBR</td><td bgcolor="lavender" rowspan="2">LIBRE <br/>24</td><td bgcolor="violet" rowspan="2">Part2 <br/>25</td><td bgcolor="violet" rowspan="2">Part3 <br/>25</td><td bgcolor="violet" rowspan="2">Part4 <br/>25</td><td bgcolor="lavender" rowspan="2">LIBRE <br/>0</td></tr>
 </table>>];
 }

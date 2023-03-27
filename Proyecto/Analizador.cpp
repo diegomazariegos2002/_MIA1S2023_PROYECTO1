@@ -189,18 +189,17 @@ void Analizador::analizarEntrada() {
                     if (entradaMinus[0] == '\"') {
                         entradaMinus.erase(0, 1);
                         this->entrada.erase(0, 1);
-                        i = entradaMinus.find(".");
-                        i+=4;
+                        i = entradaMinus.find("\"");
                         string p = this->entrada.substr(0, i);
-                        i += 1;
+                        i += 2;
                         this->disco->p = p;
                         while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                             i++;
                         }
-                        int i = entradaMinus.find("\"");
                         entradaMinus.erase(0, i);
                         this->entrada.erase(0, i);
-                    }else{
+                    }
+                    else{
                         i = entradaMinus.find(" ");
                         string p = this->entrada.substr(0, i);
                         this->disco->p = p;
@@ -213,7 +212,8 @@ void Analizador::analizarEntrada() {
                 } else if (strncmp(entradaMinus.c_str(), "#", 1) == 0) {
                     //es un comentario entonces se ignora todo
                     break;
-                }else{
+                }
+                else{
                     cout << "ERROR EN EL COMANDO: " << entradaMinus << endl;
                     return;
                 }
@@ -447,7 +447,8 @@ void Analizador::analizarEntrada() {
                         }
                         entradaMinus = entradaMinus.erase(0, i);
                         this->entrada = this->entrada.erase(0, i);
-                    } else {
+                    }
+                    else {
                         i = entradaMinus.find(" ");
                         string p = this->entrada.substr(0, i);
                         this->montar->p = p;
@@ -458,7 +459,8 @@ void Analizador::analizarEntrada() {
                         this->entrada = this->entrada.erase(0, i);
                     }
 
-                }else if (strncmp(entradaMinus.c_str(), ">name", 5) == 0) {
+                }
+                else if (strncmp(entradaMinus.c_str(), ">name", 5) == 0) {
                     i = entradaMinus.find("=") + 1;
                     while (entradaMinus[i] == ' ' && entradaMinus.length() > 0) {
                         i++;

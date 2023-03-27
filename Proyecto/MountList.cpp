@@ -21,9 +21,9 @@ void MountList::add(std::string path, std::string name, char type, int start,int
             this->ultimo->sig=nuevo;
             this->ultimo= nuevo;
         }
-        cout<<"LA PARTICION MONTADA "<<name<<" CON ID "<<nuevo->id<<endl;
+        cout<<"SE MONTO CON EXITO LA PARTICION "<<name<<" CON ID "<<nuevo->id<<endl;
     }else{
-        cout<<"LA PARTICION "<<name<<" YA HA SIDO MONTADA"<<endl;
+        cout<<"IMPOSIBLE EJECUTAR LA PARTICION YA ESTA MONTADA"<<endl;
         return;
     }
 }
@@ -97,11 +97,11 @@ bool MountList::eliminar(std::string id) {
                 ant=aux;
                 aux=aux->sig;
             }
-            cout<<"NO SE ENCONTRO UNA PARTICION CON EL ID "<<id<<endl;
+            cout<<"EL ID "<<id<< " NO REPRESENTA A NINGUNA MONTURA"<<endl;
             return false;
         }
     }else{
-        cout<<"TODAVIA NO EXISTEN PARTICIONES MONTANDAS PARA EJECUTAR ELIMINAR"<<endl;
+        cout<<"IMPOSIBLE EJECUTAR NO EXISTEN MONTURAS EN EL SISTEMA"<<endl;
         return false;
     }
 }

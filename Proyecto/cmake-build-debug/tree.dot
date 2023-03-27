@@ -16,74 +16,74 @@ n37886600[label=<<table CELLSPACING="0"><tr><td colspan="2" border="0">37886600<
 </tr>
 <tr>
 <td>i_atime</td>
-<td>2023-03-18 18:23:55</td>
+<td>2023-03-27 02:19:43</td>
 </tr>
 <tr>
 <td>i_ctime</td>
-<td>2023-03-18 18:23:55</td>
+<td>2023-03-27 02:19:43</td>
 </tr>
 <tr>
 <td>i_mtime</td>
-<td>2023-03-18 18:23:55</td>
+<td>2023-03-27 02:19:43</td>
 </tr>
 <tr>
 <td>ap0</td>
 <td port="43244232">43244232</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap1</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap2</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap3</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap4</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap5</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap6</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap7</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap8</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap9</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap10</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap11</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap12</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap13</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap14</td>
 <td>-1</td>
 </tr>
 <tr>
@@ -128,19 +128,19 @@ n37886712[label=<<table CELLSPACING="0"><tr><td colspan="2" border="0">37886712<
 </tr>
 <tr>
 <td>i_s</td>
-<td>85</td>
+<td>32</td>
 </tr>
 <tr>
 <td>i_atime</td>
-<td>2023-03-18 18:23:55</td>
+<td>2023-03-27 02:19:43</td>
 </tr>
 <tr>
 <td>i_ctime</td>
-<td>2023-03-18 18:23:55</td>
+<td>2023-03-27 02:19:43</td>
 </tr>
 <tr>
 <td>i_mtime</td>
-<td>2023-03-18 18:23:56</td>
+<td>2023-03-27 02:19:43</td>
 </tr>
 <tr>
 <td>ap0</td>
@@ -148,58 +148,58 @@ n37886712[label=<<table CELLSPACING="0"><tr><td colspan="2" border="0">37886712<
 </tr>
 <tr>
 <td>ap1</td>
-<td port="43244360">43244360</td>
-</tr>
-<tr>
-<td>i_block</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap2</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap3</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap4</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap5</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap6</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap7</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap8</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap9</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap10</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap11</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap12</td>
 <td>-1</td>
 </tr>
 <tr>
-<td>i_block</td>
+<td>ap13</td>
+<td>-1</td>
+</tr>
+<tr>
+<td>ap14</td>
 <td>-1</td>
 </tr>
 <tr>
@@ -217,20 +217,8 @@ n43244296[label=<<table CELLSPACING="0">
 <tr>
 <td>1,G,root
 1,U,root,root,123
-2,G,Archivos 1
-3,G,Archivos2
-4,G,Arch</td>
-</tr>
-</table>>]
-n37886712:43244296->n43244296;
-n43244360[label=<<table CELLSPACING="0">
-<tr>
-<td colspan="2" bgcolor="lemonchiffon">Bloque Archivo</td></tr>
-<tr>
-<td>ivos 3
-5,G,Archivos4
 </td>
 </tr>
 </table>>]
-n37886712:43244360->n43244360;
+n37886712:43244296->n43244296;
 }

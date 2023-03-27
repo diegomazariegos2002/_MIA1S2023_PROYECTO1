@@ -62,7 +62,6 @@ public:
     int getIdGrupo(string nameGrupo);
     void cambiarPropietarioRecursivo_pt1(int direccionInodo, int idUser, int idGrupo, bool r);
     void cambiarPropietarioRecursivo_pt2(TablaInodo tablaInodo, int idUser, int idGrupo, bool r);
-    string find_ImprimirBusqueda(int direccionInodo, string nombreBusqueda, int contadorProfundidad);
 
     int getInicioBloqueLibresSeguidos(int bits_a_Buscar);
 
@@ -72,6 +71,8 @@ public:
     int getIndiceBitMapBlks(int direccionBlkBusqueda);
 
     void update_First_BlkFree();
+
+    string find_ImprimirBusqueda(int direccionInodo, string nombreBusqueda, int contadorProfundidad, bool mostrarTodo);
 };
 
 

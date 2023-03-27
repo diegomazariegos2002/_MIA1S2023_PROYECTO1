@@ -115,7 +115,7 @@ void Disco::rmdisk() {
                 remove(this->p.c_str());
                 cout<<"DISCO ELIMINADO"<<endl;
             }else{
-                cout<<"DISCO INEXISTENTE"<<endl;
+                cout<<"EL DISCO NO EXISTE, VERIFIQUE LA RUTA"<<endl;
             }
         }else{
             cout<<"EXTENSION INCORRECTA"<<endl;

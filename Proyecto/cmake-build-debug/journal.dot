@@ -2,9 +2,5 @@ digraph G {
 node[shape=none]
 start[label=<<table CELLSPACING="0"><tr><td colspan="5" bgcolor="mediumslateblue" color="#2980B9">REPORTE JORUNALING</td></tr>
 <tr><td bgcolor="mediumpurple1">Tipo Operacion</td><td bgcolor="mediumpurple1">Tipo</td><td bgcolor="mediumpurple1">Path</td><td bgcolor="mediumpurple1">Contenido</td><td bgcolor="mediumpurple1">Fecha</td></tr>
-<tr><td>mkfs</td><td>0</td><td></td><td></td><td>2023-03-18 18:23:55</td></tr><tr><td>mkgrp</td><td>1</td><td>users.txt</td><td>2,G,Archivos 1
-</td><td>2023-03-18 18:23:56</td></tr><tr><td>mkgrp</td><td>1</td><td>users.txt</td><td>3,G,Archivos2
-</td><td>2023-03-18 18:23:56</td></tr><tr><td>mkgrp</td><td>1</td><td>users.txt</td><td>4,G,Archivos 3
-</td><td>2023-03-18 18:23:56</td></tr><tr><td>mkgrp</td><td>1</td><td>users.txt</td><td>5,G,Archivos4
-</td><td>2023-03-18 18:23:56</td></tr></table>>];
+<tr><td>mkfs</td><td>0</td><td></td><td></td><td>2023-03-27 02:19:43</td></tr></table>>];
 }

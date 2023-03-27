@@ -1685,8 +1685,15 @@ void Rep::ejecutarReporte_ls() {
 }
 
 string Rep::graficarInodoRecursivoLs(int direccionInodo, string nombreFile, FILE *fileDisco) {
+    if(direccionInodo <= 0){
+        return "";
+    }
+    if(nombreFile==""){
+        return "";
+    }
+
     TablaInodo tablaInodo;
-    char fecha[100];
+
     fseek(fileDisco, direccionInodo, SEEK_SET);
     fread(&tablaInodo, sizeof(TablaInodo), 1, fileDisco);
     string cuerpoDot="";
@@ -1695,12 +1702,16 @@ string Rep::graficarInodoRecursivoLs(int direccionInodo, string nombreFile, FILE
     string usuarioInodo = this->getUsuarioInodo(tablaInodo.i_uid, fileDisco);
     string grupoInodo = this->getGrupoInodo(tablaInodo.i_gid, fileDisco);
     string sizeInodo = to_string(tablaInodo.i_s);
+    if(usuarioInodo=="NOT FOUND" || grupoInodo=="NOT FOUND"){
+        return "";
+    }
     cuerpoDot+= "<td>" + permisosInodo + "</td>\n";
     cuerpoDot+= "<td>" + usuarioInodo + "</td>\n";
     cuerpoDot+= "<td>" + grupoInodo + "</td>\n";
     cuerpoDot+= "<td>" + sizeInodo + "</td>\n";
-    strftime(fecha,sizeof (fecha),"%Y-%m-%d %H:%M:%S",localtime(&tablaInodo.i_mtime));
-    string copiaFecha=fecha;
+    char fecha[100];
+    std::strftime(fecha,sizeof (fecha),"%Y-%m-%d %H:%M:%S",localtime(&tablaInodo.i_mtime));
+    std::string copiaFecha(fecha);
     cuerpoDot+= "<td>" + copiaFecha + "</td>\n";
     if (tablaInodo.i_type == '1'){
         cuerpoDot+="<td>Archivo</td>\n";
@@ -1723,11 +1734,11 @@ string Rep::graficarInodoRecursivoLs(int direccionInodo, string nombreFile, FILE
                 for (int j = 0; j < 4; ++j) {
                     if (blkCarpeta.b_content[j].b_inodo != -1){
                         string nombreFile_Next="";
-                        for (int l = 0; l < 12; ++l) {
-                            if (blkCarpeta.b_content[j].b_name[l] == '\000'){
+                        for (int k = 0; k < 12; ++k) {
+                            if (blkCarpeta.b_content[j].b_name[k] == '\000'){
                                 break;
                             }
-                            nombreFile_Next+=blkCarpeta.b_content[j].b_name[l];
+                            nombreFile_Next+=blkCarpeta.b_content[j].b_name[k];
                         }
                         if (!(nombreFile_Next == "." || nombreFile_Next == "..")){ // estos no son nombres de estructuras como tal
                             cuerpoDot+= this->graficarInodoRecursivoLs(blkCarpeta.b_content[j].b_inodo,
@@ -1753,9 +1764,11 @@ string Rep::graficarInodoRecursivoLs(int direccionInodo, string nombreFile, FILE
                                     }
                                     nombreFile_Next+=blkCarpeta.b_content[k].b_name[z];
                                 }
-                                cuerpoDot+= this->graficarInodoRecursivoLs(blkCarpeta.b_content[k].b_inodo,
-                                                                           nombreFile_Next,
-                                                                           fileDisco);
+                                if (!(nombreFile_Next == "." || nombreFile_Next == "..")) { // estos no son nombres de estructuras como tal
+                                    cuerpoDot += this->graficarInodoRecursivoLs(blkCarpeta.b_content[k].b_inodo,
+                                                                                nombreFile_Next,
+                                                                                fileDisco);
+                                }
                             }
                         }
                     }
@@ -1781,9 +1794,12 @@ string Rep::graficarInodoRecursivoLs(int direccionInodo, string nombreFile, FILE
                                                     }
                                                     nombreFile_Next+=blkCarpeta.b_content[z].b_name[y];
                                                 }
-                                                cuerpoDot+= this->graficarInodoRecursivoLs(blkCarpeta.b_content[z].b_inodo,
-                                                                                           nombreFile_Next,
-                                                                                           fileDisco);
+                                                if (!(nombreFile_Next == "." || nombreFile_Next == "..")) { // estos no son nombres de estructuras como tal
+                                                    cuerpoDot += this->graficarInodoRecursivoLs(
+                                                            blkCarpeta.b_content[z].b_inodo,
+                                                            nombreFile_Next,
+                                                            fileDisco);
+                                                }
                                             }
                                         }
                                     }
@@ -1808,16 +1824,19 @@ string Rep::graficarInodoRecursivoLs(int direccionInodo, string nombreFile, FILE
                                                 fread(&blkCarpeta, sizeof(BloqueCarpeta), 1, fileDisco);
                                                 for (int y = 0; y < 4; ++y) {
                                                     if (blkCarpeta.b_content[y].b_inodo != -1){
-                                                        string name1="";
+                                                        string nombreFile_Next="";
                                                         for (int x = 0; x < 12; ++x) {
                                                             if (blkCarpeta.b_content[y].b_name[x] == '\000'){
                                                                 break;
                                                             }
-                                                            name1+=blkCarpeta.b_content[y].b_name[x];
+                                                            nombreFile_Next+=blkCarpeta.b_content[y].b_name[x];
                                                         }
-                                                        cuerpoDot+= this->graficarInodoRecursivoLs(blkCarpeta.b_content[y].b_inodo,
-                                                                                                   name1,
-                                                                                                   fileDisco);
+                                                        if (!(nombreFile_Next == "." || nombreFile_Next == "..")) { // estos no son nombres de estructuras como tal
+                                                            cuerpoDot += this->graficarInodoRecursivoLs(
+                                                                    blkCarpeta.b_content[y].b_inodo,
+                                                                    nombreFile_Next,
+                                                                    fileDisco);
+                                                        }
                                                     }
                                                 }
                                             }
@@ -1835,7 +1854,9 @@ string Rep::graficarInodoRecursivoLs(int direccionInodo, string nombreFile, FILE
 
 string Rep::getPermisosInodo(int permisoInodo) {
     string cuerpoDot="";
-    string permisosString= to_string(permisoInodo);
+    string permisosString = "";
+    int permisosInodoAux = permisoInodo;
+    permisosString = to_string(permisosInodoAux);
     for (int i = 0; i < permisosString.length(); ++i) {
         cuerpoDot+="-";
         if(permisosString[i]=='0'){
@@ -2133,7 +2154,7 @@ string Rep::dibujarInodoReporteTree(int direccionInodo, FILE *disco) {
         }
         else{
             cadenaDot+="<tr>\n";
-            cadenaDot+="<td>i_block</td>\n";
+            cadenaDot+="<td>ap"+to_string(j)+"</td>\n";
             cadenaDot+="<td>-1</td>\n";
             cadenaDot+="</tr>\n";
         }
